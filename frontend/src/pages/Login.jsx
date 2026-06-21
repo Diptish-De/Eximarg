@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
 import { useUser } from '../context/UserContext';
 import { Link, useNavigate } from 'react-router-dom';
-import { ShieldCheck, ArrowRight } from '@phosphor-icons/react';
+import { ShieldCheck, ArrowRight, Lightning } from '@phosphor-icons/react';
 
 export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [submitting, setSubmitting] = useState(false);
-  const { login } = useUser();
+  const { login, demoLogin } = useUser();
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
@@ -16,6 +16,13 @@ export default function Login() {
     setSubmitting(true);
     const success = await login(email, password);
     setSubmitting(false);
+    if (success) {
+      navigate('/dashboard');
+    }
+  };
+
+  const handleDemoLogin = (role) => {
+    const success = demoLogin(role);
     if (success) {
       navigate('/dashboard');
     }
@@ -84,11 +91,42 @@ export default function Login() {
           </Link>
         </p>
 
+        {/* Demo mode bypass — no backend needed */}
+        <div className="mt-6 pt-6 border-t border-brand-border">
+          <div className="flex items-center gap-2 text-yellow-400 text-xs font-bold mb-3">
+            <Lightning size={16} weight="fill" />
+            <span>DEMO MODE — BYPASS LOGIN</span>
+          </div>
+          <div className="grid grid-cols-3 gap-2">
+            <button
+              onClick={() => handleDemoLogin('exporter')}
+              className="px-2 py-2.5 bg-yellow-500/10 border border-yellow-500/30 hover:bg-yellow-500/20 text-[11px] rounded-lg text-yellow-300 font-semibold transition-colors"
+              data-testid="demo-fresh-button"
+            >
+              ⚡ Exporter
+            </button>
+            <button
+              onClick={() => handleDemoLogin('admin')}
+              className="px-2 py-2.5 bg-yellow-500/10 border border-yellow-500/30 hover:bg-yellow-500/20 text-[11px] rounded-lg text-yellow-300 font-semibold transition-colors"
+              data-testid="demo-admin-button"
+            >
+              ⚡ Admin
+            </button>
+            <button
+              onClick={() => handleDemoLogin('service_provider')}
+              className="px-2 py-2.5 bg-yellow-500/10 border border-yellow-500/30 hover:bg-yellow-500/20 text-[11px] rounded-lg text-yellow-300 font-semibold transition-colors"
+              data-testid="demo-provider-button"
+            >
+              ⚡ Provider
+            </button>
+          </div>
+        </div>
+
         {/* Test credentials helper */}
-        <div className="mt-8 pt-6 border-t border-brand-border">
+        <div className="mt-4 pt-4 border-t border-brand-border">
           <div className="flex items-center gap-2 text-brand-accent text-xs font-bold mb-3">
             <ShieldCheck size={16} />
-            <span>MOCK TEST ACCOUNTS</span>
+            <span>MOCK TEST ACCOUNTS (requires backend)</span>
           </div>
           <div className="grid grid-cols-3 gap-2">
             <button
