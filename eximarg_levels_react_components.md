@@ -867,38 +867,333 @@ export function Level3Verification({ onSubmit, defaultData = {} }) {
 ## Level 4: Company Review
 ```jsx
 import React, { useState } from 'react';
-import { Building, Lock, ArrowRight } from '@phosphor-icons/react';
+import { 
+  Building, Lock, ArrowRight, ShieldCheck, Check, Trophy, SealCheck, Sparkle, Lightning, WarningCircle, Gauge 
+} from '@phosphor-icons/react';
 
-export function Level4CompanyReview({ onSubmit, companyData }) {
-  const [companyName, setCompanyName] = useState(companyData?.company_name || '');
-  const [website, setWebsite] = useState(companyData?.website || '');
-  const [tagline, setTagline] = useState(companyData?.tagline || '');
+export function Level4CompanyReview({ onSubmit, onSimulateApproval, defaultData = {}, isLocked = false, currentUserData = {} }) {
+  const [companyName, setCompanyName] = useState(defaultData.company_name || '');
+  const [website, setWebsite] = useState(defaultData.website || '');
+  const [tagline, setTagline] = useState(defaultData.tagline || '');
+  const [companyLogo, setCompanyLogo] = useState(defaultData.company_logo || null);
+
+  const handleBase64Upload = (file, callback) => {
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onloadend = () => callback(reader.result);
+    reader.readAsDataURL(file);
+  };
+
+  const handleSave = () => {
+    onSubmit({ companyName, website, tagline, companyLogo });
+  };
 
   return (
-    <div className="glass-card rounded-2xl p-8 space-y-6 max-w-3xl">
-      <div className="flex items-center gap-3 border-b border-white/5 pb-4">
-        <Building size={24} className="text-primary" />
-        <h3 className="font-display font-bold text-lg text-white">Confirm Company Credentials</h3>
-      </div>
+    <div className="space-y-8 animate-fade-in max-w-7xl">
+      {!isLocked ? (
+        // STATE 1: UNLOCKED - FORM VIEW
+        <>
+          <header className="mb-8 border-b border-white/5 pb-6">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div>
+                <h1 className="font-display font-extrabold text-3xl text-white">Level 4: Company Profile & Review</h1>
+                <p className="text-on-surface-variant text-sm mt-1">Review onboarding summary and lock information to finalize compliance verification.</p>
+              </div>
+              <div className="flex items-center gap-2 bg-[#000a31]/60 px-4 py-2 rounded-xl border border-white/5">
+                <span className="text-xs text-primary font-bold">4/6 COMPLETE</span>
+              </div>
+            </div>
+          </header>
 
-      <div className="space-y-4">
-        <div>
-          <label className="block text-xs font-semibold uppercase tracking-wider text-on-surface-variant mb-2">Export Company Name</label>
-          <input type="text" value={companyName} onChange={(e) => setCompanyName(e.target.value)} className="w-full px-4 py-3 bg-[#031037]/80 rounded-xl border border-white/10 text-white text-sm" />
-        </div>
-        <div>
-          <label className="block text-xs font-semibold uppercase tracking-wider text-on-surface-variant mb-2">Company Website</label>
-          <input type="text" value={website} onChange={(e) => setWebsite(e.target.value)} className="w-full px-4 py-3 bg-[#031037]/80 rounded-xl border border-white/10 text-white text-sm" />
-        </div>
-        <div>
-          <label className="block text-xs font-semibold uppercase tracking-wider text-on-surface-variant mb-2">Brand Tagline</label>
-          <input type="text" value={tagline} onChange={(e) => setTagline(e.target.value)} className="w-full px-4 py-3 bg-[#031037]/80 rounded-xl border border-white/10 text-white text-sm" />
-        </div>
-      </div>
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            <div className="lg:col-span-8 space-y-6">
+              <div className="glass-card rounded-2xl p-6 border border-white/5 space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-xs font-semibold uppercase tracking-wider text-on-surface-variant mb-2">Company Legal Name</label>
+                    <input
+                      type="text"
+                      value={companyName}
+                      onChange={(e) => setCompanyName(e.target.value)}
+                      className="w-full px-4 py-3 bg-[#031037]/80 rounded-xl border border-white/10 text-white text-sm focus:border-primary/50 outline-none transition-all"
+                      placeholder="e.g. Eximarg Global Private Ltd"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold uppercase tracking-wider text-on-surface-variant mb-2">Company Logo</label>
+                    <div className="flex items-center gap-4">
+                      <label className="px-4 py-2.5 bg-white/5 border border-white/10 hover:bg-white/10 text-xs text-white font-bold rounded-xl cursor-pointer transition-all">
+                        Choose File
+                        <input
+                          type="file"
+                          onChange={(e) => handleBase64Upload(e.target.files[0], setCompanyLogo)}
+                          className="hidden"
+                        />
+                      </label>
+                      {companyLogo ? (
+                        <img src={companyLogo} alt="Logo preview" className="w-12 h-12 rounded-xl object-contain bg-[#031037] border border-white/10" />
+                      ) : (
+                        <span className="text-xs text-on-surface-variant">No file chosen</span>
+                      )}
+                    </div>
+                  </div>
+                </div>
 
-      <button onClick={() => onSubmit({ companyName, website, tagline })} className="w-full py-4 bg-primary text-white font-bold rounded-xl text-sm flex items-center justify-center gap-2">
-        Lock Profile & Verify <Lock size={16} />
-      </button>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-xs font-semibold uppercase tracking-wider text-on-surface-variant mb-2">Company Website (Optional)</label>
+                    <input
+                      type="text"
+                      value={website}
+                      onChange={(e) => setWebsite(e.target.value)}
+                      className="w-full px-4 py-3 bg-[#031037]/80 rounded-xl border border-white/10 text-white text-sm focus:border-primary/50 outline-none transition-all"
+                      placeholder="https://eximarg-global.com"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold uppercase tracking-wider text-on-surface-variant mb-2">Tagline</label>
+                    <input
+                      type="text"
+                      value={tagline}
+                      onChange={(e) => setTagline(e.target.value)}
+                      className="w-full px-4 py-3 bg-[#031037]/80 rounded-xl border border-white/10 text-white text-sm focus:border-primary/50 outline-none transition-all"
+                      placeholder="Providing quality Indian Spices worldwide"
+                    />
+                  </div>
+                </div>
+
+                {/* Onboarding Summary Board */}
+                <div className="bg-[#031037]/70 border border-white/5 p-5 rounded-xl space-y-4">
+                  <h3 className="font-display font-bold text-xs text-primary uppercase tracking-wider">Compliance Review summary</h3>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-xs">
+                    <div>
+                      <span className="text-on-surface-variant block mb-1">Director Name:</span>
+                      <span className="font-semibold text-white">{currentUserData.director_name || 'Rajesh Kumar'}</span>
+                    </div>
+                    <div>
+                      <span className="text-on-surface-variant block mb-1">Exporter Type:</span>
+                      <span className="font-semibold text-white">{currentUserData.exporter_type || 'Merchant'}</span>
+                    </div>
+                    <div>
+                      <span className="text-on-surface-variant block mb-1">GSTIN:</span>
+                      <span className="font-semibold text-white">{currentUserData.gst || '07AAAAA1111A1Z1'}</span>
+                    </div>
+                    <div>
+                      <span className="text-on-surface-variant block mb-1">IEC:</span>
+                      <span className="font-semibold text-white">{currentUserData.iec || '1234567890'}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex justify-end pt-4 border-t border-white/10">
+                <button 
+                  type="button"
+                  onClick={handleSave}
+                  className="px-8 py-4 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl flex items-center gap-2 transition-all shadow-lg shadow-red-900/20 text-sm"
+                >
+                  <ShieldCheck size={20} />
+                  Check & Confirm: Lock Levels
+                </button>
+              </div>
+            </div>
+
+            <div className="lg:col-span-4 space-y-6">
+              <div className="glass-card rounded-2xl p-6 border border-white/5 space-y-4">
+                <h5 className="font-bold text-xs text-primary mb-2 flex items-center gap-1.5">
+                  <WarningCircle size={16} />
+                  Important Notice
+                </h5>
+                <p className="text-xs text-on-surface-variant leading-relaxed">
+                  Locking your onboarding level signals our Verification Officers to execute full compliance checks. Please verify that your name, GSTIN, and company details match exactly.
+                </p>
+              </div>
+            </div>
+          </div>
+        </>
+      ) : (
+        // STATE 2: LOCKED - VERIFICATION JOURNEY VIEW
+        <>
+          <header className="mb-8 border-b border-white/5 pb-6">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="px-2 py-0.5 bg-primary/15 border border-primary/20 text-primary text-[10px] font-bold uppercase rounded-full">
+                    Level 4
+                  </span>
+                  <span className="text-xs text-on-surface-variant font-semibold">• 3 of 5 Milestones Completed</span>
+                </div>
+                <h1 className="font-display font-extrabold text-3xl text-white mt-2">Level 4: Company Review</h1>
+              </div>
+              <div className="flex flex-col items-end gap-1">
+                <div className="flex items-center gap-2 bg-[#0c1940] px-3.5 py-1.5 rounded-full border border-primary/20">
+                  <span className="w-2 h-2 bg-amber-400 rounded-full animate-ping"></span>
+                  <span className="text-[10px] font-bold text-white uppercase tracking-wider">Review in Progress</span>
+                </div>
+                <span className="text-[10px] text-on-surface-variant font-medium">Estimated Completion: <strong className="text-white">24-48 Hours</strong></span>
+              </div>
+            </div>
+          </header>
+
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            {/* Left Column: Timeline */}
+            <div className="lg:col-span-8 space-y-6">
+              <div className="glass-card rounded-2xl p-6 border border-white/5 space-y-6">
+                <div className="flex justify-between items-center">
+                  <h3 className="font-bold text-white text-base">Verification Journey</h3>
+                  <div className="text-right">
+                    <span className="block text-2xl font-black text-primary">68%</span>
+                    <span className="text-[9px] font-bold text-on-surface-variant uppercase tracking-wider">Total Progress</span>
+                  </div>
+                </div>
+
+                {/* Vertical Steps Timeline */}
+                <div className="relative pl-8 space-y-8">
+                  {/* Connecting Line */}
+                  <div className="absolute left-3 top-4 bottom-4 w-0.5 bg-white/5">
+                    <div className="h-[68%] bg-primary rounded"></div>
+                  </div>
+
+                  {/* Step 1: Entity Validation */}
+                  <div className="relative flex items-start gap-4">
+                    <div className="absolute -left-8 w-6.5 h-6.5 rounded-full bg-primary flex items-center justify-center text-white border border-primary z-10">
+                      <Check size={12} />
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <h4 className="font-bold text-white text-sm">Entity Validation</h4>
+                        <span className="px-2 py-0.5 bg-green-500/10 border border-green-500/20 text-green-400 text-[8px] font-bold uppercase rounded">
+                          Completed 2h ago
+                        </span>
+                      </div>
+                      <p className="text-xs text-on-surface-variant mt-1 leading-relaxed">
+                        Company registration and GST credentials have been verified against national databases.
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Step 2: Compliance Check */}
+                  <div className="relative flex items-start gap-4">
+                    <div className="absolute -left-8 w-6.5 h-6.5 rounded-full bg-primary flex items-center justify-center text-white border border-primary z-10 animate-pulse">
+                      <Lightning size={12} className="animate-pulse" />
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex justify-between items-center">
+                        <h4 className="font-bold text-white text-sm">Compliance Check & Documentation</h4>
+                        <span className="text-primary text-[8px] font-bold uppercase tracking-wider">Active Review</span>
+                      </div>
+                      <p className="text-xs text-on-surface-variant mt-1 leading-relaxed">
+                        Our compliance engine is currently scanning your uploaded balance sheets and export licenses for regulatory alignment.
+                      </p>
+                      <div className="w-full bg-white/5 h-1.5 rounded-full mt-3 overflow-hidden">
+                        <div className="bg-primary h-full progress-shimmer" style={{ width: '40%' }}></div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Step 3: AML Screening */}
+                  <div className="relative flex items-start gap-4">
+                    <div className="absolute -left-8 w-6.5 h-6.5 rounded-full bg-white/5 flex items-center justify-center text-on-surface-variant border border-white/10 z-10">
+                      <Lock size={12} />
+                    </div>
+                    <div className="opacity-50">
+                      <h4 className="font-bold text-white text-sm">AML Screening</h4>
+                      <p className="text-xs text-on-surface-variant mt-1 leading-relaxed">
+                        Final automated screening against international trade sanctions and money laundering watchlists.
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Step 4: Level 4 Certification */}
+                  <div className="relative flex items-start gap-4">
+                    <div className="absolute -left-8 w-6.5 h-6.5 rounded-full bg-white/5 flex items-center justify-center text-on-surface-variant border border-white/10 z-10">
+                      <Trophy size={12} />
+                    </div>
+                    <div className="opacity-50">
+                      <h4 className="font-bold text-white text-sm">Level 4 Certification</h4>
+                      <p className="text-xs text-on-surface-variant mt-1 leading-relaxed">
+                        Issuance of your Silver Exporter badge and activation of increased credit limits.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Trust Score Card */}
+              <div className="glass-card rounded-2xl p-5 border border-white/5 flex flex-col md:flex-row justify-between items-center gap-4 bg-[#0c1940]/40">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
+                    <Gauge size={20} />
+                  </div>
+                  <div>
+                    <p className="font-bold text-white text-xs">Earn +450 Trust Score</p>
+                    <p className="text-[10px] text-on-surface-variant mt-0.5">Boost your global ranking upon completion</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-4">
+                  <div className="flex -space-x-2">
+                    <div className="w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center text-primary text-[8px] font-bold border border-primary/10">1</div>
+                    <div className="w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center text-primary text-[8px] font-bold border border-primary/10">2</div>
+                    <div className="w-6 h-6 rounded-full bg-primary/30 flex items-center justify-center text-primary text-[8px] font-bold border border-primary/10">12+</div>
+                  </div>
+                  <span className="text-[10px] text-on-surface-variant font-medium">12 other Indian exporters are in review today.</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Right Sidebar Columns */}
+            <div className="lg:col-span-4 space-y-6">
+              
+              {/* While You Wait */}
+              <div className="glass-card rounded-2xl p-6 border border-white/5 space-y-4">
+                <h4 className="font-bold text-xs uppercase tracking-widest text-on-surface-variant flex items-center gap-1.5">
+                  <Sparkle size={14} className="text-primary" />
+                  While You Wait
+                </h4>
+                
+                <div className="space-y-3">
+                  <div className="p-3 bg-[#031037]/60 border border-white/5 hover:border-primary/30 rounded-xl transition-all cursor-pointer">
+                    <h5 className="font-bold text-white text-xs">Explore Digital Dukan</h5>
+                    <p className="text-[10px] text-on-surface-variant mt-1">Start setting up your virtual storefront for the UAE market.</p>
+                  </div>
+                  <div className="p-3 bg-[#031037]/60 border border-white/5 hover:border-primary/30 rounded-xl transition-all cursor-pointer">
+                    <h5 className="font-bold text-white text-xs">Prep Smart Invoices</h5>
+                    <p className="text-[10px] text-on-surface-variant mt-1">Standardize your billing format for automated clearance.</p>
+                  </div>
+                  <div className="p-3 bg-[#031037]/60 border border-white/5 hover:border-primary/30 rounded-xl transition-all cursor-pointer">
+                    <h5 className="font-bold text-white text-xs">Export Academy</h5>
+                    <p className="text-[10px] text-on-surface-variant mt-1">Learn about new trade tariffs for textile exports in 2024.</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Need Help Card */}
+              <div className="glass-card rounded-2xl p-6 border border-white/5 space-y-4">
+                <h4 className="font-bold text-xs uppercase tracking-widest text-on-surface-variant">Need help?</h4>
+                <p className="text-xs text-on-surface-variant leading-relaxed">
+                  Our Verification Officers might call you from a verified +91 number if any documents need re-uploading.
+                </p>
+                <button 
+                  type="button" 
+                  onClick={onSimulateApproval}
+                  className="w-full py-2.5 bg-primary hover:bg-blue-600 text-white font-bold rounded-xl text-xs transition-all shadow-md shadow-primary/20"
+                >
+                  Simulate Review Approval
+                </button>
+              </div>
+
+              {/* Global Reach Corridor Stats */}
+              <div className="glass-card rounded-2xl p-6 border border-white/5 bg-gradient-to-br from-primary/5 to-transparent space-y-2">
+                <span className="block text-[10px] font-bold text-primary uppercase tracking-wider">Global Reach</span>
+                <h5 className="font-display font-extrabold text-2xl text-white">142 Active Corridors</h5>
+                <p className="text-xs text-on-surface-variant leading-relaxed">
+                  Eximarg currently supports verified exports to 42 countries.
+                </p>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 }
