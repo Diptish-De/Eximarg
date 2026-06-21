@@ -3,8 +3,13 @@ import path from 'path';
 
 const DATA_DIR = path.resolve('data');
 
-if (!fs.existsSync(DATA_DIR)) {
-  fs.mkdirSync(DATA_DIR, { recursive: true });
+let isFileSystemWritable = true;
+try {
+  if (!fs.existsSync(DATA_DIR)) {
+    fs.mkdirSync(DATA_DIR, { recursive: true });
+  }
+} catch (e) {
+  isFileSystemWritable = false;
 }
 
 export class MockModel {
@@ -12,15 +17,16 @@ export class MockModel {
     if (!item) return null;
     if (Object.prototype.hasOwnProperty.call(item, 'save')) return item;
     
+    const self = this;
     Object.defineProperty(item, 'save', {
       value: async function() {
-        const list = JSON.parse(fs.readFileSync(this._collectionFilePath, 'utf8'));
+        const list = self._read();
         const idx = list.findIndex(x => x._id === this._id);
         if (idx !== -1) {
           const cleanItem = { ...this };
           delete cleanItem.save;
           list[idx] = cleanItem;
-          fs.writeFileSync(this._collectionFilePath, JSON.stringify(list, null, 2));
+          self._write(list);
         }
         return this;
       },
@@ -32,23 +38,52 @@ export class MockModel {
   }
 
   constructor(collectionName) {
+    this.collectionName = collectionName;
     this.filePath = path.join(DATA_DIR, `${collectionName}.json`);
-    if (!fs.existsSync(this.filePath)) {
-      fs.writeFileSync(this.filePath, JSON.stringify([]));
+    
+    if (isFileSystemWritable) {
+      try {
+        if (!fs.existsSync(this.filePath)) {
+          fs.writeFileSync(this.filePath, JSON.stringify([]));
+        }
+      } catch (e) {
+        isFileSystemWritable = false;
+      }
+    }
+    
+    if (!isFileSystemWritable) {
+      global._mockDb = global._mockDb || {};
+      global._mockDb[this.collectionName] = global._mockDb[this.collectionName] || [];
     }
   }
 
   _read() {
+    if (!isFileSystemWritable) {
+      return global._mockDb[this.collectionName] || [];
+    }
     try {
       const data = fs.readFileSync(this.filePath, 'utf8');
       return JSON.parse(data);
     } catch (e) {
-      return [];
+      isFileSystemWritable = false;
+      global._mockDb = global._mockDb || {};
+      global._mockDb[this.collectionName] = global._mockDb[this.collectionName] || [];
+      return global._mockDb[this.collectionName];
     }
   }
 
   _write(data) {
-    fs.writeFileSync(this.filePath, JSON.stringify(data, null, 2));
+    if (!isFileSystemWritable) {
+      global._mockDb[this.collectionName] = data;
+      return;
+    }
+    try {
+      fs.writeFileSync(this.filePath, JSON.stringify(data, null, 2));
+    } catch (e) {
+      isFileSystemWritable = false;
+      global._mockDb = global._mockDb || {};
+      global._mockDb[this.collectionName] = data;
+    }
   }
 
   async find(query = {}) {
