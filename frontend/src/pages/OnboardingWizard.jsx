@@ -6,7 +6,8 @@ import {
   ArrowLeft, ArrowRight, ShieldCheck, Check, Fingerprint, 
   Files, Building, CreditCard, Sparkle, Plus, WarningCircle, FileArrowUp,
   Layout, Lightning, Tag, Trophy, Gear, Question, SignOut, Eye, Trash, Shield,
-  Bell, Lock, Lightbulb, CloudArrowUp, Gauge, SealCheck
+  Bell, Lock, Lightbulb, CloudArrowUp, Gauge, SealCheck,
+  TShirt, Leaf, Flask, Rocket, Waves, Globe, MapPin
 } from '@phosphor-icons/react';
 
 export default function OnboardingWizard() {
@@ -41,6 +42,9 @@ export default function OnboardingWizard() {
   const [shipmentsRange, setShipmentsRange] = useState(currentUser.level_2_exporter?.shipments_range || '0-10');
   const [regDate, setRegDate] = useState(currentUser.level_2_exporter?.registration_date || '');
   const [operatingSince, setOperatingSince] = useState(currentUser.level_2_exporter?.operating_since || '');
+  const [primaryIndustry, setPrimaryIndustry] = useState(currentUser.level_2_exporter?.primary_industry || 'Engineering');
+  const [exportExperience, setExportExperience] = useState(currentUser.level_2_exporter?.export_experience || '1-3 Years');
+  const [targetRegions, setTargetRegions] = useState(currentUser.level_2_exporter?.target_regions || ['North America', 'European Union']);
   const [rcmcSuggestions, setRcmcSuggestions] = useState(currentUser.level_2_exporter?.rcmc_suggestions || []);
   const [fetchingSuggestions, setFetchingSuggestions] = useState(false);
 
@@ -202,24 +206,23 @@ export default function OnboardingWizard() {
   };
 
   const submitLevel2 = async () => {
-    if (!exportIntent) {
-      toast.error('Please specify your export intent.');
-      return;
-    }
     try {
       await api.post('/api/levels/2', {
         exporter_type: exporterType,
         business_model: businessModel,
-        export_intent: exportIntent,
+        export_intent: exportIntent || `${primaryIndustry} Export Focus`,
         shipments_range: shipmentsRange,
         registration_date: regDate || new Date().toISOString().split('T')[0],
         operating_since: operatingSince || '2026',
-        rcmc_suggestions: rcmcSuggestions
+        rcmc_suggestions: rcmcSuggestions,
+        primary_industry: primaryIndustry,
+        export_experience: exportExperience,
+        target_regions: targetRegions
       });
       await refreshUser();
       toast.success('Level 2 Exporter Profile saved! Earned +100 XP');
     } catch (e) {
-      toast.error('Failed to save Level 2.');
+      toast.error('Failed to save Level 2: ' + e.message);
     }
   };
 
@@ -832,155 +835,230 @@ export default function OnboardingWizard() {
 
         {/* LEVEL 2: EXPORTER PROFILE */}
         {currentLevel === 2 && (
-          <div className="space-y-8 animate-fade-in">
-            <header className="mb-8">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h1 className="font-display font-extrabold text-3xl text-white">Level 2: Exporter Profile</h1>
-                  <p className="text-on-surface-variant text-sm mt-1">Specify your enterprise category and get RCMC regulatory suggestions.</p>
-                </div>
-                <div className="hidden md:flex flex-col items-end">
-                  <span className="text-xs text-primary font-bold">2/6 COMPLETE</span>
-                  <div className="flex gap-1 mt-2">
-                    <div className="h-1.5 w-6 bg-green-600 rounded-full"></div>
-                    <div className="h-1.5 w-6 bg-primary rounded-full"></div>
-                    <div className="h-1.5 w-6 bg-surface-container-highest rounded-full"></div>
-                    <div className="h-1.5 w-6 bg-surface-container-highest rounded-full"></div>
-                    <div className="h-1.5 w-6 bg-surface-container-highest rounded-full"></div>
-                    <div className="h-1.5 w-6 bg-surface-container-highest rounded-full"></div>
-                  </div>
-                </div>
-              </div>
-            </header>
+          <div className="space-y-8 animate-fade-in max-w-7xl">
+            {/* Header */}
+            <div className="text-center space-y-2 mb-8">
+              <span className="px-3 py-1 bg-primary/10 border border-primary/20 text-primary text-[10px] font-bold uppercase tracking-widest rounded-full">
+                Quest Step 02
+              </span>
+              <h1 className="font-display font-extrabold text-3xl md:text-4xl text-white">Refine Your Exporter DNA</h1>
+              <p className="text-on-surface-variant text-sm max-w-2xl mx-auto">
+                Help us calibrate your Export Command Center by selecting your industry expertise and operational scale.
+              </p>
+            </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-              <div className="lg:col-span-8 space-y-6">
-                <div className="glass-card rounded-2xl p-8 space-y-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-xs font-semibold uppercase tracking-wider text-on-surface-variant mb-2">Exporter Type</label>
-                      <select
-                        value={exporterType}
-                        onChange={(e) => setExporterType(e.target.value)}
-                        className="w-full px-4 py-3 bg-[#031037]/80 rounded-xl border border-white/10 text-white text-sm"
-                        data-testid="exporter-type-select"
-                      >
-                        <option value="Merchant">Merchant Exporter</option>
-                        <option value="Manufacturer">Manufacturer Exporter</option>
-                        <option value="Service">Service Exporter</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block text-xs font-semibold uppercase tracking-wider text-on-surface-variant mb-2">Primary Business Model</label>
-                      <select
-                        value={businessModel}
-                        onChange={(e) => setBusinessModel(e.target.value)}
-                        className="w-full px-4 py-3 bg-[#031037]/80 rounded-xl border border-white/10 text-white text-sm"
-                        data-testid="business-model-select"
-                      >
-                        <option value="B2B">B2B Wholesale</option>
-                        <option value="B2C">B2C Retail</option>
-                        <option value="D2C">D2C eCommerce</option>
-                      </select>
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-semibold uppercase tracking-wider text-on-surface-variant mb-2">Export Products / Focus Intent</label>
-                    <textarea
-                      value={exportIntent}
-                      onChange={(e) => setExportIntent(e.target.value)}
-                      className="w-full px-4 py-3 bg-[#031037]/80 rounded-xl border border-white/10 text-white text-sm h-24"
-                      placeholder="e.g. Organic Basmati Rice, Cotton Garments, Handicrafts..."
-                      data-testid="export-intent-input"
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div>
-                      <label className="block text-xs font-semibold uppercase tracking-wider text-on-surface-variant mb-2">Target Shipments / Year</label>
-                      <input
-                        type="text"
-                        value={shipmentsRange}
-                        onChange={(e) => setShipmentsRange(e.target.value)}
-                        className="w-full px-4 py-3 bg-[#031037]/80 rounded-xl border border-white/10 text-white text-sm"
-                        placeholder="e.g. 10 - 50"
-                        data-testid="shipments-range-input"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-semibold uppercase tracking-wider text-on-surface-variant mb-2">IEC Registration Date</label>
-                      <input
-                        type="date"
-                        value={regDate}
-                        onChange={(e) => setRegDate(e.target.value)}
-                        className="w-full px-4 py-3 bg-[#031037]/80 rounded-xl border border-white/10 text-white text-sm"
-                        data-testid="registration-date-input"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-semibold uppercase tracking-wider text-on-surface-variant mb-2">Operating Since (Year)</label>
-                      <input
-                        type="text"
-                        value={operatingSince}
-                        onChange={(e) => setOperatingSince(e.target.value)}
-                        className="w-full px-4 py-3 bg-[#031037]/80 rounded-xl border border-white/10 text-white text-sm"
-                        placeholder="e.g. 2020"
-                        data-testid="operating-since-input"
-                      />
-                    </div>
-                  </div>
-
-                  {/* AI Suggestions widget */}
-                  <div className="border-t border-white/5 pt-4 space-y-4">
-                    <div className="flex justify-between items-center">
-                      <span className="text-xs font-semibold uppercase tracking-wider text-on-surface-variant">RCMC Regulatory Councils</span>
-                      <button 
-                        type="button" 
-                        onClick={suggestRcmc}
-                        disabled={fetchingSuggestions}
-                        className="px-3 py-2 bg-primary/10 hover:bg-primary/20 border border-primary/20 text-primary rounded-xl text-xs font-bold flex items-center gap-1 transition-all"
-                        data-testid="rcmc-ai-button"
-                      >
-                        <Sparkle size={14} />
-                        Ask AI for Suggestions
-                      </button>
-                    </div>
-
-                    {rcmcSuggestions.length > 0 && (
-                      <div className="bg-[#031037]/60 border border-white/10 p-4 rounded-xl space-y-2">
-                        <span className="block text-[10px] text-primary uppercase font-bold tracking-wider">Suggested Councils</span>
-                        <ul className="list-disc pl-4 space-y-1 text-xs text-white">
-                          {rcmcSuggestions.map((s, i) => <li key={i}>{s}</li>)}
-                        </ul>
+              
+              {/* Left Column: Progress Card */}
+              <div className="lg:col-span-3 space-y-6">
+                <div className="glass-card rounded-2xl p-6 border border-white/5 space-y-6">
+                  <h4 className="font-bold text-xs uppercase tracking-widest text-on-surface-variant">Your Progress</h4>
+                  
+                  <div className="space-y-4">
+                    {/* Identity (Completed) */}
+                    <div className="flex items-center gap-3">
+                      <div className="w-6 h-6 rounded-full bg-primary/20 border border-primary/30 flex items-center justify-center text-primary">
+                        <Check size={14} />
                       </div>
-                    )}
-                  </div>
-                </div>
+                      <div>
+                        <p className="font-bold text-white text-xs">Identity</p>
+                        <p className="text-[10px] text-green-400">Completed</p>
+                      </div>
+                    </div>
 
-                <div className="flex justify-end pt-4 border-t border-white/10">
-                  <button 
-                    type="button"
-                    onClick={submitLevel2}
-                    className="px-8 py-3 bg-primary-container hover:bg-blue-600 text-white font-bold rounded-xl flex items-center gap-2 transition-all"
-                    data-testid="submit-level-2"
-                  >
-                    Save & Continue
-                    <ArrowRight size={16} />
-                  </button>
+                    {/* Exporter Profile (In Progress) */}
+                    <div className="flex items-center gap-3">
+                      <div className="w-6 h-6 rounded-full bg-surface-container-highest border border-primary text-primary flex items-center justify-center text-xs font-bold animate-pulse">
+                        02
+                      </div>
+                      <div>
+                        <p className="font-bold text-white text-xs">Exporter Profile</p>
+                        <p className="text-[10px] text-primary">In Progress</p>
+                      </div>
+                    </div>
+
+                    {/* Market Strategy (Upcoming) */}
+                    <div className="flex items-center gap-3 opacity-40">
+                      <div className="w-6 h-6 rounded-full bg-surface-container-low border border-white/10 text-on-surface-variant flex items-center justify-center text-xs font-bold">
+                        03
+                      </div>
+                      <div>
+                        <p className="font-bold text-white text-xs">Market Strategy</p>
+                        <p className="text-[10px] text-on-surface-variant">Upcoming</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* XP Bar */}
+                  <div className="pt-4 border-t border-white/5">
+                    <div className="flex justify-between text-[10px] font-bold text-on-surface-variant mb-1">
+                      <span>XP Earned</span>
+                      <span>450 / 1000</span>
+                    </div>
+                    <div className="w-full bg-white/10 h-1.5 rounded-full overflow-hidden">
+                      <div className="bg-primary h-full" style={{ width: '45%' }}></div>
+                    </div>
+                  </div>
                 </div>
               </div>
 
-              <div className="lg:col-span-4 space-y-6">
-                <div className="bg-primary/5 border border-primary/20 rounded-2xl p-6">
-                  <h5 className="font-bold text-xs text-primary mb-2 flex items-center gap-1.5">
-                    <Sparkle size={14} />
-                    Why Exporter Profile Details Matter
-                  </h5>
-                  <p className="text-xs text-on-surface leading-relaxed">
-                    Specifying your exporter type and focus products lets Eximarg custom-tailor export intelligence, trade agreements, and direct lead channels matching your operational capacity.
-                  </p>
+              {/* Center Content: Interactive Options */}
+              <div className="lg:col-span-9 space-y-8">
+                
+                {/* Primary Industry */}
+                <div className="space-y-4">
+                  <h3 className="font-bold text-sm text-white flex items-center gap-2">
+                    <Building size={18} className="text-primary" />
+                    Primary Industry
+                  </h3>
+                  
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    {[
+                      { id: 'Textiles', label: 'Textiles', icon: TShirt },
+                      { id: 'Agri-Products', label: 'Agri-Products', icon: Leaf },
+                      { id: 'Engineering', label: 'Engineering', icon: Gear },
+                      { id: 'Chemicals', label: 'Chemicals', icon: Flask }
+                    ].map((ind) => {
+                      const Icon = ind.icon;
+                      const isSel = primaryIndustry === ind.id;
+                      return (
+                        <div 
+                          key={ind.id}
+                          onClick={() => setPrimaryIndustry(ind.id)}
+                          className={`glass-card p-6 rounded-2xl border cursor-pointer flex flex-col items-center justify-center gap-3 text-center transition-all ${
+                            isSel ? 'border-primary bg-primary/10 shadow-lg scale-105' : 'border-white/5 bg-surface-container-low hover:bg-white/5'
+                          }`}
+                        >
+                          <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${
+                            isSel ? 'bg-primary/25 text-white' : 'bg-white/5 text-on-surface-variant'
+                          }`}>
+                            <Icon size={24} />
+                          </div>
+                          <span className={`text-xs font-bold ${isSel ? 'text-white' : 'text-on-surface-variant'}`}>{ind.label}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
+
+                {/* Export Experience */}
+                <div className="space-y-4">
+                  <h3 className="font-bold text-sm text-white flex items-center gap-2">
+                    <Rocket size={18} className="text-primary" />
+                    Export Experience
+                  </h3>
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {[
+                      { id: 'New Exporter', label: 'New Exporter', desc: 'Just starting the journey. Ready to learn the ropes of global trade.', icon: Rocket },
+                      { id: '1-3 Years', label: '1-3 Years', desc: 'Established domestic player scaling to international horizons.', icon: Waves },
+                      { id: '5+ Years', label: '5+ Years', desc: 'High-volume veteran looking for velocity and optimization.', icon: Globe }
+                    ].map((exp) => {
+                      const Icon = exp.icon;
+                      const isSel = exportExperience === exp.id;
+                      return (
+                        <div 
+                          key={exp.id}
+                          onClick={() => setExportExperience(exp.id)}
+                          className={`glass-card p-6 rounded-2xl border cursor-pointer flex flex-col gap-3 transition-all ${
+                            isSel ? 'border-primary bg-primary/10 shadow-lg scale-[1.02]' : 'border-white/5 bg-surface-container-low hover:bg-white/5'
+                          }`}
+                        >
+                          <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
+                            isSel ? 'bg-primary/20 text-white' : 'bg-white/5 text-on-surface-variant'
+                          }`}>
+                            <Icon size={20} />
+                          </div>
+                          <div>
+                            <h4 className={`text-xs font-bold ${isSel ? 'text-white' : 'text-on-surface-variant'}`}>{exp.label}</h4>
+                            <p className="text-[10px] text-on-surface-variant mt-1 leading-relaxed">{exp.desc}</p>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Target Markets */}
+                <div className="space-y-4">
+                  <h3 className="font-bold text-sm text-white flex items-center gap-2">
+                    <Globe size={18} className="text-primary" />
+                    Target Markets
+                  </h3>
+
+                  <div className="glass-card rounded-2xl border border-white/5 p-6 grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
+                    <div className="space-y-4">
+                      <span className="block text-xs font-bold text-on-surface-variant">Select Regions</span>
+                      <div className="flex flex-wrap gap-2">
+                        {targetRegions.map((region) => (
+                          <div key={region} className="px-3 py-1.5 bg-[#031037] border border-white/10 rounded-full text-xs font-semibold text-white flex items-center gap-2">
+                            <span>{region}</span>
+                            <button 
+                              onClick={() => setTargetRegions(targetRegions.filter(r => r !== region))}
+                              className="text-on-surface-variant hover:text-white"
+                            >
+                              ×
+                            </button>
+                          </div>
+                        ))}
+                        <button 
+                          onClick={() => {
+                            const newReg = prompt('Enter a target region (e.g. Middle East, Latin America):');
+                            if (newReg) setTargetRegions([...targetRegions, newReg]);
+                          }}
+                          className="px-3 py-1.5 bg-white/5 border border-white/10 hover:bg-white/10 rounded-full text-xs font-semibold text-white flex items-center gap-1.5"
+                        >
+                          + Add Region
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Global corridor active graphic panel */}
+                    <div className="relative rounded-xl overflow-hidden aspect-video bg-[#031037]/80 border border-white/10 flex items-center justify-center p-4">
+                      {/* Simulated map lines */}
+                      <div className="w-full h-full border border-white/5 rounded-lg relative overflow-hidden flex items-center justify-center bg-gradient-to-br from-primary/10 to-transparent">
+                        <div className="absolute inset-0 opacity-10 flex flex-wrap gap-1 p-2 justify-center">
+                          {Array.from({ length: 40 }).map((_, i) => (
+                            <div key={i} className="w-4 h-4 bg-white rounded-full"></div>
+                          ))}
+                        </div>
+                        <div className="relative z-10 flex flex-col items-center gap-2">
+                          <MapPin size={24} className="text-primary animate-bounce" />
+                          <span className="text-[10px] font-bold text-white uppercase tracking-wider flex items-center gap-1 bg-[#000a31]/90 px-3 py-1 rounded-full border border-white/10">
+                            GLOBAL CORRIDOR ACTIVE
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Bottom Actions Row */}
+                <div className="flex flex-col md:flex-row justify-between items-center gap-4 pt-6 border-t border-white/10">
+                  <div className="flex items-center gap-2 text-[10px] text-on-surface-variant font-medium">
+                    <Question size={14} />
+                    You can always update these preferences later in Settings.
+                  </div>
+                  
+                  <div className="flex items-center gap-3">
+                    <button 
+                      type="button" 
+                      onClick={() => toast.success('Progress saved as draft.')}
+                      className="px-6 py-3 bg-[#031037] border border-white/10 hover:bg-white/5 text-white font-bold rounded-full text-xs transition-all"
+                    >
+                      Save Draft
+                    </button>
+                    <button 
+                      type="button"
+                      onClick={submitLevel2}
+                      className="px-8 py-3 bg-gradient-to-r from-primary-container to-blue-600 hover:opacity-90 text-white font-bold rounded-full text-xs flex items-center gap-2 shadow-lg shadow-primary/20"
+                      data-testid="submit-level-2"
+                    >
+                      Continue Quest →
+                    </button>
+                  </div>
+                </div>
+
               </div>
             </div>
           </div>
