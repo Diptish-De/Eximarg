@@ -4,7 +4,8 @@ import { toast } from 'sonner';
 
 const UserContext = createContext(null);
 
-const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:8000';
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 
+  (typeof window !== 'undefined' && window.location.hostname === 'localhost' ? 'http://localhost:8000' : '');
 
 export const api = axios.create({
   baseURL: BACKEND_URL,
