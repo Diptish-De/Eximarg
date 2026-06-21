@@ -358,6 +358,19 @@ export default function CommandCenter() {
     setShowInvoiceWizard(false);
   };
 
+  const handleContinueQuest = () => {
+    if (currentLevel < 7) {
+      navigate('/wizard');
+    } else if (currentLevel === 7) {
+      setActiveTab('orders');
+      startNewInvoice();
+    } else if (currentLevel === 8) {
+      setActiveTab('conversations');
+    } else if (currentLevel === 9) {
+      setActiveTab('deal');
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background text-on-surface font-sans flex">
       {/* Sidebar Navigation */}
@@ -432,7 +445,7 @@ export default function CommandCenter() {
                   </div>
 
                   <button
-                    onClick={() => navigate(currentLevel >= 7 ? '/dashboard' : '/wizard')}
+                    onClick={handleContinueQuest}
                     className="px-8 py-3.5 bg-primary-container hover:bg-blue-600 text-white font-bold rounded-full transition-all flex items-center gap-2"
                   >
                     Continue Quest →
@@ -494,7 +507,7 @@ export default function CommandCenter() {
                     <p className="text-on-surface-variant text-xs mt-1">{priority.desc}</p>
                   </div>
                   <button 
-                    onClick={() => navigate(priority.route === 'orders' ? handleTabClick('orders') : '/wizard')}
+                    onClick={handleContinueQuest}
                     className="w-full py-3 bg-white/5 border border-white/10 hover:bg-white/10 text-white font-bold text-xs rounded-xl transition-all"
                   >
                     Launch Task
