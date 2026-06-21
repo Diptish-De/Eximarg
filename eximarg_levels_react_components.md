@@ -1204,43 +1204,259 @@ export function Level4CompanyReview({ onSubmit, onSimulateApproval, defaultData 
 ## Level 5: Subscription Activation
 ```jsx
 import React, { useState } from 'react';
-import { CreditCard, Sparkle } from '@phosphor-icons/react';
+import { ShieldCheck, Check, Lightning, MapPin, Shield, Gauge, Trophy, Gear, Building, Waves, CreditCard } from '@phosphor-icons/react';
 
 export function Level5Subscription({ onSubmit }) {
   const [selectedPlan, setSelectedPlan] = useState('growth');
 
-  const plans = [
-    { id: 'starter', name: 'Starter Plan', price: '₹999/mo', desc: '50 AI calls/mo + Custom Invoicing' },
-    { id: 'growth', name: 'Growth Plan', price: '₹2,999/mo', desc: '200 AI calls/mo + Bulk Catalog Import' },
-    { id: 'premium', name: 'Premium Plan', price: '₹7,999/mo', desc: 'Unlimited AI + Letters of Credit verification' }
-  ];
+  const handleActivate = (planId) => {
+    setSelectedPlan(planId);
+    onSubmit(planId);
+  };
 
   return (
-    <div className="glass-card rounded-2xl p-8 space-y-6 max-w-3xl">
-      <div className="flex items-center gap-3 border-b border-white/5 pb-4">
-        <CreditCard size={24} className="text-primary" />
-        <h3 className="font-display font-bold text-lg text-white">Select Export Tier</h3>
+    <div className="space-y-8 animate-fade-in max-w-7xl text-left">
+      {/* Header */}
+      <div className="text-center space-y-3 mb-8">
+        <div className="inline-flex items-center gap-1.5 bg-primary/10 border border-primary/20 text-primary text-[10px] font-bold uppercase tracking-wider px-3 py-1 rounded-full">
+          <ShieldCheck size={12} />
+          Enterprise Ready
+        </div>
+        <h1 className="font-display font-extrabold text-3xl md:text-5xl text-white">Level 5: Subscription Activation</h1>
+        <p className="text-on-surface-variant text-sm md:text-base max-w-3xl mx-auto font-medium">
+          Scale your export operations with the velocity of Indian global commerce. Choose the engine that fits your growth.
+        </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {plans.map((p) => (
-          <div 
-            key={p.id} 
-            onClick={() => setSelectedPlan(p.id)}
-            className={`border rounded-2xl p-6 cursor-pointer transition-all ${
-              selectedPlan === p.id ? 'border-primary bg-primary/10 shadow-lg' : 'border-white/5 bg-[#031037]/40 hover:bg-[#031037]/60'
-            }`}
-          >
-            <h4 className="font-bold text-white text-sm">{p.name}</h4>
-            <p className="text-xl font-black text-primary mt-2">{p.price}</p>
-            <p className="text-[11px] text-on-surface-variant mt-2 leading-relaxed">{p.desc}</p>
+      {/* Plan Cards Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-stretch">
+        
+        {/* TIER 1: Silver */}
+        <div className="glass-card rounded-3xl p-8 border border-white/5 bg-[#031037]/40 flex flex-col justify-between space-y-8 relative hover:border-primary/20 transition-all duration-300">
+          <div className="space-y-6">
+            <div>
+              <span className="text-[10px] font-bold text-on-surface-variant uppercase tracking-wider block">Tier I</span>
+              <h3 className="text-2xl font-black text-white mt-1">Silver</h3>
+              <p className="text-xs text-on-surface-variant mt-1">Foundational Export Tools</p>
+            </div>
+            
+            <div className="flex items-baseline gap-1">
+              <span className="text-4xl font-black text-white">$0</span>
+              <span className="text-xs text-on-surface-variant">/mo</span>
+            </div>
+
+            <ul className="space-y-4 text-xs">
+              <li className="flex items-center gap-2.5 text-white">
+                <div className="w-4 h-4 rounded-full bg-green-500/20 border border-green-500/30 flex items-center justify-center text-green-400">
+                  <Check size={10} />
+                </div>
+                <span>Standard HSN Lookup</span>
+              </li>
+              <li className="flex items-center gap-2.5 text-white">
+                <div className="w-4 h-4 rounded-full bg-green-500/20 border border-green-500/30 flex items-center justify-center text-green-400">
+                  <Check size={10} />
+                </div>
+                <span>Basic Order Tracking</span>
+              </li>
+              <li className="flex items-center gap-2.5 text-white">
+                <div className="w-4 h-4 rounded-full bg-green-500/20 border border-green-500/30 flex items-center justify-center text-green-400">
+                  <Check size={10} />
+                </div>
+                <span>Community Support</span>
+              </li>
+              <li className="flex items-center gap-2.5 text-on-surface-variant/50">
+                <svg className="w-4 h-4 text-red-500 shrink-0" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" /></svg>
+                <span>No Trust Score Boost</span>
+              </li>
+            </ul>
           </div>
-        ))}
+
+          <button
+            type="button"
+            onClick={() => handleActivate('starter')}
+            className="w-full py-3.5 bg-white/5 hover:bg-white/10 text-white font-bold rounded-xl text-xs transition-all border border-white/10"
+          >
+            Current Plan
+          </button>
+        </div>
+
+        {/* TIER 2: Gold (Most Popular) */}
+        <div className="glass-card rounded-3xl p-8 border-2 border-primary bg-[#06143c] flex flex-col justify-between space-y-8 relative shadow-2xl shadow-primary/10">
+          <span className="absolute -top-3.5 right-6 px-3 py-1 bg-primary text-white text-[9px] font-black uppercase tracking-wider rounded-full">
+            Most Popular
+          </span>
+
+          <div className="space-y-6">
+            <div>
+              <span className="text-[10px] font-bold text-primary uppercase tracking-wider block">Tier II</span>
+              <h3 className="text-2xl font-black text-white mt-1">Gold</h3>
+              <p className="text-xs text-on-surface-variant mt-1">Accelerated Global Scale</p>
+            </div>
+            
+            <div className="flex items-baseline gap-1">
+              <span className="text-4xl font-black text-white">$149</span>
+              <span className="text-xs text-on-surface-variant">/mo</span>
+            </div>
+
+            <ul className="space-y-4 text-xs">
+              <li className="flex items-center gap-2.5 text-white">
+                <Lightning size={16} className="text-primary shrink-0 animate-pulse" />
+                <span>AI HSN Suggestion <strong className="text-[9px] font-normal text-on-surface-variant block">Automated classification engine</strong></span>
+              </li>
+              <li className="flex items-center gap-2.5 text-white">
+                <MapPin size={16} className="text-primary shrink-0" />
+                <span>Live Logistics Tracking</span>
+              </li>
+              <li className="flex items-center gap-2.5 text-white">
+                <Shield size={16} className="text-primary shrink-0" />
+                <span>Trust Score Boost (Level 1)</span>
+              </li>
+              <li className="flex items-center gap-2.5 text-white">
+                <Gauge size={16} className="text-primary shrink-0" />
+                <span>24/7 Priority Access</span>
+              </li>
+            </ul>
+          </div>
+
+          <div className="space-y-4 pt-4 border-t border-white/5">
+            <div>
+              <div className="flex justify-between text-[9px] font-bold text-on-surface-variant mb-1">
+                <span>XP Progress towards Platinum</span>
+                <span>45%</span>
+              </div>
+              <div className="w-full bg-white/10 h-1 rounded-full overflow-hidden">
+                <div className="bg-primary h-full" style={{ width: '45%' }}></div>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => handleActivate('growth')}
+              className="w-full py-3.5 bg-primary hover:bg-blue-600 text-white font-bold rounded-xl text-xs transition-all shadow-lg shadow-primary/20"
+              data-testid="mock-subscription-button"
+            >
+              Activate Gold
+            </button>
+          </div>
+        </div>
+
+        {/* TIER 3: Platinum */}
+        <div className="glass-card rounded-3xl p-8 border border-white/5 bg-[#031037]/40 flex flex-col justify-between space-y-8 relative hover:border-primary/20 transition-all duration-300">
+          <div className="space-y-6">
+            <div>
+              <span className="text-[10px] font-bold text-on-surface-variant uppercase tracking-wider block">Tier III</span>
+              <h3 className="text-2xl font-black text-white mt-1">Platinum</h3>
+              <p className="text-xs text-on-surface-variant mt-1">Enterprise Sovereign Control</p>
+            </div>
+            
+            <div className="flex items-baseline gap-1">
+              <span className="text-4xl font-black text-white">$499</span>
+              <span className="text-xs text-on-surface-variant">/mo</span>
+            </div>
+
+            <ul className="space-y-4 text-xs">
+              <li className="flex items-center gap-2.5 text-white">
+                <Trophy size={16} className="text-primary shrink-0" />
+                <span>Max Trust Score Boost</span>
+              </li>
+              <li className="flex items-center gap-2.5 text-white">
+                <Gear size={16} className="text-primary shrink-0" />
+                <span>Custom ERP Integration</span>
+              </li>
+              <li className="flex items-center gap-2.5 text-white">
+                <ShieldCheck size={16} className="text-primary shrink-0" />
+                <span>Dedicated Trade Compliance Officer</span>
+              </li>
+              <li className="flex items-center gap-2.5 text-white">
+                <Building size={16} className="text-primary shrink-0" />
+                <span>Unlimited Team Seats</span>
+              </li>
+            </ul>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => handleActivate('premium')}
+            className="w-full py-3.5 bg-white/5 hover:bg-white/10 text-white font-bold rounded-xl text-xs transition-all border border-white/10"
+          >
+            Talk to Enterprise
+          </button>
+        </div>
+
       </div>
 
-      <button onClick={() => onSubmit(selectedPlan)} className="w-full py-4 bg-primary text-white font-bold rounded-xl text-sm flex items-center justify-center gap-2">
-        Activate Export Subscription <Sparkle size={16} />
-      </button>
+      {/* Footer rights & links */}
+      <div className="flex flex-col md:flex-row justify-between items-center gap-4 text-[10px] text-on-surface-variant font-medium pt-4">
+        <span>© 2024 EXIMARG Technologies. All rights reserved.</span>
+        <div className="flex gap-4">
+          <a href="#privacy" className="hover:text-white transition-colors">Privacy Policy</a>
+          <a href="#terms" className="hover:text-white transition-colors">Terms of Service</a>
+          <a href="#security" className="hover:text-white transition-colors">Security</a>
+        </div>
+      </div>
+
+      {/* Next-Gen Export Intelligence Section */}
+      <div className="space-y-6 pt-12 border-t border-white/5">
+        <h3 className="text-center font-display font-extrabold text-xl md:text-2xl text-white">
+          Next-Gen Export Intelligence
+        </h3>
+        
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+          <div className="glass-card p-6 rounded-2xl border border-white/5 bg-[#031037]/20 space-y-3">
+            <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
+              <Lightning size={18} />
+            </div>
+            <h4 className="font-bold text-white text-xs">AI HSN Suggestion</h4>
+            <p className="text-[10px] text-on-surface-variant leading-relaxed">
+              Instant, legally-compliant Harmonized System codes for your global inventory.
+            </p>
+          </div>
+
+          <div className="glass-card p-6 rounded-2xl border border-white/5 bg-[#031037]/20 space-y-3">
+            <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
+              <Waves size={18} />
+            </div>
+            <h4 className="font-bold text-white text-xs">Live Logistics</h4>
+            <p className="text-[10px] text-on-surface-variant leading-relaxed">
+              Real-time port and sea tracking with predictive delay alerts.
+            </p>
+          </div>
+
+          <div className="glass-card p-6 rounded-2xl border border-white/5 bg-[#031037]/20 space-y-3">
+            <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
+              <ShieldCheck size={18} />
+            </div>
+            <h4 className="font-bold text-white text-xs">Trust Score Boost</h4>
+            <p className="text-[10px] text-on-surface-variant leading-relaxed">
+              Verified credentials that increase buyer confidence by up to 40%.
+            </p>
+          </div>
+
+          <div className="glass-card p-6 rounded-2xl border border-white/5 bg-[#031037]/20 space-y-3">
+            <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
+              <CreditCard size={18} />
+            </div>
+            <h4 className="font-bold text-white text-xs">Trade Finance</h4>
+            <p className="text-[10px] text-on-surface-variant leading-relaxed">
+              Unlock credit lines based on your trade performance history.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Trusted Logos Section */}
+      <div className="space-y-4 pt-8 text-center">
+        <span className="text-[9px] font-bold text-on-surface-variant uppercase tracking-widest block">
+          Trusted by Global Exporters
+        </span>
+        <div className="flex flex-wrap justify-center items-center gap-10 opacity-30 text-white font-display font-black text-sm tracking-widest py-2">
+          <span>TECHSHIP</span>
+          <span>INDUSCO</span>
+          <span>MODERNLOG</span>
+          <span>GLOBALSENSE</span>
+        </div>
+      </div>
+
     </div>
   );
 }
