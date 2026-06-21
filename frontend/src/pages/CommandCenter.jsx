@@ -97,16 +97,32 @@ export default function CommandCenter() {
   const priority = getPriority();
 
   // Load products, invoices, and documents
+  const isDemo = typeof localStorage !== 'undefined' && localStorage.getItem('eximarg_demo') === 'true';
+
   const loadData = async () => {
+    // In demo mode (no backend), skip all API calls and use mock data
+    if (isDemo) {
+      setProducts([
+        { id: 'demo-1', name: 'Basmati Rice (1121 Sella)', hsn: '1006.30', price_min: 850, price_max: 1200, unit: 'MT', moq: 25, origin: 'India' },
+        { id: 'demo-2', name: 'Organic Turmeric Powder', hsn: '0910.30', price_min: 120, price_max: 180, unit: 'kg', moq: 500, origin: 'India' },
+        { id: 'demo-3', name: 'Cotton Bedsheets (King)', hsn: '6302.21', price_min: 8, price_max: 15, unit: 'piece', moq: 1000, origin: 'India' }
+      ]);
+      setInvoices([
+        { id: 'INV-001', buyer_name: 'Global Grain Corp', total: 21250, status: 'dispatched', date: '2026-06-15' }
+      ]);
+      setExtraDocs([]);
+      return;
+    }
+
     try {
       const prodRes = await api.get('/api/products');
-      setProducts(prodRes.data);
+      setProducts(Array.isArray(prodRes.data) ? prodRes.data : []);
       const invRes = await api.get('/api/orders');
-      setInvoices(invRes.data);
+      setInvoices(Array.isArray(invRes.data) ? invRes.data : []);
       const docRes = await api.get('/api/profile/extra-documents');
-      setExtraDocs(docRes.data || []);
+      setExtraDocs(Array.isArray(docRes.data) ? docRes.data : []);
     } catch (e) {
-      console.error(e);
+      console.error('Failed to load data:', e);
     }
   };
 
