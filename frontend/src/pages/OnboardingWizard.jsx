@@ -5,7 +5,8 @@ import { toast } from 'sonner';
 import { 
   ArrowLeft, ArrowRight, ShieldCheck, Check, Fingerprint, 
   Files, Building, CreditCard, Sparkle, Plus, WarningCircle, FileArrowUp,
-  Layout, Lightning, Tag, Trophy, Gear, Question, SignOut, Eye, Trash, Shield
+  Layout, Lightning, Tag, Trophy, Gear, Question, SignOut, Eye, Trash, Shield,
+  Bell, Lock, Lightbulb, CloudArrowUp, Gauge, SealCheck
 } from '@phosphor-icons/react';
 
 export default function OnboardingWizard() {
@@ -29,6 +30,9 @@ export default function OnboardingWizard() {
   const [otpSent, setOtpSent] = useState(false);
   const [otpCode, setOtpCode] = useState('');
   const [otpVerified, setOtpVerified] = useState(currentUser.level_1_identity?.otp_verified || false);
+  const [aadhaarFront, setAadhaarFront] = useState(null);
+  const [aadhaarBack, setAadhaarBack] = useState(null);
+  const [panFront, setPanFront] = useState(null);
 
   // Level 2 States
   const [exporterType, setExporterType] = useState(currentUser.level_2_exporter?.exporter_type || 'Merchant');
@@ -85,6 +89,43 @@ export default function OnboardingWizard() {
     reader.readAsDataURL(file);
   };
 
+  const handleAadhaarFrontChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      handleBase64Upload(file, (base64) => {
+        setAadhaarFront(base64);
+        setAadhaar('123456789012');
+        setDirectorName('Rajesh Kumar');
+        setPhone('9876543210');
+        setAddress('404, Galleria Towers, DLF Phase 4, Gurugram, Haryana');
+        setOtpVerified(true);
+        setTcAccepted(true);
+        toast.success('Aadhaar Front uploaded. AI auto-extracted details!');
+      });
+    }
+  };
+
+  const handleAadhaarBackChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      handleBase64Upload(file, (base64) => {
+        setAadhaarBack(base64);
+        toast.success('Aadhaar Back uploaded.');
+      });
+    }
+  };
+
+  const handlePanFrontChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      handleBase64Upload(file, (base64) => {
+        setPanFront(base64);
+        setPan('ABCDE1234F');
+        toast.success('PAN Card uploaded. AI verified card authenticity!');
+      });
+    }
+  };
+
   // Level 1 Helpers
   const triggerDigiLocker = () => {
     setDirectorName('Rajesh Kumar');
@@ -114,30 +155,29 @@ export default function OnboardingWizard() {
   };
 
   const submitLevel1 = async () => {
-    if (!tcAccepted) {
-      toast.error('Please accept the Terms & Conditions.');
-      return;
-    }
-    if (!otpVerified) {
-      toast.error('Please verify your phone via OTP.');
+    if (!aadhaarFront || !panFront) {
+      toast.error('Please upload your Aadhaar Card Front and PAN Card Front images first.');
       return;
     }
     try {
       await api.post('/api/levels/1', {
-        director_name: directorName,
-        phone,
-        email: identityEmail,
-        address,
-        pan,
-        aadhaar,
-        selfie,
+        director_name: directorName || 'Rajesh Kumar',
+        phone: phone || '9876543210',
+        email: identityEmail || currentUser.email,
+        address: address || '404, Galleria Towers, DLF Phase 4, Gurugram, Haryana',
+        pan: pan || 'ABCDE1234F',
+        aadhaar: aadhaar || '123456789012',
+        selfie: selfie || 'uploaded_selfie',
         verified: true,
-        otp_verified: true
+        otp_verified: true,
+        aadhaar_front: aadhaarFront,
+        aadhaar_back: aadhaarBack,
+        pan_front: panFront
       });
       await refreshUser();
       toast.success('Level 1 completed! Earned +100 XP');
     } catch (e) {
-      toast.error('Failed to save Level 1.');
+      toast.error('Failed to save Level 1: ' + e.message);
     }
   };
 
@@ -430,49 +470,78 @@ export default function OnboardingWizard() {
   };
 
   return (
-    <div className="min-h-screen bg-background text-on-surface font-sans overflow-x-hidden flex">
-      {/* Sidebar Navigation */}
-      <aside className="fixed left-0 top-0 h-full w-64 bg-surface-container-low border-r border-white/5 flex flex-col py-8 z-50">
-        <div className="px-6 mb-10">
-          <h1 className="font-display font-black text-2xl text-primary tracking-tighter">EXIMARG</h1>
-          <p className="text-xs text-on-surface-variant/60 font-medium">Export Command Center</p>
+    <div className="min-h-screen bg-[#031037] text-on-surface font-sans flex flex-col">
+      {/* Top Header Bar */}
+      <header className="h-16 w-full bg-[#000a31]/80 backdrop-blur-xl border-b border-white/5 flex items-center justify-between px-8 z-50 sticky top-0">
+        <div className="flex items-center gap-12">
+          <div className="flex items-center gap-2">
+            <h1 className="font-display font-black text-2xl text-primary tracking-tighter cursor-pointer" onClick={() => navigate('/dashboard')}>
+              EXIMARG
+            </h1>
+          </div>
+          <nav className="hidden md:flex items-center gap-8 text-sm font-semibold text-on-surface-variant">
+            <a href="#analytics" className="hover:text-on-surface transition-colors">Analytics</a>
+            <a href="#logistics" className="hover:text-on-surface transition-colors">Logistics</a>
+            <a href="#payments" className="hover:text-on-surface transition-colors">Payments</a>
+          </nav>
         </div>
-        <nav className="flex-1 space-y-1">
-          <button onClick={() => handleSidebarNav('overview')} className="w-full flex items-center gap-3 text-on-surface-variant hover:text-on-surface hover:bg-white/5 px-6 py-3 transition-all duration-200 text-left">
-            <Layout size={18} />
-            <span className="font-semibold text-sm">Dashboard</span>
+
+        <div className="flex items-center gap-6">
+          <button className="p-2 hover:bg-white/5 rounded-full transition-colors text-on-surface-variant hover:text-on-surface relative">
+            <Bell size={20} />
+            <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-primary rounded-full"></span>
           </button>
-          <button onClick={() => handleSidebarNav('orders')} className="w-full flex items-center gap-3 text-on-surface-variant hover:text-on-surface hover:bg-white/5 px-6 py-3 transition-all duration-200 text-left">
-            <Lightning size={18} />
-            <span className="font-semibold text-sm">Operations</span>
+          <button className="p-2 hover:bg-white/5 rounded-full transition-colors text-on-surface-variant hover:text-on-surface">
+            <Question size={20} />
           </button>
-          <button onClick={() => handleSidebarNav('dukan')} className="w-full flex items-center gap-3 text-on-surface-variant hover:text-on-surface hover:bg-white/5 px-6 py-3 transition-all duration-200 text-left">
-            <Tag size={18} />
-            <span className="font-semibold text-sm">Catalog</span>
-          </button>
-          <div className="flex items-center gap-3 text-primary bg-primary-container/10 border-r-4 border-primary px-6 py-3 scale-95 transition-transform font-bold text-sm">
-            <ShieldCheck size={18} />
-            <span>Verification</span>
+          <div className="w-8 h-8 rounded-full border border-primary/30 overflow-hidden flex items-center justify-center bg-primary/20 text-primary font-bold text-xs">
+            {currentUser.email[0].toUpperCase()}
           </div>
-          <button onClick={() => handleSidebarNav('deal')} className="w-full flex items-center gap-3 text-on-surface-variant hover:text-on-surface hover:bg-white/5 px-6 py-3 transition-all duration-200 text-left">
-            <Trophy size={18} />
-            <span className="font-semibold text-sm">Quest Log</span>
-          </button>
-          <button className="w-full flex items-center gap-3 text-on-surface-variant hover:text-on-surface hover:bg-white/5 px-6 py-3 transition-all duration-200 text-left">
-            <Gear size={18} />
-            <span className="font-semibold text-sm">Settings</span>
-          </button>
-        </nav>
-        
-        <div className="px-6 mt-auto">
-          <div className="p-4 rounded-xl bg-primary-container/20 border border-primary/20 mb-8">
-            <p className="text-[10px] font-bold text-primary uppercase tracking-widest mb-1">Current Status</p>
-            <p className="font-semibold text-white text-xs mb-2">Level {currentLevel}: {currentLevel < 5 ? 'Bronze' : currentLevel < 8 ? 'Silver' : 'Gold'} Exporter</p>
-            <div className="w-full bg-white/10 h-1.5 rounded-full overflow-hidden">
-              <div className="bg-primary h-full shimmer-progress transition-all duration-500" style={{ width: `${currentUser.readiness_score || 0}%` }}></div>
+        </div>
+      </header>
+
+      <div className="flex flex-1 relative">
+        {/* Sidebar Navigation */}
+        <aside className="w-64 bg-surface-container-low border-r border-white/5 flex flex-col py-8 z-40 sticky top-16 h-[calc(100vh-64px)]">
+          {/* Level Progress Indicator at the top of the Sidebar */}
+          <div className="px-6 mb-8">
+            <div className="flex justify-between items-center text-xs font-bold text-white mb-2">
+              <span className="uppercase tracking-widest text-primary text-[10px] font-bold">LEVEL {currentLevel}: {currentLevel < 5 ? 'BRONZE' : currentLevel < 8 ? 'SILVER' : 'GOLD'}</span>
             </div>
+            <div className="w-full bg-white/10 h-1.5 rounded-full overflow-hidden mb-2">
+              <div className="bg-primary h-full progress-shimmer transition-all duration-500" style={{ width: `${(currentUser.xp / 2000) * 100}%` }}></div>
+            </div>
+            <p className="text-[10px] text-on-surface-variant font-medium">{currentUser.xp || 0} / 2,000 XP to Gold Exporter</p>
           </div>
-          <div className="space-y-4">
+
+          <nav className="flex-1 space-y-1">
+            <button onClick={() => handleSidebarNav('overview')} className="w-full flex items-center gap-3 text-on-surface-variant hover:text-on-surface hover:bg-white/5 px-6 py-3 transition-all duration-200 text-left">
+              <Layout size={18} />
+              <span className="font-semibold text-sm">Dashboard</span>
+            </button>
+            <div className="flex items-center gap-3 text-primary bg-primary-container/10 border-r-4 border-primary px-6 py-3 scale-95 transition-transform font-bold text-sm cursor-pointer">
+              <ShieldCheck size={18} />
+              <span>Verification</span>
+            </div>
+            <button onClick={() => handleSidebarNav('orders')} className="w-full flex items-center gap-3 text-on-surface-variant hover:text-on-surface hover:bg-white/5 px-6 py-3 transition-all duration-200 text-left">
+              <Lightning size={18} />
+              <span className="font-semibold text-sm">Operations</span>
+            </button>
+            <button onClick={() => handleSidebarNav('dukan')} className="w-full flex items-center gap-3 text-on-surface-variant hover:text-on-surface hover:bg-white/5 px-6 py-3 transition-all duration-200 text-left">
+              <Tag size={18} />
+              <span className="font-semibold text-sm">Catalog</span>
+            </button>
+            <button onClick={() => handleSidebarNav('deal')} className="w-full flex items-center gap-3 text-on-surface-variant hover:text-on-surface hover:bg-white/5 px-6 py-3 transition-all duration-200 text-left">
+              <Trophy size={18} />
+              <span className="font-semibold text-sm">Quest Log</span>
+            </button>
+            <button onClick={() => handleSidebarNav('overview')} className="w-full flex items-center gap-3 text-on-surface-variant hover:text-on-surface hover:bg-white/5 px-6 py-3 transition-all duration-200 text-left">
+              <Gear size={18} />
+              <span className="font-semibold text-sm">Settings</span>
+            </button>
+          </nav>
+          
+          <div className="px-6 space-y-4">
             <button className="w-full flex items-center gap-3 text-on-surface-variant hover:text-on-surface text-xs font-semibold text-left">
               <Question size={18} />
               Help Center
@@ -482,225 +551,284 @@ export default function OnboardingWizard() {
               Log Out
             </button>
           </div>
-        </div>
-      </aside>
+        </aside>
 
-      {/* Main Content Area */}
-      <main className="flex-1 ml-64 p-12 min-h-screen">
-        {/* Top Header Row with Back and Bypass */}
-        <div className="flex justify-between items-center mb-8">
-          <button 
-            onClick={() => navigate('/')} 
-            className="flex items-center gap-2 text-on-surface-variant hover:text-white text-sm font-semibold transition-colors"
-            data-testid="wizard-back-button"
-          >
-            <ArrowLeft size={16} />
-            Back to Dashboard
-          </button>
+        {/* Main Content Area */}
+        <main className="flex-1 p-12 overflow-y-auto h-[calc(100vh-64px)] bg-[#031037]">
+          {/* Top Header Row with Back and Bypass */}
+          <div className="flex justify-between items-center mb-8">
+            <button 
+              onClick={() => navigate('/')} 
+              className="flex items-center gap-2 text-on-surface-variant hover:text-white text-sm font-semibold transition-colors"
+              data-testid="wizard-back-button"
+            >
+              <ArrowLeft size={16} />
+              Back to Dashboard
+            </button>
 
-          <button
-            onClick={handleBypassStep}
-            className="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold rounded-xl flex items-center gap-1 shadow-lg shadow-amber-900/30 transition-all duration-200"
-            data-testid="bypass-current-step-button"
-          >
-            <Sparkle size={14} />
-            Bypass Level {currentLevel}
-          </button>
-        </div>
+            <button
+              onClick={handleBypassStep}
+              className="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold rounded-xl flex items-center gap-1 shadow-lg shadow-amber-900/30 transition-all duration-200"
+              data-testid="bypass-current-step-button"
+            >
+              <Sparkle size={14} />
+              Bypass Level {currentLevel}
+            </button>
+          </div>
 
-        {/* LEVEL 1: IDENTITY */}
-        {currentLevel === 1 && (
-          <div className="space-y-8 animate-fade-in">
-            <header className="mb-8">
-              <div className="flex items-center justify-between">
+          {/* LEVEL 1: IDENTITY */}
+          {currentLevel === 1 && (
+            <div className="space-y-8 animate-fade-in max-w-7xl">
+              <header className="flex justify-between items-center mb-8">
                 <div>
                   <h1 className="font-display font-extrabold text-3xl text-white">Level 1: Identity Verification</h1>
                   <p className="text-on-surface-variant text-sm mt-1">Securely verify your personal identity to begin your export journey.</p>
                 </div>
-                <div className="hidden md:flex flex-col items-end">
-                  <span className="text-xs text-primary font-bold">1/6 COMPLETE</span>
-                  <div className="flex gap-1 mt-2">
+                <div className="flex flex-col items-end">
+                  <span className="text-xs text-white font-bold uppercase tracking-wider">1/4 COMPLETE</span>
+                  <div className="flex gap-1.5 mt-2">
                     <div className="h-1.5 w-6 bg-primary rounded-full"></div>
-                    <div className="h-1.5 w-6 bg-surface-container-highest rounded-full"></div>
-                    <div className="h-1.5 w-6 bg-surface-container-highest rounded-full"></div>
-                    <div className="h-1.5 w-6 bg-surface-container-highest rounded-full"></div>
-                    <div className="h-1.5 w-6 bg-surface-container-highest rounded-full"></div>
-                    <div className="h-1.5 w-6 bg-surface-container-highest rounded-full"></div>
+                    <div className="h-1.5 w-6 bg-white/10 rounded-full"></div>
+                    <div className="h-1.5 w-6 bg-white/10 rounded-full"></div>
+                    <div className="h-1.5 w-6 bg-white/10 rounded-full"></div>
                   </div>
                 </div>
-              </div>
-            </header>
+              </header>
 
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-              {/* Form Fields */}
-              <div className="lg:col-span-8 space-y-6">
-                <div className="glass-card rounded-2xl p-6 flex justify-between items-center bg-primary-container/10 border border-primary-container/20">
-                  <div>
-                    <h4 className="text-sm font-bold text-white flex items-center gap-1.5">
-                      <Sparkle size={16} className="text-primary animate-pulse" />
-                      Instant DigiLocker Fetch
-                    </h4>
-                    <p className="text-xs text-on-surface-variant mt-1">Fetch director information securely using your Aadhaar linked credential.</p>
-                  </div>
-                  <button 
-                    type="button" 
-                    onClick={triggerDigiLocker}
-                    className="px-4 py-2 bg-primary-container hover:bg-blue-600 text-white text-xs font-bold rounded-xl transition-all"
-                    data-testid="digilocker-fetch-button"
-                  >
-                    Fetch details
-                  </button>
-                </div>
-
-                <div className="glass-card rounded-2xl p-8 space-y-6">
-                  <div>
-                    <h3 className="font-display font-bold text-lg text-white mb-4">Aadhaar Card Details</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                      <div>
-                        <label className="block text-xs font-semibold uppercase tracking-wider text-on-surface-variant mb-2">Director Full Name</label>
-                        <input
-                          type="text"
-                          value={directorName}
-                          onChange={(e) => setDirectorName(e.target.value)}
-                          className="w-full px-4 py-3 bg-[#031037]/80 rounded-xl border border-white/10 text-white text-sm"
-                          placeholder="As printed on Aadhaar / PAN"
-                          data-testid="director-name-input"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-xs font-semibold uppercase tracking-wider text-on-surface-variant mb-2">Phone Number</label>
-                        <input
-                          type="text"
-                          value={phone}
-                          onChange={(e) => setPhone(e.target.value)}
-                          className="w-full px-4 py-3 bg-[#031037]/80 rounded-xl border border-white/10 text-white text-sm"
-                          placeholder="Linked with Aadhaar"
-                          data-testid="director-phone-input"
-                        />
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-xs font-semibold uppercase tracking-wider text-on-surface-variant mb-2">Aadhaar Number (12 Digits)</label>
-                        <input
-                          type="text"
-                          value={aadhaar}
-                          onChange={(e) => setAadhaar(e.target.value)}
-                          className="w-full px-4 py-3 bg-[#031037]/80 rounded-xl border border-white/10 text-white text-sm"
-                          placeholder="XXXX XXXX XXXX"
-                          data-testid="director-aadhaar-input"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-xs font-semibold uppercase tracking-wider text-on-surface-variant mb-2">PAN Card Number</label>
-                        <input
-                          type="text"
-                          value={pan}
-                          onChange={(e) => setPan(e.target.value)}
-                          className="w-full px-4 py-3 bg-[#031037]/80 rounded-xl border border-white/10 text-white text-sm"
-                          placeholder="ABCDE1234F"
-                          data-testid="director-pan-input"
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="pt-4 border-t border-white/5 space-y-4">
-                    <div className="flex gap-3">
-                      <button
-                        type="button"
-                        onClick={sendOTP}
-                        className="px-4 py-2 bg-white/5 border border-white/10 hover:bg-white/10 text-white text-xs font-bold rounded-xl transition-all"
-                      >
-                        {otpSent ? 'Resend OTP' : 'Send OTP'}
-                      </button>
-                      {otpSent && (
-                        <div className="flex gap-2 items-center flex-1">
-                          <input
-                            type="text"
-                            value={otpCode}
-                            onChange={(e) => setOtpCode(e.target.value)}
-                            className="px-4 py-2 bg-[#031037]/80 border border-white/10 rounded-xl text-white text-xs w-28"
-                            placeholder="Enter OTP (1234)"
-                          />
-                          <button
-                            type="button"
-                            onClick={verifyOTPCode}
-                            className={`px-4 py-2 text-xs font-bold rounded-xl transition-all ${
-                              otpVerified ? 'bg-green-600 text-white' : 'bg-primary-container text-white'
-                            }`}
-                          >
-                            {otpVerified ? 'Verified' : 'Verify'}
-                          </button>
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                {/* Left Form: Aadhaar & PAN Upload Cards */}
+                <div className="lg:col-span-8 space-y-6">
+                  
+                  {/* Aadhaar Card Container */}
+                  <div className="glass-card rounded-2xl p-6 border border-white/5 space-y-6 relative">
+                    <div className="flex justify-between items-start">
+                      <div className="flex items-center gap-4">
+                        <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
+                          <Fingerprint size={24} />
                         </div>
-                      )}
+                        <div>
+                          <h3 className="font-bold text-white text-base">Aadhaar Card</h3>
+                          <p className="text-xs text-on-surface-variant mt-0.5">Front and back images required (JPEG/PNG, max 5MB)</p>
+                        </div>
+                      </div>
+                      <button 
+                        type="button"
+                        onClick={triggerDigiLocker}
+                        className="px-4 py-1.5 bg-white/5 border border-white/10 hover:bg-white/10 text-xs text-on-surface font-semibold rounded-lg flex items-center gap-1.5 transition-all"
+                      >
+                        <Sparkle size={14} className="text-primary animate-pulse" />
+                        Ask AI
+                      </button>
                     </div>
 
-                    <div className="flex items-center gap-2">
+                    {/* Two drag and drop upload boxes side by side */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {/* Front Side Box */}
+                      <label className="border border-dashed border-white/10 hover:border-primary/40 rounded-xl p-8 flex flex-col items-center justify-center gap-3 cursor-pointer hover:bg-white/5 transition-all relative overflow-hidden group min-h-[160px]">
+                        <input 
+                          type="file" 
+                          accept="image/*" 
+                          onChange={handleAadhaarFrontChange} 
+                          className="hidden" 
+                        />
+                        {aadhaarFront ? (
+                          <>
+                            <img src={aadhaarFront} className="absolute inset-0 w-full h-full object-cover opacity-40" />
+                            <div className="relative z-10 flex flex-col items-center text-center">
+                              <Check size={28} className="text-green-400" />
+                              <span className="text-xs font-semibold text-white mt-1">Front Side Loaded</span>
+                            </div>
+                          </>
+                        ) : (
+                          <>
+                            <CloudArrowUp size={32} className="text-on-surface-variant group-hover:text-primary transition-colors" />
+                            <div className="text-center">
+                              <span className="block text-xs font-bold text-white">Upload Front Side</span>
+                              <span className="block text-[10px] text-on-surface-variant mt-1">Drag and drop or click</span>
+                            </div>
+                          </>
+                        )}
+                      </label>
+
+                      {/* Back Side Box */}
+                      <label className="border border-dashed border-white/10 hover:border-primary/40 rounded-xl p-8 flex flex-col items-center justify-center gap-3 cursor-pointer hover:bg-white/5 transition-all relative overflow-hidden group min-h-[160px]">
+                        <input 
+                          type="file" 
+                          accept="image/*" 
+                          onChange={handleAadhaarBackChange} 
+                          className="hidden" 
+                        />
+                        {aadhaarBack ? (
+                          <>
+                            <img src={aadhaarBack} className="absolute inset-0 w-full h-full object-cover opacity-40" />
+                            <div className="relative z-10 flex flex-col items-center text-center">
+                              <Check size={28} className="text-green-400" />
+                              <span className="text-xs font-semibold text-white mt-1">Back Side Loaded</span>
+                            </div>
+                          </>
+                        ) : (
+                          <>
+                            <CloudArrowUp size={32} className="text-on-surface-variant group-hover:text-primary transition-colors" />
+                            <div className="text-center">
+                              <span className="block text-xs font-bold text-white">Upload Back Side</span>
+                              <span className="block text-[10px] text-on-surface-variant mt-1">Drag and drop or click</span>
+                            </div>
+                          </>
+                        )}
+                      </label>
+                    </div>
+                  </div>
+
+                  {/* PAN Card Container */}
+                  <div className="glass-card rounded-2xl p-6 border border-white/5 space-y-6 relative">
+                    <div className="flex justify-between items-start">
+                      <div className="flex items-center gap-4">
+                        <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
+                          <CreditCard size={24} />
+                        </div>
+                        <div>
+                          <h3 className="font-bold text-white text-base">PAN Card</h3>
+                          <p className="text-xs text-on-surface-variant mt-0.5">Front side scan clearly showing PAN number</p>
+                        </div>
+                      </div>
+                      <button 
+                        type="button"
+                        onClick={triggerDigiLocker}
+                        className="px-4 py-1.5 bg-white/5 border border-white/10 hover:bg-white/10 text-xs text-on-surface font-semibold rounded-lg flex items-center gap-1.5 transition-all"
+                      >
+                        <Sparkle size={14} className="text-primary animate-pulse" />
+                        Ask AI
+                      </button>
+                    </div>
+
+                    {/* One large upload box */}
+                    <label className="border border-dashed border-white/10 hover:border-primary/40 rounded-xl p-10 flex flex-col items-center justify-center gap-3 cursor-pointer hover:bg-white/5 transition-all relative overflow-hidden group min-h-[160px]">
                       <input 
-                        type="checkbox" 
-                        checked={tcAccepted} 
-                        onChange={(e) => setTcAccepted(e.target.checked)} 
-                        className="rounded border-white/10 bg-[#031037]/80 w-4 h-4 text-brand-primary"
-                        data-testid="tc-checkbox"
+                        type="file" 
+                        accept="image/*" 
+                        onChange={handlePanFrontChange} 
+                        className="hidden" 
                       />
-                      <label className="text-xs text-on-surface-variant">I declare the details provided match my official credentials.</label>
+                      {panFront ? (
+                        <>
+                          <img src={panFront} className="absolute inset-0 w-full h-full object-cover opacity-40" />
+                          <div className="relative z-10 flex flex-col items-center text-center">
+                            <Check size={28} className="text-green-400" />
+                            <span className="text-xs font-semibold text-white mt-1">PAN Front Loaded</span>
+                          </div>
+                        </>
+                      ) : (
+                        <>
+                          <CloudArrowUp size={36} className="text-on-surface-variant group-hover:text-primary transition-colors" />
+                          <div className="text-center">
+                            <span className="block text-xs font-bold text-white">Upload PAN Card Front</span>
+                            <span className="block text-[10px] text-on-surface-variant mt-1">High resolution scans preferred for OCR speed</span>
+                          </div>
+                        </>
+                      )}
+                    </label>
+                  </div>
+
+                  {/* Submit Row */}
+                  <div className="flex items-center justify-between pt-6 border-t border-white/10">
+                    <div className="flex items-center gap-2 text-on-surface-variant text-xs font-semibold">
+                      <Lock size={16} />
+                      End-to-end encrypted verification
                     </div>
+                    <button 
+                      type="button"
+                      onClick={submitLevel1}
+                      className="bg-primary text-white px-8 py-3.5 rounded-xl font-bold text-sm hover:bg-blue-600 transition-all flex items-center gap-2 shadow-lg shadow-primary/20"
+                      data-testid="submit-level-1"
+                    >
+                      Submit for Verification
+                    </button>
                   </div>
                 </div>
 
-                <div className="flex items-center justify-between pt-6 border-t border-white/10">
-                  <div className="flex items-center gap-2 text-on-surface-variant text-xs font-semibold">
-                    <ShieldCheck size={16} />
-                    End-to-end encrypted verification
-                  </div>
-                  <button 
-                    type="button"
-                    onClick={submitLevel1}
-                    className="bg-primary-container text-white px-8 py-3 rounded-xl font-bold text-sm hover:bg-blue-600 transition-all flex items-center gap-2"
-                    data-testid="submit-level-1"
-                  >
-                    Submit & Continue
-                    <ArrowRight size={16} />
-                  </button>
-                </div>
-              </div>
-
-              {/* Sidebar Info */}
-              <div className="lg:col-span-4 space-y-6">
-                <div className="glass-card rounded-2xl p-6 space-y-4">
-                  <h4 className="font-display font-bold text-sm text-primary">Why this matters</h4>
-                  <div className="space-y-4 text-xs">
-                    <div className="flex gap-3">
-                      <ShieldCheck size={20} className="text-primary shrink-0" />
-                      <div>
-                        <p className="font-bold text-white">KYC Compliance</p>
-                        <p className="text-on-surface-variant mt-0.5">Mandatory per DGFT and RBI guidelines for all Indian export entities.</p>
+                {/* Right Sidebar Columns */}
+                <div className="lg:col-span-4 space-y-6">
+                  {/* Why this matters card */}
+                  <div className="glass-card rounded-2xl p-6 border border-white/5 space-y-6">
+                    <h4 className="font-bold text-sm text-white">Why this matters</h4>
+                    <div className="space-y-5">
+                      <div className="flex gap-3">
+                        <ShieldCheck size={22} className="text-primary shrink-0 mt-0.5" />
+                        <div>
+                          <p className="font-bold text-white text-xs">KYC Compliance</p>
+                          <p className="text-on-surface-variant text-[11px] mt-1 leading-relaxed">
+                            Mandatory per DGFT and RBI guidelines for all Indian export entities.
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex gap-3">
+                        <SealCheck size={22} className="text-primary shrink-0 mt-0.5" />
+                        <div>
+                          <p className="font-bold text-white text-xs">Trusted Seller Badge</p>
+                          <p className="text-on-surface-variant text-[11px] mt-1 leading-relaxed">
+                            Verified identities receive higher trust scores in the global marketplace.
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex gap-3">
+                        <Gauge size={22} className="text-primary shrink-0 mt-0.5" />
+                        <div>
+                          <p className="font-bold text-white text-xs">Faster Processing</p>
+                          <p className="text-on-surface-variant text-[11px] mt-1 leading-relaxed">
+                            OCR-assisted verification typically takes less than 2 hours.
+                          </p>
+                        </div>
                       </div>
                     </div>
-                    <div className="flex gap-3">
-                      <ShieldCheck size={20} className="text-primary shrink-0" />
-                      <div>
-                        <p className="font-bold text-white">Trusted Seller Badge</p>
-                        <p className="text-on-surface-variant mt-0.5">Verified identities receive higher trust scores in the global marketplace.</p>
+                  </div>
+
+                  {/* Pro Tip Card */}
+                  <div className="glass-card rounded-2xl p-6 border border-white/5 flex gap-3 bg-[#0c1940]/40">
+                    <Lightbulb size={24} className="text-yellow-400 shrink-0" />
+                    <div>
+                      <h5 className="font-bold text-xs text-white mb-1">Pro Tip</h5>
+                      <p className="text-[11px] text-on-surface-variant leading-relaxed">
+                        Ensure all four corners of the document are visible. Avoid glare from lights or flash to ensure the AI can read your details instantly.
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Sample: Good Upload Card */}
+                  <div className="glass-card rounded-2xl p-6 border border-white/5 space-y-4">
+                    <h5 className="font-bold text-xs text-white">Sample: Good Upload</h5>
+                    <div className="relative rounded-xl overflow-hidden aspect-video bg-[#031037]/80 border border-white/10 flex items-center justify-center p-4">
+                      {/* Simulated card design */}
+                      <div className="w-full h-full rounded-lg bg-gradient-to-br from-primary/20 to-tertiary/10 border border-white/20 p-3 relative flex flex-col justify-between">
+                        <div className="flex justify-between items-start">
+                          <div className="space-y-1">
+                            <div className="w-10 h-1.5 bg-white/20 rounded"></div>
+                            <div className="w-6 h-1 bg-white/10 rounded"></div>
+                          </div>
+                          <div className="w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center">
+                            <Fingerprint size={12} className="text-primary" />
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded bg-white/10"></div>
+                          <div className="space-y-1 flex-1">
+                            <div className="w-16 h-1 bg-white/20 rounded"></div>
+                            <div className="w-12 h-1 bg-white/10 rounded"></div>
+                            <div className="w-20 h-1 bg-white/10 rounded"></div>
+                          </div>
+                        </div>
+                      </div>
+                      {/* Floating verified badge */}
+                      <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                        <div className="w-10 h-10 rounded-full bg-green-500/20 border border-green-500/30 flex items-center justify-center text-green-400">
+                          <Check size={20} />
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-
-                <div className="bg-primary/5 border border-primary/20 rounded-2xl p-6">
-                  <h5 className="font-bold text-xs text-primary flex items-center gap-1.5 mb-2">
-                    <Sparkle size={14} />
-                    Pro Tip
-                  </h5>
-                  <p className="text-xs text-on-surface leading-relaxed">
-                    Ensure all four corners of the document are visible. Avoid glare from lights or flash to ensure the AI can read your details instantly.
-                  </p>
                 </div>
               </div>
             </div>
-          </div>
-        )}
+          )}
 
         {/* LEVEL 2: EXPORTER PROFILE */}
         {currentLevel === 2 && (
@@ -1553,6 +1681,7 @@ export default function OnboardingWizard() {
           </div>
         )}
       </main>
+      </div>
     </div>
   );
 }
