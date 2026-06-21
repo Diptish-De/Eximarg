@@ -82,6 +82,12 @@ export default function OnboardingWizard() {
   const [csvFile, setCsvFile] = useState(null);
   const [zipFile, setZipFile] = useState(null);
   const [importErrors, setImportErrors] = useState([]);
+  const [prodCategory, setProdCategory] = useState('Apparel & Accessories');
+  const [prodSubCategory, setProdSubCategory] = useState('Handbags');
+  const [prodMoq, setProdMoq] = useState('100 Units');
+  const [prodCif, setProdCif] = useState('0.00');
+  const [showBulkModal, setShowBulkModal] = useState(false);
+  const [enableSmartInsights, setEnableSmartInsights] = useState(false);
 
   // File uploading utils
   const handleBase64Upload = (file, callback) => {
@@ -380,6 +386,29 @@ export default function OnboardingWizard() {
     } catch (e) {
       toast.error('Failed to lock catalog. Make sure products are added.');
     }
+  };
+
+  const handlePublishStorefront = async () => {
+    if (prodName && prodPriceMin && prodHsn) {
+      try {
+        const generatedSku = prodSku || 'SKU-' + prodName.substring(0,3).toUpperCase() + '-' + Math.random().toString(36).substring(7).toUpperCase();
+        await api.post('/api/products', {
+          name: prodName,
+          description: prodDesc,
+          sku: generatedSku,
+          hsn_code: prodHsn,
+          price_min: parseFloat(prodPriceMin),
+          price_max: parseFloat(prodPriceMin),
+          sample_price: parseFloat(prodSamplePrice || 0),
+          images: prodImage ? [prodImage] : [],
+          moq_tiers: [{ category: prodCategory, subcategory: prodSubCategory, moq: prodMoq, cif: prodCif }]
+        });
+        toast.success('Product added to catalog!');
+      } catch (err) {
+        // ignore if fails
+      }
+    }
+    await handleLockCatalog();
   };
 
   const handleBypassStep = async () => {
@@ -2052,104 +2081,175 @@ export default function OnboardingWizard() {
 
         {/* LEVEL 6: PRODUCT CATALOG */}
         {currentLevel === 6 && (
-          <div className="space-y-8 animate-fade-in">
-            <header className="mb-8">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h1 className="font-display font-extrabold text-3xl text-white">Level 6: Product Catalog Entry</h1>
-                  <p className="text-on-surface-variant text-sm mt-1">Add items to your digital catalog. Enter details and trigger HSN suggestions.</p>
+          <div className="space-y-8 animate-fade-in text-left">
+            <header className="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="px-2 py-0.5 bg-primary/10 border border-primary/20 text-primary text-[10px] font-bold uppercase rounded-full">
+                    Level 6 Task
+                  </span>
+                  <span className="text-xs text-on-surface-variant font-semibold">Step 2 of 4</span>
                 </div>
-                <div className="hidden md:flex flex-col items-end">
-                  <span className="text-xs text-primary font-bold">6/6 COMPLETE</span>
-                  <div className="flex gap-1 mt-2">
-                    <div className="h-1.5 w-6 bg-green-600 rounded-full"></div>
-                    <div className="h-1.5 w-6 bg-green-600 rounded-full"></div>
-                    <div className="h-1.5 w-6 bg-green-600 rounded-full"></div>
-                    <div className="h-1.5 w-6 bg-green-600 rounded-full"></div>
-                    <div className="h-1.5 w-6 bg-green-600 rounded-full"></div>
-                    <div className="h-1.5 w-6 bg-primary rounded-full"></div>
-                  </div>
-                </div>
+                <h1 className="font-display font-extrabold text-3xl text-white mt-2">Build Your Digital Dukan</h1>
+                <p className="text-on-surface-variant text-sm mt-1">High-fidelity product creation optimized for international buyers. Globalize your inventory with one click.</p>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <button 
+                  onClick={() => setShowBulkModal(true)} 
+                  className="px-6 py-2.5 bg-white/5 hover:bg-white/10 text-white font-bold rounded-xl text-xs transition-all border border-white/10 flex items-center gap-2"
+                >
+                  <FileArrowUp size={16} />
+                  Bulk Upload
+                </button>
+                <button 
+                  onClick={handlePublishStorefront} 
+                  className="px-6 py-2.5 bg-primary hover:bg-blue-600 text-white font-bold rounded-xl text-xs transition-all flex items-center justify-center shadow-lg shadow-primary/20"
+                  data-testid="lock-catalog-button"
+                >
+                  Publish to Storefront
+                </button>
               </div>
             </header>
 
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
               {/* Left Canvas */}
               <div className="lg:col-span-8 space-y-6">
-                <div className="glass-card rounded-2xl p-8 space-y-6">
+                
+                {/* Core Information Card */}
+                <div className="glass-card rounded-2xl p-8 space-y-6 border border-white/5 bg-[#031037]/40">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-primary-container/20 flex items-center justify-center text-primary">
-                      <Plus size={24} />
+                    <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
+                      <Plus size={18} />
                     </div>
-                    <h3 className="font-display font-bold text-lg text-white">Core Information</h3>
+                    <h3 className="font-display font-bold text-sm text-white">Core Information</h3>
                   </div>
 
-                  <form onSubmit={handleSingleProductSubmit} className="space-y-4">
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-xs font-semibold text-on-surface-variant mb-2">Product Name</label>
+                      <input
+                        type="text"
+                        value={prodName}
+                        onChange={(e) => setProdName(e.target.value)}
+                        className="w-full px-4 py-3 bg-[#031037]/80 rounded-xl border border-white/10 text-white text-sm focus:border-primary/50 outline-none transition-all"
+                        placeholder="e.g. Premium Handcrafted Leather Satchel"
+                        data-testid="product-name-input"
+                        required
+                      />
+                    </div>
+
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-xs font-semibold uppercase tracking-wider text-on-surface-variant mb-2">Product Name</label>
+                        <label className="block text-xs font-semibold text-on-surface-variant mb-2">Category</label>
                         <input
                           type="text"
-                          value={prodName}
-                          onChange={(e) => setProdName(e.target.value)}
-                          className="w-full px-4 py-3 bg-[#031037]/80 rounded-xl border border-white/10 text-white text-sm"
-                          placeholder="e.g. Organic Basmati Rice"
-                          data-testid="product-name-input"
-                          required
+                          value={prodCategory}
+                          onChange={(e) => setProdCategory(e.target.value)}
+                          className="w-full px-4 py-3 bg-[#031037]/80 rounded-xl border border-white/10 text-white text-sm focus:border-primary/50 outline-none transition-all"
+                          placeholder="Apparel & Accessories"
                         />
                       </div>
                       <div>
-                        <label className="block text-xs font-semibold uppercase tracking-wider text-on-surface-variant mb-2">SKU ID</label>
+                        <label className="block text-xs font-semibold text-on-surface-variant mb-2">Sub-category</label>
                         <input
                           type="text"
-                          value={prodSku}
-                          onChange={(e) => setProdSku(e.target.value)}
-                          className="w-full px-4 py-3 bg-[#031037]/80 rounded-xl border border-white/10 text-white text-sm"
-                          placeholder="e.g. BR-ORG-001"
-                          data-testid="product-sku-input"
-                          required
+                          value={prodSubCategory}
+                          onChange={(e) => setProdSubCategory(e.target.value)}
+                          className="w-full px-4 py-3 bg-[#031037]/80 rounded-xl border border-white/10 text-white text-sm focus:border-primary/50 outline-none transition-all"
+                          placeholder="Handbags"
                         />
                       </div>
                     </div>
 
                     <div>
-                      <label className="block text-xs font-semibold uppercase tracking-wider text-on-surface-variant mb-2">Product Description</label>
+                      <label className="block text-xs font-semibold text-on-surface-variant mb-2">Product Description</label>
                       <textarea
                         value={prodDesc}
                         onChange={(e) => setProdDesc(e.target.value)}
-                        className="w-full px-4 py-3 bg-[#031037]/80 rounded-xl border border-white/10 text-white text-sm h-20"
-                        placeholder="Product attributes and packaging"
+                        className="w-full px-4 py-3 bg-[#031037]/80 rounded-xl border border-white/10 text-white text-sm h-32 focus:border-primary/50 outline-none transition-all resize-none"
+                        placeholder="Describe the materials, craftsmanship, and unique value propositions..."
                         data-testid="product-desc-input"
                       />
                     </div>
+                  </div>
+                </div>
 
-                    {/* HSN lookup */}
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
-                      <div className="md:col-span-2">
-                        <label className="block text-xs font-semibold uppercase tracking-wider text-on-surface-variant mb-2">HSN Code (8 digits)</label>
+                {/* Export Logistics & Compliance Card */}
+                <div className="glass-card rounded-2xl p-8 space-y-6 border border-white/5 bg-[#031037]/40">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
+                      <Globe size={18} />
+                    </div>
+                    <h3 className="font-display font-bold text-sm text-white">Export Logistics & Compliance</h3>
+                  </div>
+
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-xs font-semibold text-on-surface-variant mb-2">HSN Code</label>
+                        <div className="flex gap-2">
+                          <input
+                            type="text"
+                            value={prodHsn}
+                            onChange={(e) => setProdHsn(e.target.value)}
+                            className="flex-1 px-4 py-3 bg-[#031037]/80 rounded-xl border border-white/10 text-white text-sm focus:border-primary/50 outline-none transition-all"
+                            placeholder="XXXX XX XX"
+                            data-testid="product-hsn-input"
+                            required
+                          />
+                          <button 
+                            type="button" 
+                            onClick={findHsnAI}
+                            disabled={loadingHsn}
+                            className="px-4 py-3 bg-primary/10 hover:bg-primary/20 border border-primary/20 text-primary text-xs font-bold rounded-xl flex items-center gap-1.5 transition-all shrink-0"
+                            data-testid="hsn-lookup-button"
+                          >
+                            <Sparkle size={14} className={loadingHsn ? "animate-spin" : "animate-pulse"} />
+                            Suggest by AI
+                          </button>
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-semibold text-on-surface-variant mb-2">MOQ Tier (Minimum Order Quantity)</label>
                         <input
                           type="text"
-                          value={prodHsn}
-                          onChange={(e) => setProdHsn(e.target.value)}
-                          className="w-full px-4 py-3 bg-[#031037]/80 rounded-xl border border-white/10 text-white text-sm"
-                          placeholder="Lookup or enter HSN code"
-                          data-testid="product-hsn-input"
+                          value={prodMoq}
+                          onChange={(e) => setProdMoq(e.target.value)}
+                          className="w-full px-4 py-3 bg-[#031037]/80 rounded-xl border border-white/10 text-white text-sm focus:border-primary/50 outline-none transition-all"
+                          placeholder="100 Units"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-xs font-semibold text-on-surface-variant mb-2">FOB Price ($/Unit)</label>
+                        <input
+                          type="number"
+                          value={prodPriceMin}
+                          onChange={(e) => setProdPriceMin(e.target.value)}
+                          className="w-full px-4 py-3 bg-[#031037]/80 rounded-xl border border-white/10 text-white text-sm focus:border-primary/50 outline-none transition-all"
+                          placeholder="0.00"
+                          data-testid="product-price-min-input"
                           required
                         />
                       </div>
-                      <button 
-                        type="button" 
-                        onClick={findHsnAI}
-                        disabled={loadingHsn}
-                        className="w-full py-3 bg-primary/10 hover:bg-primary/20 border border-primary/20 text-primary text-xs font-bold rounded-xl flex items-center justify-center gap-1 transition-all"
-                        data-testid="hsn-lookup-button"
-                      >
-                        <Sparkle size={14} />
-                        Suggest HSN
-                      </button>
+
+                      <div>
+                        <label className="block text-xs font-semibold text-on-surface-variant mb-2">CIF Quote (Estimated)</label>
+                        <input
+                          type="text"
+                          value={prodCif}
+                          onChange={(e) => setProdCif(e.target.value)}
+                          className="w-full px-4 py-3 bg-[#031037]/80 rounded-xl border border-white/10 text-white text-sm focus:border-primary/50 outline-none transition-all"
+                          placeholder="0.00"
+                        />
+                      </div>
                     </div>
 
-                    {/* HSN Candidates */}
+                    {/* HSN Candidates Match (AI Suggestions) inline dropdown */}
                     {hsnCandidates.length > 0 && (
                       <div className="bg-[#031037]/60 border border-white/10 p-4 rounded-xl space-y-2">
                         <span className="block text-[10px] text-primary uppercase font-bold tracking-wider">HSN Candidate Match (AI)</span>
@@ -2173,66 +2273,245 @@ export default function OnboardingWizard() {
                         </div>
                       </div>
                     )}
-
-                    <div className="grid grid-cols-3 gap-4">
-                      <div>
-                        <label className="block text-xs font-semibold uppercase tracking-wider text-on-surface-variant mb-2">Price Min ($)</label>
-                        <input
-                          type="number"
-                          value={prodPriceMin}
-                          onChange={(e) => setProdPriceMin(e.target.value)}
-                          className="w-full px-4 py-3 bg-[#031037]/80 rounded-xl border border-white/10 text-white text-sm"
-                          placeholder="Min Price"
-                          data-testid="product-price-min-input"
-                          required
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-xs font-semibold uppercase tracking-wider text-on-surface-variant mb-2">Price Max ($)</label>
-                        <input
-                          type="number"
-                          value={prodPriceMax}
-                          onChange={(e) => setProdPriceMax(e.target.value)}
-                          className="w-full px-4 py-3 bg-[#031037]/80 rounded-xl border border-white/10 text-white text-sm"
-                          placeholder="Max Price"
-                          data-testid="product-price-max-input"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-xs font-semibold uppercase tracking-wider text-on-surface-variant mb-2">Sample Price ($)</label>
-                        <input
-                          type="number"
-                          value={prodSamplePrice}
-                          onChange={(e) => setProdSamplePrice(e.target.value)}
-                          className="w-full px-4 py-3 bg-[#031037]/80 rounded-xl border border-white/10 text-white text-sm"
-                          placeholder="Sample"
-                          data-testid="product-sample-price-input"
-                        />
-                      </div>
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-semibold tracking-wider text-on-surface-variant mb-2">Product Image</label>
-                      <input
-                        type="file"
-                        onChange={(e) => handleBase64Upload(e.target.files[0], setProdImage)}
-                        className="text-xs text-on-surface-variant"
-                        data-testid="product-file-input"
-                      />
-                    </div>
-
-                    <button 
-                      type="submit" 
-                      className="w-full py-3 bg-primary-container hover:bg-blue-600 text-white font-bold rounded-xl text-sm transition-all"
-                      data-testid="add-product-button"
-                    >
-                      Add Product to Catalog
-                    </button>
-                  </form>
+                  </div>
                 </div>
 
-                {/* Bulk Import */}
-                <div className="glass-card rounded-2xl p-8 space-y-6">
+                {/* Product Gallery Card */}
+                <div className="glass-card rounded-2xl p-8 space-y-6 border border-white/5 bg-[#031037]/40">
+                  <div className="flex justify-between items-center">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
+                        <Sparkle size={18} />
+                      </div>
+                      <div>
+                        <h3 className="font-display font-bold text-sm text-white">Product Gallery</h3>
+                        <p className="text-[10px] text-on-surface-variant mt-0.5">Max 5MB per image. 4K resolution supported.</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    {/* Add Media Box */}
+                    <label className="border border-dashed border-white/10 hover:border-primary/40 rounded-xl p-4 flex flex-col items-center justify-center gap-2 cursor-pointer hover:bg-white/5 transition-all min-h-[120px] group">
+                      <input 
+                        type="file" 
+                        onChange={(e) => handleBase64Upload(e.target.files[0], setProdImage)} 
+                        className="hidden" 
+                        data-testid="product-file-input"
+                      />
+                      <Plus size={20} className="text-on-surface-variant group-hover:text-primary transition-colors" />
+                      <span className="text-[10px] font-bold text-white">Add Media</span>
+                    </label>
+
+                    {/* Box 2: Handbag Preview */}
+                    <div className="relative rounded-xl overflow-hidden aspect-square bg-[#031037] border border-white/10 flex items-center justify-center min-h-[120px]">
+                      {prodImage ? (
+                        <img src={prodImage} className="absolute inset-0 w-full h-full object-cover" />
+                      ) : (
+                        <div className="w-full h-full bg-gradient-to-br from-primary/10 to-transparent p-3 flex flex-col justify-between">
+                          <span className="text-[9px] font-bold text-primary uppercase">MOCKUP IMAGE</span>
+                          <div className="flex items-center justify-center flex-1">
+                            <svg className="w-10 h-10 text-primary/40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                              <path d="M6 9V7a6 6 0 0 1 12 0v2m-14 0h16a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2z" />
+                            </svg>
+                          </div>
+                          <span className="text-[8px] text-on-surface-variant">White background suggested</span>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Box 3: Leather texture mockup */}
+                    <div className="relative rounded-xl overflow-hidden aspect-square bg-[#031037] border border-white/10 flex items-center justify-center min-h-[120px]">
+                      <div className="w-full h-full bg-gradient-to-br from-primary/5 to-transparent p-3 flex flex-col justify-between">
+                        <span className="text-[9px] font-bold text-primary/60 uppercase">TEXTURE</span>
+                        <div className="flex items-center justify-center flex-1">
+                          <svg className="w-10 h-10 text-primary/20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                            <path d="M4 4h16v16H4z M12 4v16 M4 12h16" />
+                          </svg>
+                        </div>
+                        <span className="text-[8px] text-on-surface-variant">Secondary detail</span>
+                      </div>
+                    </div>
+
+                    {/* Box 4: Placeholder */}
+                    <div className="rounded-xl bg-[#031037]/40 border border-white/5 flex items-center justify-center min-h-[120px] text-on-surface-variant text-base font-bold">
+                      •••
+                    </div>
+                  </div>
+                </div>
+
+                {/* Add Product Submit Row */}
+                <div className="flex justify-start pt-4 border-t border-white/10">
+                  <button 
+                    type="button" 
+                    onClick={async () => {
+                      if (!prodName || !prodPriceMin || !prodHsn) {
+                        toast.error('Please input Product Name, HSN Code, and FOB Price to add a product.');
+                        return;
+                      }
+                      const generatedSku = prodSku || 'SKU-' + prodName.substring(0,3).toUpperCase() + '-' + Math.random().toString(36).substring(7).toUpperCase();
+                      try {
+                        await api.post('/api/products', {
+                          name: prodName,
+                          description: prodDesc,
+                          sku: generatedSku,
+                          hsn_code: prodHsn,
+                          price_min: parseFloat(prodPriceMin),
+                          price_max: parseFloat(prodPriceMin),
+                          sample_price: parseFloat(prodSamplePrice || 0),
+                          images: prodImage ? [prodImage] : [],
+                          moq_tiers: [{ category: prodCategory, subcategory: prodSubCategory, moq: prodMoq, cif: prodCif }]
+                        });
+                        toast.success('Product added successfully!');
+                        // Clear fields
+                        setProdName('');
+                        setProdDesc('');
+                        setProdSku('');
+                        setProdHsn('');
+                        setProdPriceMin('');
+                        setProdSamplePrice('');
+                        setProdImage(null);
+                      } catch (e) {
+                        toast.error('Failed to add product.');
+                      }
+                    }}
+                    className="px-6 py-3 bg-[#0c1940] hover:bg-[#12245c] text-primary hover:text-white border border-primary/20 hover:border-primary/50 text-xs font-bold rounded-xl flex items-center gap-1.5 transition-all"
+                    data-testid="add-product-button"
+                  >
+                    <Plus size={14} />
+                    Add Product to Catalog
+                  </button>
+                </div>
+
+              </div>
+
+              {/* Sidebar Info */}
+              <div className="lg:col-span-4 space-y-6">
+                
+                {/* Product Readiness Card */}
+                <div className="glass-card rounded-2xl p-6 space-y-6 border border-white/5 bg-[#031037]/40">
+                  <div className="flex justify-between items-center">
+                    <h4 className="font-bold text-xs uppercase tracking-widest text-on-surface-variant">Product Readiness</h4>
+                    <div className="text-right">
+                      <span className="block text-lg font-black text-primary">
+                        {Math.round(
+                          ( (prodName ? 1 : 0) + 
+                            (prodHsn ? 1 : 0) + 
+                            (prodImage ? 1 : 0) + 
+                            (prodPriceMin ? 1 : 0) ) * 25
+                        )}%
+                      </span>
+                      <span className="text-[9px] font-bold text-on-surface-variant uppercase tracking-wider">Ready</span>
+                    </div>
+                  </div>
+
+                  <div className="w-full bg-white/10 h-1.5 rounded-full overflow-hidden">
+                    <div 
+                      className="bg-primary h-full progress-shimmer transition-all duration-300" 
+                      style={{ 
+                        width: `${
+                          ( (prodName ? 1 : 0) + 
+                            (prodHsn ? 1 : 0) + 
+                            (prodImage ? 1 : 0) + 
+                            (prodPriceMin ? 1 : 0) ) * 25
+                        }%` 
+                      }}
+                    ></div>
+                  </div>
+
+                  <div className="space-y-3 text-xs">
+                    <div className="flex items-center gap-2.5 text-white">
+                      {prodName ? (
+                        <div className="w-4 h-4 rounded-full bg-green-500/20 border border-green-500/30 flex items-center justify-center text-green-400">
+                          <Check size={10} />
+                        </div>
+                      ) : (
+                        <div className="w-4 h-4 rounded-full border border-white/10"></div>
+                      )}
+                      <span className={prodName ? "font-semibold" : "text-on-surface-variant"}>Basic details added</span>
+                    </div>
+
+                    <div className="flex items-center gap-2.5 text-white">
+                      {prodHsn ? (
+                        <div className="w-4 h-4 rounded-full bg-green-500/20 border border-green-500/30 flex items-center justify-center text-green-400">
+                          <Check size={10} />
+                        </div>
+                      ) : (
+                        <div className="w-4 h-4 rounded-full border border-white/10"></div>
+                      )}
+                      <span className={prodHsn ? "font-semibold" : "text-on-surface-variant"}>Compliance docs linked</span>
+                    </div>
+
+                    <div className="flex items-center gap-2.5 text-white">
+                      {prodImage ? (
+                        <div className="w-4 h-4 rounded-full bg-green-500/20 border border-green-500/30 flex items-center justify-center text-green-400">
+                          <Check size={10} />
+                        </div>
+                      ) : (
+                        <div className="w-4 h-4 rounded-full border border-white/10"></div>
+                      )}
+                      <span className={prodImage ? "font-semibold" : "text-on-surface-variant"}>Add 2 more HD photos</span>
+                    </div>
+
+                    <div className="flex items-center gap-2.5 text-white">
+                      {prodPriceMin ? (
+                        <div className="w-4 h-4 rounded-full bg-green-500/20 border border-green-500/30 flex items-center justify-center text-green-400">
+                          <Check size={10} />
+                        </div>
+                      ) : (
+                        <div className="w-4 h-4 rounded-full border border-white/10"></div>
+                      )}
+                      <span className={prodPriceMin ? "font-semibold" : "text-on-surface-variant"}>Optimize FOB pricing</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Export AI Assistant Card */}
+                <div className="glass-card rounded-2xl p-6 border border-white/5 bg-[#0c1940]/40 space-y-4">
+                  <h5 className="font-bold text-xs text-primary flex items-center gap-1.5">
+                    <Sparkle size={14} className="animate-pulse" />
+                    Export AI Assistant
+                  </h5>
+                  <p className="text-xs text-on-surface-variant italic leading-relaxed bg-[#031037]/60 p-3 rounded-xl border border-white/5">
+                    "Based on your category, US buyers typically look for 'Sustainable Sourcing' certs. Would you like to add one?"
+                  </p>
+                  <button 
+                    type="button" 
+                    onClick={() => {
+                      setEnableSmartInsights(!enableSmartInsights);
+                      toast.success(enableSmartInsights ? "Smart Insights disabled" : "Smart Insights enabled!");
+                    }}
+                    className="w-full py-2.5 bg-white/5 hover:bg-white/10 text-white font-bold rounded-xl text-xs transition-all border border-white/10"
+                  >
+                    {enableSmartInsights ? "Smart Insights Enabled" : "Enable Smart Insights"}
+                  </button>
+                </div>
+
+                {/* Pro Tip Card */}
+                <div className="glass-card rounded-2xl p-6 border border-white/5 flex gap-3 bg-[#0c1940]/40">
+                  <Lightbulb size={24} className="text-yellow-400 shrink-0" />
+                  <div>
+                    <h5 className="font-bold text-xs text-white mb-1">Pro Tip</h5>
+                    <p className="text-[11px] text-on-surface-variant leading-relaxed">
+                      Products with White Backgrounds see a 40% higher click-through rate from Middle-Eastern importers.
+                    </p>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+
+            {/* Bulk CSV / ZIP Import Modal Overlay */}
+            {showBulkModal && (
+              <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[9999] p-4">
+                <div className="glass-card rounded-3xl p-8 max-w-lg w-full border border-white/10 space-y-6 relative animate-fade-in">
+                  <button 
+                    onClick={() => setShowBulkModal(false)}
+                    className="absolute top-4 right-4 text-on-surface-variant hover:text-white text-lg font-bold"
+                  >
+                    ×
+                  </button>
+
                   <div className="flex items-center gap-3 border-b border-white/5 pb-4">
                     <FileArrowUp size={24} className="text-primary" />
                     <div>
@@ -2241,34 +2520,37 @@ export default function OnboardingWizard() {
                     </div>
                   </div>
 
-                  <form onSubmit={handleBulkImport} className="space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-xs font-semibold uppercase tracking-wider text-on-surface-variant mb-2">CSV File (sku,name...)</label>
-                        <input 
-                          type="file" 
-                          accept=".csv"
-                          onChange={(e) => setCsvFile(e.target.files[0])}
-                          className="text-xs text-on-surface-variant"
-                          data-testid="csv-file-input"
-                          required
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-xs font-semibold uppercase tracking-wider text-on-surface-variant mb-2">ZIP Images Archive</label>
-                        <input 
-                          type="file" 
-                          accept=".zip"
-                          onChange={(e) => setZipFile(e.target.files[0])}
-                          className="text-xs text-on-surface-variant"
-                          data-testid="zip-file-input"
-                        />
-                      </div>
+                  <form onSubmit={async (e) => {
+                    await handleBulkImport(e);
+                    if (importErrors.length === 0) {
+                      setShowBulkModal(false);
+                    }
+                  }} className="space-y-4 text-left">
+                    <div>
+                      <label className="block text-xs font-semibold uppercase tracking-wider text-on-surface-variant mb-2">CSV File (sku,name...)</label>
+                      <input 
+                        type="file" 
+                        accept=".csv"
+                        onChange={(e) => setCsvFile(e.target.files[0])}
+                        className="text-xs text-on-surface-variant w-full"
+                        data-testid="csv-file-input"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold uppercase tracking-wider text-on-surface-variant mb-2">ZIP Images Archive</label>
+                      <input 
+                        type="file" 
+                        accept=".zip"
+                        onChange={(e) => setZipFile(e.target.files[0])}
+                        className="text-xs text-on-surface-variant w-full"
+                        data-testid="zip-file-input"
+                      />
                     </div>
 
                     <button 
                       type="submit" 
-                      className="w-full py-3 bg-white/5 border border-white/10 hover:bg-white/10 text-white font-bold rounded-xl text-sm transition-all"
+                      className="w-full py-3 bg-primary hover:bg-blue-600 text-white font-bold rounded-xl text-sm transition-all shadow-lg shadow-primary/20"
                       data-testid="bulk-import-submit"
                     >
                       Upload & Process Import
@@ -2276,7 +2558,7 @@ export default function OnboardingWizard() {
                   </form>
 
                   {importErrors.length > 0 && (
-                    <div className="bg-red-950/40 border border-red-900/50 p-4 rounded-xl space-y-2">
+                    <div className="bg-red-950/40 border border-red-900/50 p-4 rounded-xl space-y-2 text-left">
                       <p className="text-red-400 text-xs font-bold uppercase tracking-wider flex items-center gap-2">
                         <WarningCircle size={16} />
                         Import Validation Errors
@@ -2287,39 +2569,9 @@ export default function OnboardingWizard() {
                     </div>
                   )}
                 </div>
-
-                <div className="flex justify-end pt-4 border-t border-white/10">
-                  <button 
-                    type="button" 
-                    onClick={handleLockCatalog}
-                    className="px-8 py-4 bg-green-700 hover:bg-green-800 text-white font-bold rounded-xl flex items-center justify-center gap-2 transition-all"
-                    data-testid="lock-catalog-button"
-                  >
-                    Lock Product Catalog & Launch Command Center
-                  </button>
-                </div>
               </div>
+            )}
 
-              {/* Sidebar Info */}
-              <div className="lg:col-span-4 space-y-6">
-                <div className="glass-card rounded-2xl p-6 space-y-4">
-                  <h4 className="font-display font-bold text-sm text-primary">Product Readiness</h4>
-                  <div className="space-y-4 text-xs">
-                    <p className="text-on-surface-variant">Adding multiple products unlocks global market corridors and builds buyer trust in your digital storefront.</p>
-                  </div>
-                </div>
-
-                <div className="bg-primary/5 border border-primary/20 rounded-2xl p-6">
-                  <h5 className="font-bold text-xs text-primary flex items-center gap-1.5 mb-2">
-                    <Sparkle size={14} />
-                    Pro Tip
-                  </h5>
-                  <p className="text-xs text-on-surface leading-relaxed">
-                    Products with clear, white background photos see a 40% higher click-through rate from Middle-Eastern importers.
-                  </p>
-                </div>
-              </div>
-            </div>
           </div>
         )}
       </main>

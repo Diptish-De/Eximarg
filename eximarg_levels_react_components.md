@@ -1467,58 +1467,470 @@ export function Level5Subscription({ onSubmit }) {
 ## Level 6: Product Catalog (Digital Dukan)
 ```jsx
 import React, { useState } from 'react';
-import { Tag, Plus, FileArrowUp, Check } from '@phosphor-icons/react';
+import { Plus, FileArrowUp, Check, Globe, Sparkle, Lightbulb, WarningCircle } from '@phosphor-icons/react';
 
 export function Level6ProductCatalog({ onAddProduct, onBulkImport, onLockCatalog, productsList }) {
-  const [name, setName] = useState('');
-  const [sku, setSku] = useState('');
-  const [hsn, setHsn] = useState('');
-  const [price, setPrice] = useState('');
+  const [prodName, setProdName] = useState('');
+  const [prodDesc, setProdDesc] = useState('');
+  const [prodSku, setProdSku] = useState('');
+  const [prodHsn, setProdHsn] = useState('');
+  const [prodPriceMin, setProdPriceMin] = useState('');
+  const [prodImage, setProdImage] = useState(null);
+  const [prodCategory, setProdCategory] = useState('Apparel & Accessories');
+  const [prodSubCategory, setProdSubCategory] = useState('Handbags');
+  const [prodMoq, setProdMoq] = useState('100 Units');
+  const [prodCif, setProdCif] = useState('0.00');
+  const [showBulkModal, setShowBulkModal] = useState(false);
+  const [enableSmartInsights, setEnableSmartInsights] = useState(false);
 
-  const handleSingleProduct = (e) => {
-    e.preventDefault();
-    onAddProduct({ name, sku, hsn, price: parseFloat(price) });
-    setName(''); setSku(''); setHsn(''); setPrice('');
+  // Bulk files
+  const [csvFile, setCsvFile] = useState(null);
+  const [zipFile, setZipFile] = useState(null);
+
+  const handleBase64Upload = (file, callback) => {
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onloadend = () => callback(reader.result);
+    reader.readAsDataURL(file);
+  };
+
+  const handleAddClick = () => {
+    if (!prodName || !prodPriceMin || !prodHsn) return;
+    const generatedSku = prodSku || 'SKU-' + prodName.substring(0,3).toUpperCase() + '-' + Math.random().toString(36).substring(7).toUpperCase();
+    onAddProduct({
+      name: prodName,
+      description: prodDesc,
+      sku: generatedSku,
+      hsn_code: prodHsn,
+      price: parseFloat(prodPriceMin),
+      image: prodImage
+    });
+    setProdName('');
+    setProdDesc('');
+    setProdSku('');
+    setProdHsn('');
+    setProdPriceMin('');
+    setProdImage(null);
+  };
+
+  const handlePublishClick = () => {
+    if (prodName && prodPriceMin && prodHsn) {
+      const generatedSku = prodSku || 'SKU-' + prodName.substring(0,3).toUpperCase() + '-' + Math.random().toString(36).substring(7).toUpperCase();
+      onAddProduct({
+        name: prodName,
+        description: prodDesc,
+        sku: generatedSku,
+        hsn_code: prodHsn,
+        price: parseFloat(prodPriceMin),
+        image: prodImage
+      });
+    }
+    onLockCatalog();
   };
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 max-w-7xl">
-      <div className="lg:col-span-8 space-y-6">
-        
-        {/* Add Product Form */}
-        <div className="glass-card rounded-2xl p-8 space-y-6">
-          <h3 className="font-bold text-white text-base">Add Single Product</h3>
-          <form onSubmit={handleSingleProduct} className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <input type="text" placeholder="Product Name" value={name} onChange={(e) => setName(e.target.value)} className="w-full px-4 py-3 bg-[#031037]/80 rounded-xl border border-white/10 text-white text-sm" required />
-            <input type="text" placeholder="SKU Code" value={sku} onChange={(e) => setSku(e.target.value)} className="w-full px-4 py-3 bg-[#031037]/80 rounded-xl border border-white/10 text-white text-sm" required />
-            <input type="text" placeholder="HSN Code" value={hsn} onChange={(e) => setHsn(e.target.value)} className="w-full px-4 py-3 bg-[#031037]/80 rounded-xl border border-white/10 text-white text-sm" required />
-            <input type="number" placeholder="Price ($)" value={price} onChange={(e) => setPrice(e.target.value)} className="w-full px-4 py-3 bg-[#031037]/80 rounded-xl border border-white/10 text-white text-sm" required />
-            <button type="submit" className="md:col-span-2 py-3 bg-primary text-white font-bold rounded-xl text-sm flex items-center justify-center gap-2">
-              <Plus size={16} /> Add Product to Catalog
-            </button>
-          </form>
+    <div className="space-y-8 animate-fade-in text-left max-w-7xl">
+      <header className="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <div className="flex items-center gap-2">
+            <span className="px-2 py-0.5 bg-primary/10 border border-primary/20 text-primary text-[10px] font-bold uppercase rounded-full">
+              Level 6 Task
+            </span>
+            <span className="text-xs text-on-surface-variant font-semibold">Step 2 of 4</span>
+          </div>
+          <h1 className="font-display font-extrabold text-3xl text-white mt-2">Build Your Digital Dukan</h1>
+          <p className="text-on-surface-variant text-sm mt-1">High-fidelity product creation optimized for international buyers. Globalize your inventory with one click.</p>
         </div>
 
-        {/* Products List */}
-        <div className="glass-card rounded-2xl p-6 border border-white/5 space-y-4">
-          <h4 className="font-bold text-sm text-white">Catalog Inventory ({productsList.length})</h4>
-          <div className="divide-y divide-white/5">
-            {productsList.map((p, idx) => (
-              <div key={idx} className="py-3 flex justify-between items-center text-xs">
-                <div>
-                  <p className="font-bold text-white">{p.name}</p>
-                  <p className="text-on-surface-variant mt-0.5">SKU: {p.sku} | HSN: {p.hsn_code || p.hsn}</p>
-                </div>
-                <span className="font-bold text-primary">${p.price_min || p.price}</span>
+        <div className="flex items-center gap-3">
+          <button 
+            onClick={() => setShowBulkModal(true)} 
+            className="px-6 py-2.5 bg-white/5 hover:bg-white/10 text-white font-bold rounded-xl text-xs transition-all border border-white/10 flex items-center gap-2"
+          >
+            <FileArrowUp size={16} />
+            Bulk Upload
+          </button>
+          <button 
+            onClick={handlePublishClick} 
+            className="px-6 py-2.5 bg-primary hover:bg-blue-600 text-white font-bold rounded-xl text-xs transition-all flex items-center justify-center shadow-lg shadow-primary/20"
+          >
+            Publish to Storefront
+          </button>
+        </div>
+      </header>
+
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        {/* Left Canvas */}
+        <div className="lg:col-span-8 space-y-6">
+          
+          {/* Core Information Card */}
+          <div className="glass-card rounded-2xl p-8 space-y-6 border border-white/5 bg-[#031037]/40">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
+                <Plus size={18} />
               </div>
-            ))}
+              <h3 className="font-display font-bold text-sm text-white">Core Information</h3>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-xs font-semibold text-on-surface-variant mb-2">Product Name</label>
+                <input
+                  type="text"
+                  value={prodName}
+                  onChange={(e) => setProdName(e.target.value)}
+                  className="w-full px-4 py-3 bg-[#031037]/80 rounded-xl border border-white/10 text-white text-sm focus:border-primary/50 outline-none transition-all"
+                  placeholder="e.g. Premium Handcrafted Leather Satchel"
+                  required
+                />
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-semibold text-on-surface-variant mb-2">Category</label>
+                  <input
+                    type="text"
+                    value={prodCategory}
+                    onChange={(e) => setProdCategory(e.target.value)}
+                    className="w-full px-4 py-3 bg-[#031037]/80 rounded-xl border border-white/10 text-white text-sm focus:border-primary/50 outline-none transition-all"
+                    placeholder="Apparel & Accessories"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-on-surface-variant mb-2">Sub-category</label>
+                  <input
+                    type="text"
+                    value={prodSubCategory}
+                    onChange={(e) => setProdSubCategory(e.target.value)}
+                    className="w-full px-4 py-3 bg-[#031037]/80 rounded-xl border border-white/10 text-white text-sm focus:border-primary/50 outline-none transition-all"
+                    placeholder="Handbags"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-on-surface-variant mb-2">Product Description</label>
+                <textarea
+                  value={prodDesc}
+                  onChange={(e) => setProdDesc(e.target.value)}
+                  className="w-full px-4 py-3 bg-[#031037]/80 rounded-xl border border-white/10 text-white text-sm h-32 focus:border-primary/50 outline-none transition-all resize-none"
+                  placeholder="Describe the materials, craftsmanship, and unique value propositions..."
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Export Logistics & Compliance Card */}
+          <div className="glass-card rounded-2xl p-8 space-y-6 border border-white/5 bg-[#031037]/40">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
+                <Globe size={18} />
+              </div>
+              <h3 className="font-display font-bold text-sm text-white">Export Logistics & Compliance</h3>
+            </div>
+
+            <div className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-semibold text-on-surface-variant mb-2">HSN Code</label>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={prodHsn}
+                      onChange={(e) => setProdHsn(e.target.value)}
+                      className="flex-1 px-4 py-3 bg-[#031037]/80 rounded-xl border border-white/10 text-white text-sm focus:border-primary/50 outline-none transition-all"
+                      placeholder="XXXX XX XX"
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-on-surface-variant mb-2">MOQ Tier (Minimum Order Quantity)</label>
+                  <input
+                    type="text"
+                    value={prodMoq}
+                    onChange={(e) => setProdMoq(e.target.value)}
+                    className="w-full px-4 py-3 bg-[#031037]/80 rounded-xl border border-white/10 text-white text-sm focus:border-primary/50 outline-none transition-all"
+                    placeholder="100 Units"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-semibold text-on-surface-variant mb-2">FOB Price ($/Unit)</label>
+                  <input
+                    type="number"
+                    value={prodPriceMin}
+                    onChange={(e) => setProdPriceMin(e.target.value)}
+                    className="w-full px-4 py-3 bg-[#031037]/80 rounded-xl border border-white/10 text-white text-sm focus:border-primary/50 outline-none transition-all"
+                    placeholder="0.00"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-on-surface-variant mb-2">CIF Quote (Estimated)</label>
+                  <input
+                    type="text"
+                    value={prodCif}
+                    onChange={(e) => setProdCif(e.target.value)}
+                    className="w-full px-4 py-3 bg-[#031037]/80 rounded-xl border border-white/10 text-white text-sm focus:border-primary/50 outline-none transition-all"
+                    placeholder="0.00"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Product Gallery Card */}
+          <div className="glass-card rounded-2xl p-8 space-y-6 border border-white/5 bg-[#031037]/40">
+            <div className="flex justify-between items-center">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
+                  <Sparkle size={18} />
+                </div>
+                <div>
+                  <h3 className="font-display font-bold text-sm text-white">Product Gallery</h3>
+                  <p className="text-[10px] text-on-surface-variant mt-0.5">Max 5MB per image. 4K resolution supported.</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {/* Add Media Box */}
+              <label className="border border-dashed border-white/10 hover:border-primary/40 rounded-xl p-4 flex flex-col items-center justify-center gap-2 cursor-pointer hover:bg-white/5 transition-all min-h-[120px] group">
+                <input 
+                  type="file" 
+                  onChange={(e) => handleBase64Upload(e.target.files[0], setProdImage)} 
+                  className="hidden" 
+                />
+                <Plus size={20} className="text-on-surface-variant group-hover:text-primary transition-colors" />
+                <span className="text-[10px] font-bold text-white">Add Media</span>
+              </label>
+
+              {/* Box 2: Handbag Preview */}
+              <div className="relative rounded-xl overflow-hidden aspect-square bg-[#031037] border border-white/10 flex items-center justify-center min-h-[120px]">
+                {prodImage ? (
+                  <img src={prodImage} className="absolute inset-0 w-full h-full object-cover" />
+                ) : (
+                  <div className="w-full h-full bg-gradient-to-br from-primary/10 to-transparent p-3 flex flex-col justify-between">
+                    <span className="text-[9px] font-bold text-primary uppercase">MOCKUP IMAGE</span>
+                    <div className="flex items-center justify-center flex-1">
+                      <svg className="w-10 h-10 text-primary/40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                        <path d="M6 9V7a6 6 0 0 1 12 0v2m-14 0h16a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2z" />
+                      </svg>
+                    </div>
+                    <span className="text-[8px] text-on-surface-variant">White background suggested</span>
+                  </div>
+                )}
+              </div>
+
+              {/* Box 3: Leather texture mockup */}
+              <div className="relative rounded-xl overflow-hidden aspect-square bg-[#031037] border border-white/10 flex items-center justify-center min-h-[120px]">
+                <div className="w-full h-full bg-gradient-to-br from-primary/5 to-transparent p-3 flex flex-col justify-between">
+                  <span className="text-[9px] font-bold text-primary/60 uppercase">TEXTURE</span>
+                  <div className="flex items-center justify-center flex-1">
+                    <svg className="w-10 h-10 text-primary/20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                      <path d="M4 4h16v16H4z M12 4v16 M4 12h16" />
+                    </svg>
+                  </div>
+                  <span className="text-[8px] text-on-surface-variant">Secondary detail</span>
+                </div>
+              </div>
+
+              {/* Box 4: Placeholder */}
+              <div className="rounded-xl bg-[#031037]/40 border border-white/5 flex items-center justify-center min-h-[120px] text-on-surface-variant text-base font-bold">
+                •••
+              </div>
+            </div>
+          </div>
+
+          {/* Add Product Submit Row */}
+          <div className="flex justify-start pt-4 border-t border-white/10">
+            <button 
+              type="button" 
+              onClick={handleAddClick}
+              className="px-6 py-3 bg-[#0c1940] hover:bg-[#12245c] text-primary hover:text-white border border-primary/20 hover:border-primary/50 text-xs font-bold rounded-xl flex items-center gap-1.5 transition-all"
+            >
+              <Plus size={14} />
+              Add Product to Catalog
+            </button>
+          </div>
+
+        </div>
+
+        {/* Sidebar Info */}
+        <div className="lg:col-span-4 space-y-6">
+          
+          {/* Product Readiness Card */}
+          <div className="glass-card rounded-2xl p-6 space-y-6 border border-white/5 bg-[#031037]/40">
+            <div className="flex justify-between items-center">
+              <h4 className="font-bold text-xs uppercase tracking-widest text-on-surface-variant">Product Readiness</h4>
+              <div className="text-right">
+                <span className="block text-lg font-black text-primary">
+                  {Math.round(
+                    ( (prodName ? 1 : 0) + 
+                      (prodHsn ? 1 : 0) + 
+                      (prodImage ? 1 : 0) + 
+                      (prodPriceMin ? 1 : 0) ) * 25
+                  )}%
+                </span>
+                <span className="text-[9px] font-bold text-on-surface-variant uppercase tracking-wider">Ready</span>
+              </div>
+            </div>
+
+            <div className="w-full bg-white/10 h-1.5 rounded-full overflow-hidden">
+              <div 
+                className="bg-primary h-full progress-shimmer transition-all duration-300" 
+                style={{ 
+                  width: `${
+                    ( (prodName ? 1 : 0) + 
+                      (prodHsn ? 1 : 0) + 
+                      (prodImage ? 1 : 0) + 
+                      (prodPriceMin ? 1 : 0) ) * 25
+                  }%` 
+                }}
+              ></div>
+            </div>
+
+            <div className="space-y-3 text-xs">
+              <div className="flex items-center gap-2.5 text-white">
+                {prodName ? (
+                  <div className="w-4 h-4 rounded-full bg-green-500/20 border border-green-500/30 flex items-center justify-center text-green-400">
+                    <Check size={10} />
+                  </div>
+                ) : (
+                  <div className="w-4 h-4 rounded-full border border-white/10"></div>
+                )}
+                <span className={prodName ? "font-semibold" : "text-on-surface-variant"}>Basic details added</span>
+              </div>
+
+              <div className="flex items-center gap-2.5 text-white">
+                {prodHsn ? (
+                  <div className="w-4 h-4 rounded-full bg-green-500/20 border border-green-500/30 flex items-center justify-center text-green-400">
+                    <Check size={10} />
+                  </div>
+                ) : (
+                  <div className="w-4 h-4 rounded-full border border-white/10"></div>
+                )}
+                <span className={prodHsn ? "font-semibold" : "text-on-surface-variant"}>Compliance docs linked</span>
+              </div>
+
+              <div className="flex items-center gap-2.5 text-white">
+                {prodImage ? (
+                  <div className="w-4 h-4 rounded-full bg-green-500/20 border border-green-500/30 flex items-center justify-center text-green-400">
+                    <Check size={10} />
+                  </div>
+                ) : (
+                  <div className="w-4 h-4 rounded-full border border-white/10"></div>
+                )}
+                <span className={prodImage ? "font-semibold" : "text-on-surface-variant"}>Add 2 more HD photos</span>
+              </div>
+
+              <div className="flex items-center gap-2.5 text-white">
+                {prodPriceMin ? (
+                  <div className="w-4 h-4 rounded-full bg-green-500/20 border border-green-500/30 flex items-center justify-center text-green-400">
+                    <Check size={10} />
+                  </div>
+                ) : (
+                  <div className="w-4 h-4 rounded-full border border-white/10"></div>
+                )}
+                <span className={prodPriceMin ? "font-semibold" : "text-on-surface-variant"}>Optimize FOB pricing</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Export AI Assistant Card */}
+          <div className="glass-card rounded-2xl p-6 border border-white/5 bg-[#0c1940]/40 space-y-4">
+            <h5 className="font-bold text-xs text-primary flex items-center gap-1.5">
+              <Sparkle size={14} className="animate-pulse" />
+              Export AI Assistant
+            </h5>
+            <p className="text-xs text-on-surface-variant italic leading-relaxed bg-[#031037]/60 p-3 rounded-xl border border-white/5">
+              "Based on your category, US buyers typically look for 'Sustainable Sourcing' certs. Would you like to add one?"
+            </p>
+            <button 
+              type="button" 
+              onClick={() => {
+                setEnableSmartInsights(!enableSmartInsights);
+              }}
+              className="w-full py-2.5 bg-white/5 hover:bg-white/10 text-white font-bold rounded-xl text-xs transition-all border border-white/10"
+            >
+              {enableSmartInsights ? "Smart Insights Enabled" : "Enable Smart Insights"}
+            </button>
+          </div>
+
+          {/* Pro Tip Card */}
+          <div className="glass-card rounded-2xl p-6 border border-white/5 flex gap-3 bg-[#0c1940]/40">
+            <Lightbulb size={24} className="text-yellow-400 shrink-0" />
+            <div>
+              <h5 className="font-bold text-xs text-white mb-1">Pro Tip</h5>
+              <p className="text-[11px] text-on-surface-variant leading-relaxed">
+                Products with White Backgrounds see a 40% higher click-through rate from Middle-Eastern importers.
+              </p>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      {/* Bulk CSV / ZIP Import Modal Overlay */}
+      {showBulkModal && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[9999] p-4">
+          <div className="glass-card rounded-3xl p-8 max-w-lg w-full border border-white/10 space-y-6 relative animate-fade-in">
+            <button 
+              onClick={() => setShowBulkModal(false)}
+              className="absolute top-4 right-4 text-on-surface-variant hover:text-white text-lg font-bold"
+            >
+              ×
+            </button>
+
+            <div className="flex items-center gap-3 border-b border-white/5 pb-4">
+              <FileArrowUp size={24} className="text-primary" />
+              <div>
+                <h3 className="font-display font-bold text-lg text-white">Bulk CSV / ZIP Import</h3>
+                <p className="text-xs text-on-surface-variant">Upload CSV catalog and ZIP image files simultaneously.</p>
+              </div>
+            </div>
+
+            <form onSubmit={async (e) => {
+              e.preventDefault();
+              onBulkImport({ csvFile, zipFile });
+              setShowBulkModal(false);
+            }} className="space-y-4 text-left">
+              <div>
+                <label className="block text-xs font-semibold uppercase tracking-wider text-on-surface-variant mb-2">CSV File (sku,name...)</label>
+                <input 
+                  type="file" 
+                  accept=".csv"
+                  onChange={(e) => setCsvFile(e.target.files[0])}
+                  className="text-xs text-on-surface-variant w-full"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold uppercase tracking-wider text-on-surface-variant mb-2">ZIP Images Archive</label>
+                <input 
+                  type="file" 
+                  accept=".zip"
+                  onChange={(e) => setZipFile(e.target.files[0])}
+                  className="text-xs text-on-surface-variant w-full"
+                />
+              </div>
+
+              <button 
+                type="submit" 
+                className="w-full py-3 bg-primary hover:bg-blue-600 text-white font-bold rounded-xl text-sm transition-all shadow-lg shadow-primary/20"
+              >
+                Upload & Process Import
+              </button>
+            </form>
           </div>
         </div>
+      )}
 
-        <button onClick={onLockCatalog} className="w-full py-4 bg-green-700 hover:bg-green-800 text-white font-bold rounded-xl text-sm flex items-center justify-center gap-2">
-          Lock Catalog & Continue <Check size={16} />
-        </button>
-      </div>
     </div>
   );
 }
