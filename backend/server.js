@@ -38,9 +38,13 @@ const startServer = async () => {
   await connectDB();
   await initTestUsers();
   
-  app.listen(PORT, () => {
-    console.log(`EXIMARG Node.js API server running on port ${PORT}`);
-  });
+  if (!process.env.VERCEL) {
+    app.listen(PORT, () => {
+      console.log(`EXIMARG Node.js API server running on port ${PORT}`);
+    });
+  }
 };
 
 startServer();
+
+export default app;
