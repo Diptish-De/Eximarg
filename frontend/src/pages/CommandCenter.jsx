@@ -261,15 +261,18 @@ export default function CommandCenter() {
   };
 
   const startNewInvoice = () => {
-    setBuyerName('');
-    setBuyerEmail('');
-    setBuyerAddress('');
-    setInvoiceProducts([]);
+    setBuyerName('Nordic Retail Group GmbH');
+    setBuyerEmail('claus.h@nordic-retail.com');
+    setBuyerAddress('Kaiserstraße 120-122, 60329 Frankfurt am Main, Germany');
+    setInvoiceProducts([
+      { product_id: '1', name: 'Handcrafted Organic Cotton Bed Linen - Set of 3 (Indigo Collection)', quantity: 420, price: 25.00 },
+      { product_id: '2', name: 'Decorative Silk Cushion Covers - 16x16"', quantity: 150, price: 13.00 }
+    ]);
     setFobPortLoading(0);
     setFobTransport(0);
     setFobDocs(0);
-    setCifFreight(0);
-    setCifInsurance(0);
+    setCifFreight(1000);
+    setCifInsurance(150);
     setSelectedInvoiceId(null);
     setCurrentWizardStep(1);
     setShowInvoiceWizard(true);
@@ -636,318 +639,327 @@ export default function CommandCenter() {
             </div>
           )}
 
-          {/* INVOICE WIZARD (6 STEPS) */}
+          {/* INVOICE WIZARD */}
           {showInvoiceWizard && (
-            <div className="glass-card p-8 rounded-3xl space-y-6 animate-fade-in">
-              <div className="flex justify-between items-center border-b border-white/5 pb-4">
+            <div className="space-y-8 animate-fade-in text-left">
+              <header className="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                  <h3 className="font-display font-extrabold text-xl text-white">Create Export Invoice (Level 7)</h3>
-                  <p className="text-xs text-on-surface-variant mt-1">Step {currentWizardStep} of 6</p>
+                  <div className="flex items-center gap-2">
+                    <span className="px-2 py-0.5 bg-primary/10 border border-primary/20 text-primary text-[10px] font-bold uppercase rounded-full">
+                      Orders
+                    </span>
+                    <span className="text-xs text-on-surface-variant font-semibold">/ Invoice Dispatch Wizard</span>
+                  </div>
+                  <h1 className="font-display font-extrabold text-3xl text-white mt-2">Dispatch Final Documentation</h1>
                 </div>
+
                 <div className="flex items-center gap-3">
-                  <button
-                    type="button"
-                    onClick={bypassInvoiceWizard}
-                    className="px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold rounded-lg flex items-center gap-1 shadow transition-colors"
-                  >
-                    <Sparkle size={12} />
-                    Bypass/Auto-fill
-                  </button>
+                  <div className="inline-flex items-center gap-1.5 bg-green-500/10 border border-green-500/20 text-green-400 text-[10px] font-bold uppercase tracking-wider px-3 py-1 rounded-full">
+                    <ShieldCheck size={12} />
+                    FEMA Compliance Active
+                  </div>
                   <button 
                     onClick={() => setShowInvoiceWizard(false)}
-                    className="text-xs text-on-surface-variant hover:text-white font-bold"
+                    className="px-4 py-2 bg-white/5 border border-white/10 hover:bg-white/10 text-white text-xs font-bold rounded-xl transition-all"
                     data-testid="close-invoice-wizard"
                   >
                     Cancel
                   </button>
                 </div>
-              </div>
+              </header>
 
-              {/* Step 1: Buyer Details */}
-              {currentWizardStep === 1 && (
-                <div className="space-y-4">
-                  <h4 className="font-display font-bold text-sm text-primary uppercase tracking-wider font-semibold">Step 1: Buyer Information</h4>
-                  <div>
-                    <label className="block text-xs font-semibold text-on-surface-variant mb-2">Buyer Corporate Name</label>
-                    <input
-                      type="text"
-                      value={buyerName}
-                      onChange={(e) => setBuyerName(e.target.value)}
-                      className="w-full px-4 py-3 bg-[#031037]/80 rounded-xl border border-white/10 text-white text-sm"
-                      placeholder="e.g. Global Foods Corp LLC"
-                      data-testid="buyer-name-input"
-                      required
-                    />
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-xs font-semibold text-on-surface-variant mb-2">Contact Email</label>
-                      <input
-                        type="email"
-                        value={buyerEmail}
-                        onChange={(e) => setBuyerEmail(e.target.value)}
-                        className="w-full px-4 py-3 bg-[#031037]/80 rounded-xl border border-white/10 text-white text-sm"
-                        placeholder="buyer@globalfoods.com"
-                        data-testid="buyer-email-input"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-semibold text-on-surface-variant mb-2">Delivery Address</label>
-                      <input
-                        type="text"
-                        value={buyerAddress}
-                        onChange={(e) => setBuyerAddress(e.target.value)}
-                        className="w-full px-4 py-3 bg-[#031037]/80 rounded-xl border border-white/10 text-white text-sm"
-                        placeholder="100, Wharf Side, Long Beach, CA, USA"
-                        data-testid="buyer-address-input"
-                      />
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Step 2: Seller Details */}
-              {currentWizardStep === 2 && (
-                <div className="space-y-4">
-                  <h4 className="font-display font-bold text-sm text-primary uppercase tracking-wider font-semibold">Step 2: Seller Information (Your Company)</h4>
-                  <div>
-                    <label className="block text-xs font-semibold text-on-surface-variant mb-2">Seller Company Name</label>
-                    <input
-                      type="text"
-                      value={sellerName}
-                      onChange={(e) => setSellerName(e.target.value)}
-                      className="w-full px-4 py-3 bg-[#031037]/80 rounded-xl border border-white/10 text-white text-sm font-semibold"
-                      placeholder="Auto-populated seller company"
-                      data-testid="seller-name-input"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-semibold text-on-surface-variant mb-2">Registered Address</label>
-                    <input
-                      type="text"
-                      value={sellerAddress}
-                      onChange={(e) => setSellerAddress(e.target.value)}
-                      className="w-full px-4 py-3 bg-[#031037]/80 rounded-xl border border-white/10 text-white text-sm"
-                      placeholder="Seller office location"
-                      data-testid="seller-address-input"
-                    />
-                  </div>
-                </div>
-              )}
-
-              {/* Step 3: Product Selections */}
-              {currentWizardStep === 3 && (
-                <div className="space-y-4">
-                  <h4 className="font-display font-bold text-sm text-primary uppercase tracking-wider font-semibold">Step 3: Select Products & MOQ Quantity</h4>
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+                {/* Left Column: Input Sections */}
+                <div className="lg:col-span-7 space-y-6">
                   
-                  <div className="bg-[#031037]/60 border border-white/10 p-4 rounded-2xl space-y-3">
-                    <span className="block text-[10px] text-on-surface-variant uppercase font-bold tracking-wider">Click to add product</span>
-                    <div className="flex flex-wrap gap-2">
-                      {products.map(p => (
-                        <button
-                          key={p.id}
-                          type="button"
-                          onClick={() => addProductToInvoice(p)}
-                          className="px-3 py-2 bg-primary/10 border border-primary/20 hover:bg-primary/30 text-white rounded-xl text-xs font-semibold transition-all"
+                  {/* Step 1: Identify Recipient */}
+                  <div className="glass-card rounded-2xl p-6 border border-white/5 bg-[#031037]/40 space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary font-bold text-xs">
+                          1
+                        </div>
+                        <h3 className="font-display font-bold text-sm text-white">Identify Recipient</h3>
+                      </div>
+                      <Users size={20} className="text-on-surface-variant/40" />
+                    </div>
+
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-[10px] font-bold text-on-surface-variant uppercase tracking-wider mb-2">VERIFIED FOREIGN BUYER</label>
+                        <select 
+                          value={buyerName}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            setBuyerName(val);
+                            if (val === 'Nordic Retail Group GmbH') {
+                              setBuyerEmail('claus.h@nordic-retail.com');
+                              setBuyerAddress('Kaiserstraße 120-122, 60329 Frankfurt am Main, Germany');
+                              setInvoiceProducts([
+                                { product_id: '1', name: 'Handcrafted Organic Cotton Bed Linen - Set of 3 (Indigo Collection)', quantity: 420, price: 25.00 },
+                                { product_id: '2', name: 'Decorative Silk Cushion Covers - 16x16"', quantity: 150, price: 13.00 }
+                              ]);
+                              setCifFreight(1000);
+                              setCifInsurance(150);
+                            } else if (val === 'Global Foods Corp LLC') {
+                              setBuyerEmail('info@globalfoods.com');
+                              setBuyerAddress('100, Wharf Side, Long Beach, CA, USA');
+                              setInvoiceProducts([
+                                { product_id: '1', name: 'Premium Basmati Rice', quantity: 200, price: 15.50 }
+                              ]);
+                              setCifFreight(800);
+                              setCifInsurance(120);
+                            } else {
+                              setBuyerEmail('import@londontextiles.co.uk');
+                              setBuyerAddress('24 Baker St, London, UK');
+                              setInvoiceProducts([
+                                { product_id: '2', name: 'Silk Accessories', quantity: 120, price: 35.00 }
+                              ]);
+                              setCifFreight(900);
+                              setCifInsurance(130);
+                            }
+                          }}
+                          className="w-full px-4 py-3 bg-[#031037]/80 rounded-xl border border-white/10 text-white text-sm focus:border-primary/50 outline-none transition-all"
                         >
-                          + {p.name}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
+                          <option value="Nordic Retail Group GmbH">Nordic Retail Group GmbH (VAT: DE98231)</option>
+                          <option value="Global Foods Corp LLC">Global Foods Corp LLC (VAT: US99123)</option>
+                          <option value="London Textiles Ltd">London Textiles Ltd (VAT: GB55231)</option>
+                        </select>
+                      </div>
 
-                  <div className="space-y-3">
-                    {invoiceProducts.map((p, idx) => (
-                      <div key={idx} className="bg-[#031037]/80 border border-white/10 p-4 rounded-2xl flex items-center justify-between gap-4">
-                        <div className="flex-1">
-                          <p className="font-bold text-white text-sm">{p.name}</p>
+                      <div className="bg-[#0c1940]/60 border border-primary/20 rounded-xl p-4 flex gap-3 text-xs text-on-surface-variant">
+                        <Question size={18} className="text-primary shrink-0 mt-0.5" />
+                        <div>
+                          Dispatching to <strong className="text-white">{buyerEmail || 'claus.h@nordic-retail.com'}</strong>. This buyer is cleared for immediate dispatch.
                         </div>
-                        <div className="w-24">
-                          <label className="text-[10px] text-on-surface-variant">Qty</label>
-                          <input
-                            type="number"
-                            value={p.quantity}
-                            onChange={(e) => updateInvoiceProduct(idx, 'quantity', parseInt(e.target.value))}
-                            className="w-full px-2 py-1 bg-brand-bg rounded-lg border border-white/10 text-xs text-white"
-                          />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Step 2: Consolidated Shipments */}
+                  <div className="glass-card rounded-2xl p-6 border border-white/5 bg-[#031037]/40 space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary font-bold text-xs">
+                          2
                         </div>
-                        <div className="w-24">
-                          <label className="text-[10px] text-on-surface-variant">Unit Price ($)</label>
-                          <input
-                            type="number"
-                            value={p.price}
-                            onChange={(e) => updateInvoiceProduct(idx, 'price', parseFloat(e.target.value))}
-                            className="w-full px-2 py-1 bg-brand-bg rounded-lg border border-white/10 text-xs text-white"
-                          />
+                        <h3 className="font-display font-bold text-sm text-white">Consolidated Shipments</h3>
+                      </div>
+                    </div>
+
+                    <div className="space-y-3">
+                      {/* Shipment 1 */}
+                      <div className="bg-[#031037]/80 border border-white/10 p-4 rounded-xl flex items-center justify-between gap-4">
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
+                            <FileText size={16} />
+                          </div>
+                          <div>
+                            <p className="font-bold text-white text-xs">SHP-2023-9941</p>
+                            <p className="text-[10px] text-on-surface-variant mt-0.5">Handcrafted Textiles • 420 Units</p>
+                          </div>
                         </div>
-                        <button 
-                          type="button"
-                          onClick={() => removeProductFromInvoice(idx)}
-                          className="text-red-400 hover:text-red-300 self-end mb-1"
-                        >
-                          <Trash size={16} />
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Step 4: FOB Charges */}
-              {currentWizardStep === 4 && (
-                <div className="space-y-4">
-                  <h4 className="font-display font-bold text-sm text-primary uppercase tracking-wider font-semibold">Step 4: FOB (Free On Board) Charges</h4>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div>
-                      <label className="block text-xs font-semibold text-on-surface-variant mb-2">Port Loading Fees ($)</label>
-                      <input
-                        type="number"
-                        value={fobPortLoading}
-                        onChange={(e) => setFobPortLoading(e.target.value)}
-                        className="w-full px-4 py-3 bg-[#031037]/80 rounded-xl border border-white/10 text-white text-sm"
-                        placeholder="Loading fees"
-                        data-testid="fob-loading-input"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-semibold text-on-surface-variant mb-2">Local Transport ($)</label>
-                      <input
-                        type="number"
-                        value={fobTransport}
-                        onChange={(e) => setFobTransport(e.target.value)}
-                        className="w-full px-4 py-3 bg-[#031037]/80 rounded-xl border border-white/10 text-white text-sm"
-                        placeholder="Transport to Port"
-                        data-testid="fob-transport-input"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-semibold text-on-surface-variant mb-2">Documentation Fees ($)</label>
-                      <input
-                        type="number"
-                        value={fobDocs}
-                        onChange={(e) => setFobDocs(e.target.value)}
-                        className="w-full px-4 py-3 bg-[#031037]/80 rounded-xl border border-white/10 text-white text-sm"
-                        placeholder="Customs clearance docs"
-                        data-testid="fob-docs-input"
-                      />
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Step 5: CIF Charges */}
-              {currentWizardStep === 5 && (
-                <div className="space-y-4">
-                  <h4 className="font-display font-bold text-sm text-primary uppercase tracking-wider font-semibold">Step 5: CIF (Cost, Insurance & Freight) Charges</h4>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-xs font-semibold text-on-surface-variant mb-2">Ocean/Air Freight charges ($)</label>
-                      <input
-                        type="number"
-                        value={cifFreight}
-                        onChange={(e) => setCifFreight(e.target.value)}
-                        className="w-full px-4 py-3 bg-[#031037]/80 rounded-xl border border-white/10 text-white text-sm"
-                        placeholder="Freight charges"
-                        data-testid="cif-freight-input"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-semibold text-on-surface-variant mb-2">Marine Cargo Insurance ($)</label>
-                      <input
-                        type="number"
-                        value={cifInsurance}
-                        onChange={(e) => setCifInsurance(e.target.value)}
-                        className="w-full px-4 py-3 bg-[#031037]/80 rounded-xl border border-white/10 text-white text-sm"
-                        placeholder="Insurance"
-                        data-testid="cif-insurance-input"
-                      />
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Step 6: Live Export Invoice Preview */}
-              {currentWizardStep === 6 && (
-                <div className="space-y-6">
-                  <h4 className="font-display font-bold text-sm text-primary uppercase tracking-wider font-semibold">Step 6: Live Export Invoice Preview</h4>
-                  
-                  <div className="bg-[#031037]/80 border border-white/10 p-6 rounded-2xl space-y-4 text-xs font-mono">
-                    <div className="flex justify-between font-bold text-white border-b border-white/5 pb-2 text-sm">
-                      <span>Seller: {sellerName}</span>
-                      <span>Buyer: {buyerName}</span>
-                    </div>
-                    <div className="space-y-2">
-                      <p className="font-bold text-white">Line Items:</p>
-                      {invoiceProducts.map((p, i) => (
-                        <div key={i} className="flex justify-between text-on-surface-variant">
-                          <span>{p.name} (x{p.quantity})</span>
-                          <span>${(p.quantity * p.price).toFixed(2)}</span>
+                        <div className="flex items-center gap-4">
+                          <div className="text-right">
+                            <p className="font-bold text-white text-xs">$12,450.00</p>
+                            <p className="text-[9px] text-on-surface-variant">FOB Mumbai</p>
+                          </div>
+                          <div className="w-5 h-5 rounded-full bg-green-500/20 border border-green-500/30 flex items-center justify-center text-green-400">
+                            <CheckCircle size={14} />
+                          </div>
                         </div>
-                      ))}
-                    </div>
-                    <div className="border-t border-white/5 pt-2 space-y-1">
-                      <div className="flex justify-between">
-                        <span>Products Subtotal:</span>
-                        <span>${getSubtotal().toFixed(2)}</span>
                       </div>
-                      <div className="flex justify-between">
-                        <span>FOB Charges:</span>
-                        <span>${getFobTotal().toFixed(2)}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span>CIF Charges:</span>
-                        <span>${getCifTotal().toFixed(2)}</span>
-                      </div>
-                      <div className="flex justify-between font-bold text-white text-sm pt-2 border-t border-dashed border-white/10">
-                        <span>Grand Total:</span>
-                        <span>${getTotalAmount().toFixed(2)}</span>
+
+                      {/* Shipment 2 */}
+                      <div className="bg-[#031037]/40 border border-white/5 p-4 rounded-xl flex items-center justify-between gap-4 opacity-60 hover:opacity-100 transition-opacity">
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center text-on-surface-variant">
+                            <FileText size={16} />
+                          </div>
+                          <div>
+                            <p className="font-bold text-white text-xs">SHP-2023-8821</p>
+                            <p className="text-[10px] text-on-surface-variant mt-0.5">Silk Accessories • 150 Units</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-4">
+                          <div className="text-right">
+                            <p className="font-bold text-white text-xs">$4,200.00</p>
+                            <p className="text-[9px] text-on-surface-variant">EXW Delhi</p>
+                          </div>
+                          <button 
+                            type="button"
+                            onClick={() => {
+                              if (invoiceProducts.length <= 2) {
+                                setInvoiceProducts([
+                                  ...invoiceProducts,
+                                  { product_id: '3', name: 'Premium Silk Accessories & Scarves', quantity: 150, price: 28.00 }
+                                ]);
+                                toast.success("Consolidated shipment added!");
+                              }
+                            }}
+                            className="w-5 h-5 rounded-full bg-white/5 hover:bg-primary/20 border border-white/10 flex items-center justify-center text-white"
+                          >
+                            <Plus size={12} />
+                          </button>
+                        </div>
                       </div>
                     </div>
                   </div>
+
+                  {/* Step 3: Review & Dispatch */}
+                  <div className="glass-card rounded-2xl p-6 border border-white/5 bg-[#031037]/40 space-y-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary font-bold text-xs">
+                        3
+                      </div>
+                      <h3 className="font-display font-bold text-sm text-white">Review & Dispatch</h3>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <label className="flex items-start gap-3 p-4 bg-[#031037]/60 border border-white/5 rounded-xl cursor-pointer">
+                        <input type="checkbox" defaultChecked className="mt-1" />
+                        <div>
+                          <p className="font-bold text-white text-xs">Attach Certificate of Origin</p>
+                          <p className="text-[10px] text-on-surface-variant mt-0.5">Digitally signed by Chamber of Commerce</p>
+                        </div>
+                      </label>
+                      <label className="flex items-start gap-3 p-4 bg-[#031037]/60 border border-white/5 rounded-xl cursor-pointer">
+                        <input type="checkbox" defaultChecked className="mt-1" />
+                        <div>
+                          <p className="font-bold text-white text-xs">Courier Tracking (DHL)</p>
+                          <p className="text-[10px] text-on-surface-variant mt-0.5">Auto-notify buyer upon pickup</p>
+                        </div>
+                      </label>
+                    </div>
+
+                    <div className="pt-4 border-t border-white/5">
+                      <button
+                        onClick={handleSendInvoice}
+                        className="w-full py-4 bg-primary hover:bg-blue-600 text-white font-bold rounded-xl text-sm flex items-center justify-center gap-2 shadow-lg shadow-primary/20"
+                        data-testid="send-invoice-button"
+                      >
+                        <PaperPlaneRight size={16} />
+                        Dispatch Export Invoice
+                      </button>
+                    </div>
+                  </div>
+
                 </div>
-              )}
 
-              {/* Wizard Navigation controls */}
-              <div className="flex justify-between pt-6 border-t border-white/5">
-                {currentWizardStep > 1 ? (
-                  <button
-                    onClick={() => setCurrentWizardStep(currentWizardStep - 1)}
-                    className="px-4 py-2 bg-white/5 hover:bg-white/10 text-white rounded-xl text-xs font-bold transition-all"
-                    data-testid="wizard-prev-button"
-                  >
-                    Previous
-                  </button>
-                ) : (
-                  <div />
-                )}
+                {/* Right Column: LIVE DOCUMENT PREVIEW */}
+                <div className="lg:col-span-5 space-y-4">
+                  <span className="block text-[10px] font-bold text-on-surface-variant uppercase tracking-widest text-center">
+                    LIVE DOCUMENT PREVIEW
+                  </span>
 
-                <div className="flex gap-2">
-                  <button
-                    onClick={handleSaveDraft}
-                    className="px-4 py-2 bg-white/5 border border-white/10 hover:bg-white/10 text-white text-xs font-bold rounded-xl transition-all"
-                    data-testid="invoice-draft-button"
-                  >
-                    Save Draft
-                  </button>
+                  <div className="bg-white text-black p-8 rounded-3xl shadow-2xl space-y-6 text-left border border-white/10 relative min-h-[600px] flex flex-col justify-between">
+                    <div className="space-y-6">
+                      {/* Invoice Title */}
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <h4 className="font-display font-black text-lg text-slate-800 tracking-tight">EXIMARG TRADING CO.</h4>
+                          <p className="text-[8px] text-slate-500 mt-1 max-w-[180px]">Plot 44, SEZ Industrial Estate Gurugram, HR 122018, India</p>
+                          <p className="text-[8px] text-slate-500">GSTIN: 07AAACH1234F1Z1</p>
+                        </div>
+                        <div className="text-right">
+                          <h5 className="font-display font-bold text-sm text-slate-400 uppercase tracking-widest">COMMERCIAL INVOICE</h5>
+                          <p className="text-xs font-black text-slate-800 mt-1">#INV-2023-XM-0941</p>
+                          <p className="text-[9px] text-slate-500">Date: 24 Oct 2023</p>
+                        </div>
+                      </div>
 
-                  {currentWizardStep < 6 ? (
-                    <button
-                      onClick={() => setCurrentWizardStep(currentWizardStep + 1)}
-                      className="px-4 py-2 bg-primary-container hover:bg-blue-600 text-white text-xs font-bold rounded-xl transition-all"
-                      data-testid="wizard-next-button"
-                    >
-                      Next
-                    </button>
-                  ) : (
-                    <button
-                      onClick={handleSendInvoice}
-                      className="px-5 py-2.5 bg-green-600 hover:bg-green-700 text-white text-xs font-bold rounded-xl flex items-center gap-1 transition-all"
-                      data-testid="send-invoice-button"
-                    >
-                      <PaperPlaneRight size={14} />
-                      Send Invoice
-                    </button>
-                  )}
+                      {/* Consignee & Shipment row */}
+                      <div className="grid grid-cols-2 gap-4 border-t border-slate-100 pt-4 text-[9px]">
+                        <div>
+                          <span className="block font-bold text-slate-400 uppercase tracking-wider text-[8px] mb-1">CONSIGNEE (BILL TO)</span>
+                          <p className="font-bold text-slate-800">{buyerName || 'Nordic Retail Group GmbH'}</p>
+                          <p className="text-slate-500 whitespace-pre-wrap mt-0.5">{buyerAddress || 'Kaiserstraße 120-122\n60329 Frankfurt am Main\nGermany'}</p>
+                          <p className="text-slate-500">VAT: {buyerName === 'Nordic Retail Group GmbH' ? 'DE98231200' : 'US99123'}</p>
+                        </div>
+                        <div>
+                          <span className="block font-bold text-slate-400 uppercase tracking-wider text-[8px] mb-1">SHIPMENT DETAILS</span>
+                          <table className="w-full text-left">
+                            <tbody>
+                              <tr>
+                                <td className="text-slate-400 pr-2">Port of Loading:</td>
+                                <td className="font-bold text-slate-800">Nhava Sheva (INNSA)</td>
+                              </tr>
+                              <tr>
+                                <td className="text-slate-400 pr-2">Port of Discharge:</td>
+                                <td className="font-bold text-slate-800">Hamburg (DEHAM)</td>
+                              </tr>
+                              <tr>
+                                <td className="text-slate-400 pr-2">Incoterms:</td>
+                                <td className="font-bold text-slate-800">CIF Hamburg</td>
+                              </tr>
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+
+                      {/* Product Table */}
+                      <div className="border-t border-slate-100 pt-4">
+                        <table className="w-full text-left text-[9px] border-collapse">
+                          <thead>
+                            <tr className="border-b border-slate-100 text-[8px] text-slate-400 uppercase font-bold">
+                              <th className="pb-2">HS Code</th>
+                              <th className="pb-2">Description</th>
+                              <th className="pb-2 text-right">Qty</th>
+                              <th className="pb-2 text-right">Price</th>
+                              <th className="pb-2 text-right">Total</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {invoiceProducts.map((p, i) => (
+                              <tr key={i} className="border-b border-slate-50">
+                                <td className="py-2 text-slate-500">{i === 0 ? '6302.21' : '6307.90'}</td>
+                                <td className="py-2 font-medium text-slate-800 max-w-[150px] truncate">{p.name}</td>
+                                <td className="py-2 text-right text-slate-700">{p.quantity}</td>
+                                <td className="py-2 text-right text-slate-700">${p.price?.toFixed(2)}</td>
+                                <td className="py-2 text-right font-bold text-slate-800">${(p.quantity * p.price).toFixed(2)}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+
+                    {/* Calculation summary */}
+                    <div className="border-t border-slate-100 pt-4 flex flex-col items-end text-[9px] space-y-1">
+                      <div className="flex justify-between w-48 text-slate-500">
+                        <span>Subtotal (FOB Value):</span>
+                        <span className="font-semibold text-slate-800">${getSubtotal().toFixed(2)}</span>
+                      </div>
+                      <div className="flex justify-between w-48 text-slate-500">
+                        <span>Freight & Insurance:</span>
+                        <span className="font-semibold text-slate-800">${(cifFreight + cifInsurance).toFixed(2)}</span>
+                      </div>
+                      <div className="flex justify-between w-48 font-bold text-slate-800 border-t border-dashed border-slate-200 pt-1.5 text-xs">
+                        <span className="text-primary">Total Amount Payable:</span>
+                        <span className="text-primary">${getTotalAmount().toFixed(2)}</span>
+                      </div>
+                    </div>
+
+                    {/* Document Verification Footer */}
+                    <div className="border-t border-slate-100 pt-4 flex justify-between items-center text-[8px] text-slate-400">
+                      <div>
+                        <span className="block font-bold uppercase tracking-wider text-slate-400 mb-0.5">BANK DETAILS</span>
+                        <p>Standard Chartered Bank, IFSC: SCBL0034211</p>
+                        <p>A/C: 4421 9920 1102 3349</p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div className="text-right">
+                          <span className="block font-bold text-green-600 uppercase">Digitally Verified</span>
+                          <span className="text-[7px]">FEMA Compliant ID: XM-9941</span>
+                        </div>
+                        {/* Simulated QR Code */}
+                        <div className="w-10 h-10 bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-500 font-bold text-[6px]">
+                          QR
+                        </div>
+                      </div>
+                    </div>
+
+                  </div>
                 </div>
               </div>
             </div>
