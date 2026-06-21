@@ -445,43 +445,418 @@ export function Level2Exporter({ onSubmit, defaultData = {} }) {
 ## Level 3: Business Verification
 ```jsx
 import React, { useState } from 'react';
-import { Files, FileArrowUp, ArrowRight } from '@phosphor-icons/react';
+import { 
+  Building, Globe, Files, FileArrowUp, CreditCard, ArrowRight, ShieldCheck, Check, Trophy, SealCheck, Sparkle, Lightning, CloudArrowUp
+} from '@phosphor-icons/react';
 
-export function Level3Verification({ onSubmit }) {
-  const [gst, setGst] = useState('');
-  const [cin, setCin] = useState('');
-  const [iec, setIec] = useState('');
-  const [adCode, setAdCode] = useState('');
+export function Level3Verification({ onSubmit, defaultData = {} }) {
+  const [gst, setGst] = useState(defaultData.gst || '');
+  const [cin, setCin] = useState(defaultData.cin || '');
+  const [iec, setIec] = useState(defaultData.iec || '');
+  const [ifsc, setIfsc] = useState(defaultData.ifsc || '');
+  const [adCode, setAdCode] = useState(defaultData.ad_code || '');
+  const [rcmc, setRcmc] = useState(defaultData.rcmc || '');
+  const [apedaFssai, setApedaFssai] = useState(defaultData.apeda_fssai || '');
+  const [addressProof, setAddressProof] = useState(null);
+  const [bankStatement, setBankStatement] = useState(null);
+
+  const handleBase64Upload = (file, callback) => {
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onloadend = () => callback(reader.result);
+    reader.readAsDataURL(file);
+  };
+
+  const handleAutoFill = () => {
+    setGst('22AAAAA0000A1ZS');
+    setCin('U74140DL2026PTC');
+    setIec('1234567890');
+    setIfsc('HDFC0000001');
+    setAdCode('AD123456');
+    setRcmc('RCMC123456');
+    setApedaFssai('APEDA123456');
+    setAddressProof('mock_gst_certificate_base64');
+    setBankStatement('mock_bank_statement_base64');
+  };
+
+  const handleSave = () => {
+    onSubmit({
+      gst,
+      cin,
+      iec,
+      ifsc,
+      ad_code: adCode,
+      rcmc,
+      apeda_fssai: apedaFssai,
+      address_proof: addressProof,
+      bank_statement: bankStatement
+    });
+  };
 
   return (
-    <div className="glass-card rounded-2xl p-8 space-y-6 max-w-3xl">
-      <div className="flex items-center gap-3 border-b border-white/5 pb-4">
-        <Files size={24} className="text-primary" />
-        <h3 className="font-display font-bold text-lg text-white">Government Registrations</h3>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <div className="space-y-8 animate-fade-in max-w-7xl">
+      {/* Header */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-white/5 pb-6">
         <div>
-          <label className="block text-xs font-semibold uppercase tracking-wider text-on-surface-variant mb-2">GSTIN Number</label>
-          <input type="text" value={gst} onChange={(e) => setGst(e.target.value)} className="w-full px-4 py-3 bg-[#031037]/80 rounded-xl border border-white/10 text-white text-sm" placeholder="15-digit GSTIN" />
+          <h1 className="font-display font-extrabold text-3xl text-white">Level 3: Business Verification</h1>
+          <p className="text-on-surface-variant text-sm mt-1">
+            Complete your corporate compliance profile to unlock global trading capabilities and earn your verified status.
+          </p>
         </div>
-        <div>
-          <label className="block text-xs font-semibold uppercase tracking-wider text-on-surface-variant mb-2">CIN (Corporate ID Number)</label>
-          <input type="text" value={cin} onChange={(e) => setCin(e.target.value)} className="w-full px-4 py-3 bg-[#031037]/80 rounded-xl border border-white/10 text-white text-sm" placeholder="21-digit CIN code" />
-        </div>
-        <div>
-          <label className="block text-xs font-semibold uppercase tracking-wider text-on-surface-variant mb-2">IEC Code</label>
-          <input type="text" value={iec} onChange={(e) => setIec(e.target.value)} className="w-full px-4 py-3 bg-[#031037]/80 rounded-xl border border-white/10 text-white text-sm" placeholder="Import Export Code" />
-        </div>
-        <div>
-          <label className="block text-xs font-semibold uppercase tracking-wider text-on-surface-variant mb-2">Bank AD Code</label>
-          <input type="text" value={adCode} onChange={(e) => setAdCode(e.target.value)} className="w-full px-4 py-3 bg-[#031037]/80 rounded-xl border border-white/10 text-white text-sm" placeholder="Authorized Dealer Code" />
+        <div className="flex items-center gap-2 bg-[#000a31]/60 px-4 py-2 rounded-xl border border-white/5">
+          <ShieldCheck size={18} className="text-primary" />
+          <span className="text-xs text-white font-bold uppercase tracking-wider">3/6 COMPLETE</span>
         </div>
       </div>
 
-      <button onClick={() => onSubmit({ gst, cin, iec, adCode })} className="w-full py-4 bg-primary text-white font-bold rounded-xl text-sm flex items-center justify-center gap-2">
-        Verify Credentials <ArrowRight size={16} />
-      </button>
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        
+        {/* Center Content: Verification Cards */}
+        <div className="lg:col-span-8 space-y-6">
+          
+          {/* GST Registration Card */}
+          <div className="glass-card rounded-2xl p-6 border border-white/5 space-y-6 relative">
+            <div className="flex justify-between items-start">
+              <div className="flex items-center gap-4">
+                <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
+                  <Building size={22} />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-bold text-white text-base">GST Registration</h3>
+                    <span className="px-2 py-0.5 bg-green-500/10 border border-green-500/20 text-green-400 text-[9px] font-bold uppercase tracking-wider rounded-full">
+                      Ready
+                    </span>
+                  </div>
+                  <p className="text-xs text-on-surface-variant mt-0.5">Provide your Goods and Services Tax identification number for tax compliance.</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex gap-3">
+              <div className="flex-1 relative">
+                <input
+                  type="text"
+                  value={gst}
+                  onChange={(e) => setGst(e.target.value)}
+                  className="w-full px-4 py-3 bg-[#031037]/80 rounded-xl border border-white/10 text-white text-sm focus:border-primary/50 outline-none transition-all"
+                  placeholder="Enter GSTIN (e.g., 22AAAAA0000A1ZS)"
+                />
+              </div>
+              <button 
+                type="button"
+                onClick={handleAutoFill}
+                className="px-4 py-3 bg-[#0c1940] hover:bg-[#12245c] text-primary hover:text-white border border-primary/20 hover:border-primary/50 text-xs font-bold rounded-xl flex items-center gap-1.5 transition-all shrink-0"
+              >
+                <Lightning size={14} className="animate-pulse" />
+                Auto-fill
+              </button>
+            </div>
+
+            {/* GST Upload & Preview */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <label className="border border-dashed border-white/10 hover:border-primary/40 rounded-xl p-6 flex flex-col items-center justify-center gap-3 cursor-pointer hover:bg-white/5 transition-all relative overflow-hidden group min-h-[140px]">
+                <input 
+                  type="file" 
+                  onChange={(e) => handleBase64Upload(e.target.files[0], setAddressProof)} 
+                  className="hidden" 
+                />
+                {addressProof ? (
+                  <div className="relative z-10 flex flex-col items-center text-center">
+                    <Check size={28} className="text-green-400" />
+                    <span className="text-xs font-semibold text-white mt-1">GST Certificate Loaded</span>
+                  </div>
+                ) : (
+                  <>
+                    <CloudArrowUp size={28} className="text-on-surface-variant group-hover:text-primary transition-colors" />
+                    <div className="text-center">
+                      <span className="block text-xs font-bold text-white">Upload Certificate</span>
+                      <span className="block text-[10px] text-on-surface-variant mt-1">PDF, JPG up to 5MB</span>
+                    </div>
+                  </>
+                )}
+              </label>
+
+              {/* Mock certificate visual preview container */}
+              <div className="relative rounded-xl overflow-hidden bg-[#031037]/80 border border-white/10 flex items-center justify-center p-2 h-[140px]">
+                <div className="w-full h-full rounded-lg bg-gradient-to-br from-primary/20 to-transparent border border-white/5 p-3 flex flex-col justify-between">
+                  <div className="flex justify-between items-start">
+                    <div className="space-y-1">
+                      <div className="w-12 h-2 bg-white/20 rounded"></div>
+                      <div className="w-8 h-1 bg-white/10 rounded"></div>
+                    </div>
+                    <ShieldCheck size={16} className="text-primary" />
+                  </div>
+                  <div className="border-t border-white/10 pt-2 flex justify-between items-center text-[8px] text-on-surface-variant">
+                    <span>REGISTRATION CERTIFICATE</span>
+                    <span className="text-green-400 font-bold">VERIFIED</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Import Export Code (IEC) Card */}
+          <div className="glass-card rounded-2xl p-6 border border-white/5 space-y-6 relative">
+            <div className="flex justify-between items-start">
+              <div className="flex items-center gap-4">
+                <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
+                  <Globe size={22} />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-bold text-white text-base">Import Export Code (IEC)</h3>
+                    <span className="px-2 py-0.5 bg-amber-500/10 border border-amber-500/20 text-amber-400 text-[9px] font-bold uppercase tracking-wider rounded-full">
+                      Pending
+                    </span>
+                  </div>
+                  <p className="text-xs text-on-surface-variant mt-0.5">Your primary identification for international trade operations.</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="relative">
+              <input
+                type="text"
+                value={iec}
+                onChange={(e) => setIec(e.target.value)}
+                className="w-full px-4 py-3 bg-[#031037]/80 rounded-xl border border-white/10 text-white text-sm focus:border-primary/50 outline-none transition-all"
+                placeholder="10-digit IEC Code (e.g. 1234567890)"
+              />
+            </div>
+
+            <label className="border border-dashed border-white/10 hover:border-primary/40 rounded-xl p-8 flex flex-col items-center justify-center gap-3 cursor-pointer hover:bg-white/5 transition-all relative overflow-hidden group min-h-[120px]">
+              <input 
+                type="file" 
+                onChange={(e) => {
+                  const file = e.target.files[0];
+                  if (file) {
+                    handleBase64Upload(file, (base64) => {
+                      setIec(iec || '1234567890');
+                    });
+                  }
+                }} 
+                className="hidden" 
+              />
+              <Files size={28} className="text-on-surface-variant group-hover:text-primary transition-colors" />
+              <div className="text-center">
+                <span className="block text-xs font-bold text-white">Drop IEC Document Here</span>
+                <span className="block text-[10px] text-on-surface-variant mt-1">or click to browse from your device</span>
+              </div>
+            </label>
+          </div>
+
+          {/* Udyam Certificate Card */}
+          <div className="glass-card rounded-2xl p-6 border border-white/5 space-y-6 relative">
+            <div className="flex justify-between items-start">
+              <div className="flex items-center gap-4">
+                <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
+                  <Building size={22} />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-bold text-white text-base">Udyam Certificate</h3>
+                    <span className="px-2 py-0.5 bg-amber-500/10 border border-amber-500/20 text-amber-400 text-[9px] font-bold uppercase tracking-wider rounded-full">
+                      Pending
+                    </span>
+                  </div>
+                  <p className="text-xs text-on-surface-variant mt-0.5">MSME registration to unlock government benefits and priority support.</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="relative">
+              <input
+                type="text"
+                value={apedaFssai}
+                onChange={(e) => setApedaFssai(e.target.value)}
+                className="w-full px-4 py-3 bg-[#031037]/80 rounded-xl border border-white/10 text-white text-sm focus:border-primary/50 outline-none transition-all"
+                placeholder="Udyam Registration Number"
+              />
+            </div>
+
+            <label className="border border-dashed border-white/10 hover:border-primary/40 rounded-xl p-8 flex flex-col items-center justify-center gap-3 cursor-pointer hover:bg-white/5 transition-all relative overflow-hidden group min-h-[120px]">
+              <input 
+                type="file" 
+                onChange={(e) => {
+                  const file = e.target.files[0];
+                  if (file) {
+                    handleBase64Upload(file, (base64) => {});
+                  }
+                }} 
+                className="hidden" 
+              />
+              <FileArrowUp size={28} className="text-on-surface-variant group-hover:text-primary transition-colors" />
+              <div className="text-center">
+                <span className="block text-xs font-bold text-white">Upload Certificate</span>
+              </div>
+            </label>
+          </div>
+
+          {/* Collapsible Card: Additional Registrations & Banking */}
+          <div className="glass-card rounded-2xl p-6 border border-white/5 space-y-4">
+            <h4 className="font-bold text-sm text-white flex items-center gap-2">
+              <CreditCard size={18} className="text-primary" />
+              Banking & Additional Registrations
+            </h4>
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <label className="block text-[10px] font-semibold uppercase tracking-wider text-on-surface-variant mb-2">IFSC Code</label>
+                <input
+                  type="text"
+                  value={ifsc}
+                  onChange={(e) => setIfsc(e.target.value)}
+                  className="w-full px-3 py-2.5 bg-[#031037]/80 rounded-xl border border-white/10 text-white text-xs"
+                  placeholder="e.g. HDFC0000001"
+                />
+              </div>
+              <div>
+                <label className="block text-[10px] font-semibold uppercase tracking-wider text-on-surface-variant mb-2">AD Code</label>
+                <input
+                  type="text"
+                  value={adCode}
+                  onChange={(e) => setAdCode(e.target.value)}
+                  className="w-full px-3 py-2.5 bg-[#031037]/80 rounded-xl border border-white/10 text-white text-xs"
+                  placeholder="Authorized Dealer Code"
+                />
+              </div>
+              <div>
+                <label className="block text-[10px] font-semibold uppercase tracking-wider text-on-surface-variant mb-2">RCMC Number</label>
+                <input
+                  type="text"
+                  value={rcmc}
+                  onChange={(e) => setRcmc(e.target.value)}
+                  className="w-full px-3 py-2.5 bg-[#031037]/80 rounded-xl border border-white/10 text-white text-xs"
+                  placeholder="Registration Certificate No."
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-3 border-t border-white/5">
+              <div>
+                <label className="block text-[10px] font-semibold text-on-surface-variant mb-2">CIN (Company ID Number)</label>
+                <input
+                  type="text"
+                  value={cin}
+                  onChange={(e) => setCin(e.target.value)}
+                  className="w-full px-3 py-2.5 bg-[#031037]/80 rounded-xl border border-white/10 text-white text-xs"
+                  placeholder="e.g. U74140DL2026PTC"
+                />
+              </div>
+              <div>
+                <label className="block text-[10px] font-semibold text-on-surface-variant mb-2">Bank Statement / Cheque</label>
+                <input
+                  type="file"
+                  onChange={(e) => handleBase64Upload(e.target.files[0], setBankStatement)}
+                  className="text-xs text-on-surface-variant"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Actions Row */}
+          <div className="flex justify-center pt-4">
+            <button
+              type="button"
+              onClick={handleSave}
+              className="px-12 py-4 bg-primary hover:bg-blue-600 text-white font-bold rounded-xl flex items-center justify-center gap-2 transition-all shadow-lg shadow-primary/20 text-sm"
+            >
+              Next: Company Review
+              <ArrowRight size={16} />
+            </button>
+          </div>
+        </div>
+
+        {/* Right Sidebar Columns */}
+        <div className="lg:col-span-4 space-y-6">
+          
+          {/* Rewards Panel */}
+          <div className="glass-card rounded-2xl p-6 border border-white/5 space-y-6">
+            <h4 className="font-bold text-xs uppercase tracking-widest text-on-surface-variant flex items-center gap-1.5">
+              <Trophy size={14} className="text-primary" />
+              Verification Rewards
+            </h4>
+            
+            <div className="space-y-4">
+              {/* XP Boost */}
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center text-primary font-black text-sm">
+                  +
+                </div>
+                <div>
+                  <p className="font-bold text-white text-xs">+250 XP</p>
+                  <p className="text-[10px] text-on-surface-variant">Level progress boost</p>
+                </div>
+              </div>
+
+              {/* Verified Badge */}
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center text-primary">
+                  <SealCheck size={20} />
+                </div>
+                <div>
+                  <p className="font-bold text-white text-xs">Verified Badge</p>
+                  <p className="text-[10px] text-on-surface-variant">Profile trust marker</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Testimonial Quote */}
+            <div className="bg-[#031037]/60 border border-white/5 rounded-xl p-4 space-y-3">
+              <p className="text-[11px] text-on-surface-variant italic leading-relaxed">
+                "Verified businesses see a 40% increase in buyer inquiries on the global marketplace."
+              </p>
+              <div className="flex items-center gap-2">
+                <div className="w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold text-[9px]">
+                  RK
+                </div>
+                <span className="text-[10px] font-bold text-white">Rahul K., Exporter</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Verification Checklist */}
+          <div className="glass-card rounded-2xl p-6 border border-white/5 space-y-4">
+            <h4 className="font-bold text-xs uppercase tracking-widest text-on-surface-variant">
+              Verification Checklist
+            </h4>
+            
+            <div className="space-y-3">
+              <div className="flex items-center gap-2.5 text-xs text-white">
+                <div className="w-4 h-4 rounded-full bg-green-500/20 border border-green-500/30 flex items-center justify-center text-green-400">
+                  <Check size={10} />
+                </div>
+                <span className="font-semibold">Tax Documents Uploaded</span>
+              </div>
+              <div className="flex items-center gap-2.5 text-xs text-on-surface-variant">
+                <div className="w-4 h-4 rounded-full border border-white/10"></div>
+                <span>Operational Address</span>
+              </div>
+              <div className="flex items-center gap-2.5 text-xs text-on-surface-variant">
+                <div className="w-4 h-4 rounded-full border border-white/10"></div>
+                <span>Bank Statement</span>
+              </div>
+              <div className="flex items-center gap-2.5 text-xs text-on-surface-variant">
+                <div className="w-4 h-4 rounded-full border border-white/10"></div>
+                <span>Signatory Validation</span>
+              </div>
+            </div>
+          </div>
+
+          {/* AI Assistant card */}
+          <div className="glass-card rounded-2xl p-6 border border-white/5 bg-[#0c1940]/40 space-y-3">
+            <h5 className="font-bold text-xs text-primary flex items-center gap-1.5">
+              <Sparkle size={14} />
+              AI Assistant
+            </h5>
+            <p className="text-[11px] text-on-surface-variant leading-relaxed">
+              I've detected that your GSTIN matches a 'Small' category enterprise. You might be eligible for additional Udyam benefits.
+            </p>
+          </div>
+        </div>
+
+      </div>
     </div>
   );
 }
