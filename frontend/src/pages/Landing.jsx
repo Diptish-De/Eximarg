@@ -15,14 +15,24 @@ import {
   ArrowDown,
   User,
   IdentificationCard,
+  Sidebar,
   ShieldCheck,
   Storefront,
   Users,
   Trophy,
   X
 } from '@phosphor-icons/react';
+import { Globe as CobeGlobe } from '../components/ui/cobe-globe';
 
 gsap.registerPlugin(ScrollTrigger);
+
+const globeMarkers = [
+  { id: "india", location: [20.5937, 78.9629], label: "India" },
+  { id: "germany", location: [51.1657, 10.4515], label: "Germany" },
+  { id: "usa", location: [37.0902, -95.7129], label: "USA" },
+  { id: "uae", location: [23.4241, 53.8478], label: "UAE" },
+  { id: "singapore", location: [1.3521, 103.8198], label: "Singapore" }
+];
 
 const milestones = [
   { id: 'identity', title: 'Identity', desc: 'Secure verification of director PAN & identity checks.', icon: User, xp: 100, badge: 'Verified Citizen' },
@@ -306,51 +316,15 @@ export default function Landing() {
           {/* Middle Column: Centered Rotating Globe */}
           <div ref={globeContainerRef} className="lg:col-span-4 flex items-center justify-center relative w-full max-w-[360px] mx-auto">
             <div className="absolute w-[280px] h-[280px] bg-blue-500/5 rounded-full blur-[60px] pointer-events-none" />
-            <svg 
-              viewBox="0 0 600 600" 
-              className="w-full h-auto drop-shadow-[0_0_50px_rgba(37,99,235,0.08)]"
-            >
-              {/* Globe sphere gradient with spinning lines */}
-              <g className="animate-spin-slow origin-center">
-                <circle cx="300" cy="300" r="220" fill="url(#globeAtmosphere)" />
-                
-                {/* Latitude/Longitude lines */}
-                <circle cx="300" cy="300" r="220" fill="none" stroke="rgba(0,0,0,0.04)" strokeWidth="1" />
-                <path d="M 80 300 A 220 220 0 0 0 520 300" fill="none" stroke="rgba(37,99,235,0.06)" strokeWidth="1.5" />
-                <path d="M 120 300 A 220 120 0 0 0 480 300" fill="none" stroke="rgba(37,99,235,0.06)" strokeWidth="1.5" />
-                <path d="M 300 80 A 220 220 0 0 0 300 520" fill="none" stroke="rgba(37,99,235,0.06)" strokeWidth="1.5" />
-                <path d="M 300 80 A 120 220 0 0 0 300 520" fill="none" stroke="rgba(37,99,235,0.06)" strokeWidth="1.5" />
-              </g>
-              
-              {/* India glow pointer */}
-              <circle cx="290" cy="280" r="25" fill="rgba(245,158,11,0.15)" className="animate-pulse" />
-              <circle cx="290" cy="280" r="6" fill="#F59E0B" />
-              
-              {/* Routes to Hamburg, USA, UAE */}
-              <path d="M 290 280 Q 210 200 170 190" fill="none" stroke="url(#routeGrad)" strokeWidth="2" strokeDasharray="6 3" className="animate-route" />
-              <path d="M 290 280 C 200 300 130 280 90 230" fill="none" stroke="url(#routeGrad)" strokeWidth="2" strokeDasharray="6 3" className="animate-route" />
-              <path d="M 290 280 Q 250 260 220 250" fill="none" stroke="url(#routeGrad)" strokeWidth="2" strokeDasharray="6 3" className="animate-route" />
-
-              {/* Cargo dots moving */}
-              <circle r="3.5" fill="#F59E0B">
-                <animateMotion path="M 290 280 Q 210 200 170 190" dur="5s" repeatCount="indefinite" />
-              </circle>
-              <circle r="3.5" fill="#3B82F6">
-                <animateMotion path="M 290 280 C 200 300 130 280 90 230" dur="8s" repeatCount="indefinite" />
-              </circle>
-
-              <defs>
-                <radialGradient id="globeAtmosphere" cx="50%" cy="50%" r="50%" fx="30%" fy="30%">
-                  <stop offset="0%" stopColor="#dbeafe" />
-                  <stop offset="70%" stopColor="#eff6ff" />
-                  <stop offset="100%" stopColor="#f3f4f6" />
-                </radialGradient>
-                <linearGradient id="routeGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stopColor="#F59E0B" />
-                  <stop offset="100%" stopColor="#3B82F6" />
-                </linearGradient>
-              </defs>
-            </svg>
+            <CobeGlobe
+              markers={globeMarkers}
+              markerColor={[0.96, 0.62, 0.04]} // Warm orange/amber
+              baseColor={[0.94, 0.96, 0.98]}   // Light slate/blue base
+              glowColor={[0.9, 0.92, 0.96]}    // Soft blue glow
+              dark={0}
+              mapBrightness={6}
+              markerSize={0.03}
+            />
           </div>
 
           {/* Right Column: Actions & Quick Stats */}
