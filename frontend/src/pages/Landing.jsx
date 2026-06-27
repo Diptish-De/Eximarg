@@ -82,61 +82,48 @@ export default function Landing() {
           let r, g, b;
           if (progress < 0.16) {
             const factor = progress / 0.16;
-            const color1 = [2, 6, 23]; // Midnight Blue
-            const color2 = [24, 27, 34]; // Industrial Grey
+            const color1 = [249, 250, 251]; // Light Off-White
+            const color2 = [243, 244, 246]; // Light Industrial Grey
             r = Math.round(color1[0] + (color2[0] - color1[0]) * factor);
             g = Math.round(color1[1] + (color2[1] - color1[1]) * factor);
             b = Math.round(color1[2] + (color2[2] - color1[2]) * factor);
-            setIsLightBg(false);
           } else if (progress < 0.32) {
             const factor = (progress - 0.16) / 0.16;
-            const color2 = [24, 27, 34]; // Industrial Grey
-            const color3 = [12, 27, 64]; // Royal Blue
+            const color2 = [243, 244, 246]; // Light Industrial Grey
+            const color3 = [224, 231, 255]; // Soft Blue-Violet
             r = Math.round(color2[0] + (color3[0] - color2[0]) * factor);
             g = Math.round(color2[1] + (color3[1] - color2[1]) * factor);
             b = Math.round(color2[2] + (color3[2] - color2[2]) * factor);
-            setIsLightBg(false);
           } else if (progress < 0.48) {
             const factor = (progress - 0.32) / 0.16;
-            const color3 = [12, 27, 64]; // Royal Blue
-            const color4 = [249, 246, 240]; // Warm White
+            const color3 = [224, 231, 255]; // Soft Blue-Violet
+            const color4 = [254, 251, 235]; // Warm Off-White
             r = Math.round(color3[0] + (color4[0] - color3[0]) * factor);
             g = Math.round(color3[1] + (color4[1] - color3[1]) * factor);
             b = Math.round(color3[2] + (color4[2] - color3[2]) * factor);
-            if (progress > 0.45) {
-              setIsLightBg(true);
-            } else {
-              setIsLightBg(false);
-            }
           } else if (progress < 0.64) {
             const factor = (progress - 0.48) / 0.16;
-            const color4 = [249, 246, 240]; // Warm White
-            const color5 = [41, 35, 18]; // Golden Port Lights
+            const color4 = [254, 251, 235]; // Warm Off-White
+            const color5 = [254, 243, 199]; // Light Gold
             r = Math.round(color4[0] + (color5[0] - color4[0]) * factor);
             g = Math.round(color4[1] + (color5[1] - color4[1]) * factor);
             b = Math.round(color4[2] + (color5[2] - color4[2]) * factor);
-            if (progress > 0.58) {
-              setIsLightBg(false);
-            } else {
-              setIsLightBg(true);
-            }
           } else if (progress < 0.80) {
             const factor = (progress - 0.64) / 0.16;
-            const color5 = [41, 35, 18]; // Golden Port Lights
-            const color6 = [3, 7, 18]; // Deep Space Dark
+            const color5 = [254, 243, 199]; // Light Gold
+            const color6 = [239, 246, 255]; // Soft Ocean Blue
             r = Math.round(color5[0] + (color6[0] - color5[0]) * factor);
             g = Math.round(color5[1] + (color6[1] - color5[1]) * factor);
             b = Math.round(color5[2] + (color6[2] - color5[2]) * factor);
-            setIsLightBg(false);
           } else {
             const factor = (progress - 0.80) / 0.20;
-            const color6 = [3, 7, 18]; // Deep Space Dark
-            const color7 = [11, 15, 25]; // Premium Dark
+            const color6 = [239, 246, 255]; // Soft Ocean Blue
+            const color7 = [249, 250, 251]; // Light Off-White
             r = Math.round(color6[0] + (color7[0] - color6[0]) * factor);
             g = Math.round(color6[1] + (color7[1] - color6[1]) * factor);
             b = Math.round(color6[2] + (color7[2] - color6[2]) * factor);
-            setIsLightBg(false);
           }
+          setIsLightBg(true);
           mainContainerRef.current.style.backgroundColor = `rgb(${r}, ${g}, ${b})`;
         }
       }
@@ -249,29 +236,27 @@ export default function Landing() {
   return (
     <div 
       ref={mainContainerRef} 
-      className={`min-h-screen relative overflow-hidden font-sans transition-colors duration-500 selection:bg-brand-primary selection:text-white ${
-        isLightBg ? 'text-stone-900' : 'text-[#eeefff]'
-      }`}
-      style={{ backgroundColor: '#020617' }}
+      className="min-h-screen relative overflow-hidden font-sans transition-colors duration-500 selection:bg-brand-primary selection:text-white text-slate-800"
+      style={{ backgroundColor: '#f9fafb' }}
     >
-      {/* Stars Background */}
-      <div className="absolute inset-0 opacity-20 pointer-events-none bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.15)_1px,transparent_1px)] bg-[size:24px_24px]" />
+      {/* Light dot grid Background */}
+      <div className="absolute inset-0 opacity-40 pointer-events-none bg-[radial-gradient(#d1d5db_1px,transparent_1px)] bg-[size:20px_20px]" />
 
       {/* Premium Minimal Header */}
-      <header className="fixed top-0 left-0 right-0 z-50 backdrop-blur-md bg-[#020617]/40 border-b border-brand-border/40">
+      <header className="fixed top-0 left-0 right-0 z-50 backdrop-blur-md bg-white/75 border-b border-slate-200/80">
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-brand-primary to-indigo-500 flex items-center justify-center font-display font-extrabold text-sm text-white shadow-lg shadow-brand-primary/10">
+            <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center font-display font-extrabold text-sm text-white shadow-lg shadow-blue-500/10">
               E
             </div>
-            <span className="font-display font-bold text-sm tracking-widest text-white uppercase">EXIMARG</span>
+            <span className="font-display font-bold text-sm tracking-widest text-slate-800 uppercase">EXIMARG</span>
           </div>
 
           <nav className="flex items-center gap-6">
             {currentUser ? (
               <button 
                 onClick={() => navigate('/dashboard')}
-                className="px-4 py-2 bg-gradient-to-r from-brand-primary to-indigo-500 hover:opacity-90 text-white text-[10px] font-extrabold rounded-lg tracking-wider transition-all uppercase shadow-md shadow-brand-primary/15"
+                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-[10px] font-extrabold rounded-lg tracking-wider transition-all uppercase shadow-md shadow-blue-500/15"
               >
                 Launch Dashboard
               </button>
@@ -279,13 +264,13 @@ export default function Landing() {
               <>
                 <button 
                   onClick={() => navigate('/login')} 
-                  className="text-[10px] font-extrabold uppercase tracking-wider text-brand-textMuted hover:text-white transition-colors"
+                  className="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 hover:text-slate-800 transition-colors"
                 >
                   Sign In
                 </button>
                 <button 
                   onClick={() => navigate('/register')}
-                  className="px-4 py-2 bg-gradient-to-r from-brand-primary to-indigo-500 hover:opacity-95 text-white text-[10px] font-extrabold rounded-lg tracking-wider transition-all uppercase shadow-md shadow-brand-primary/15"
+                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-[10px] font-extrabold rounded-lg tracking-wider transition-all uppercase shadow-md shadow-blue-500/15"
                 >
                   Start Journey
                 </button>
@@ -301,40 +286,40 @@ export default function Landing() {
           
           {/* Left Column: Hero Content */}
           <div className="lg:col-span-4 flex flex-col text-left space-y-6">
-            <div className="inline-flex items-center gap-2 px-3 py-1 bg-brand-primary/10 border border-brand-primary/20 rounded-full w-fit">
-              <Sparkle size={14} className="text-brand-primary animate-pulse" />
-              <span className="text-[9px] font-extrabold tracking-widest text-brand-primary uppercase">The World Is Waiting</span>
+            <div className="inline-flex items-center gap-2 px-3 py-1 bg-blue-50 border border-blue-200 rounded-full w-fit">
+              <Sparkle size={14} className="text-blue-600 animate-pulse" />
+              <span className="text-[9px] font-extrabold tracking-widest text-blue-600 uppercase">The World Is Waiting</span>
             </div>
             
-            <h1 className="font-display font-extrabold text-4xl md:text-5xl lg:text-6xl text-white leading-[1.1] tracking-tight">
+            <h1 className="font-display font-extrabold text-4xl md:text-5xl lg:text-6xl text-slate-900 leading-[1.1] tracking-tight">
               Your Export <br />
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-primary via-indigo-400 to-brand-accent">
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-indigo-500 to-blue-500">
                 Journey Starts Here.
               </span>
             </h1>
             
-            <p className="text-brand-textMuted text-xs md:text-sm leading-relaxed max-w-md">
+            <p className="text-slate-500 text-xs md:text-sm leading-relaxed max-w-md">
               From your first export document to your first international shipment. One guided, cinematic experience mapping your business directly to the global stage.
             </p>
           </div>
 
           {/* Middle Column: Centered Rotating Globe */}
           <div ref={globeContainerRef} className="lg:col-span-4 flex items-center justify-center relative w-full max-w-[360px] mx-auto">
-            <div className="absolute w-[280px] h-[280px] bg-brand-primary/5 rounded-full blur-[60px] pointer-events-none" />
+            <div className="absolute w-[280px] h-[280px] bg-blue-500/5 rounded-full blur-[60px] pointer-events-none" />
             <svg 
               viewBox="0 0 600 600" 
-              className="w-full h-auto drop-shadow-[0_0_50px_rgba(37,99,235,0.12)]"
+              className="w-full h-auto drop-shadow-[0_0_50px_rgba(37,99,235,0.08)]"
             >
               {/* Globe sphere gradient with spinning lines */}
               <g className="animate-spin-slow origin-center">
                 <circle cx="300" cy="300" r="220" fill="url(#globeAtmosphere)" />
                 
                 {/* Latitude/Longitude lines */}
-                <circle cx="300" cy="300" r="220" fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="1" />
-                <path d="M 80 300 A 220 220 0 0 0 520 300" fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="1.5" />
-                <path d="M 120 300 A 220 120 0 0 0 480 300" fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="1.5" />
-                <path d="M 300 80 A 220 220 0 0 0 300 520" fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="1.5" />
-                <path d="M 300 80 A 120 220 0 0 0 300 520" fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="1.5" />
+                <circle cx="300" cy="300" r="220" fill="none" stroke="rgba(0,0,0,0.04)" strokeWidth="1" />
+                <path d="M 80 300 A 220 220 0 0 0 520 300" fill="none" stroke="rgba(37,99,235,0.06)" strokeWidth="1.5" />
+                <path d="M 120 300 A 220 120 0 0 0 480 300" fill="none" stroke="rgba(37,99,235,0.06)" strokeWidth="1.5" />
+                <path d="M 300 80 A 220 220 0 0 0 300 520" fill="none" stroke="rgba(37,99,235,0.06)" strokeWidth="1.5" />
+                <path d="M 300 80 A 120 220 0 0 0 300 520" fill="none" stroke="rgba(37,99,235,0.06)" strokeWidth="1.5" />
               </g>
               
               {/* India glow pointer */}
@@ -356,9 +341,9 @@ export default function Landing() {
 
               <defs>
                 <radialGradient id="globeAtmosphere" cx="50%" cy="50%" r="50%" fx="30%" fy="30%">
-                  <stop offset="0%" stopColor="#081e59" />
-                  <stop offset="70%" stopColor="#030b21" />
-                  <stop offset="100%" stopColor="#020617" />
+                  <stop offset="0%" stopColor="#dbeafe" />
+                  <stop offset="70%" stopColor="#eff6ff" />
+                  <stop offset="100%" stopColor="#f3f4f6" />
                 </radialGradient>
                 <linearGradient id="routeGrad" x1="0%" y1="0%" x2="100%" y2="100%">
                   <stop offset="0%" stopColor="#F59E0B" />
@@ -373,7 +358,7 @@ export default function Landing() {
             <div className="space-y-4">
               <button 
                 onClick={handleCTA}
-                className="w-full px-6 py-4 bg-gradient-to-r from-brand-primary to-brand-accent hover:opacity-95 text-white font-bold text-xs uppercase tracking-wider rounded-xl transition-all shadow-xl shadow-brand-primary/25 flex items-center justify-center gap-2 group"
+                className="w-full px-6 py-4 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs uppercase tracking-wider rounded-xl transition-all shadow-xl shadow-blue-500/10 flex items-center justify-center gap-2 group"
                 data-testid="hero-primary-cta"
               >
                 Start Your Export Journey
@@ -381,23 +366,23 @@ export default function Landing() {
               </button>
               <button 
                 onClick={handleScrollDown}
-                className="w-full px-6 py-4 bg-white/5 hover:bg-white/10 text-white font-bold text-xs uppercase tracking-wider rounded-xl border border-white/10 transition-all flex items-center justify-center gap-2"
+                className="w-full px-6 py-4 bg-white hover:bg-slate-50 text-slate-700 font-bold text-xs uppercase tracking-wider rounded-xl border border-slate-200 transition-all flex items-center justify-center gap-2"
               >
                 Watch the Journey
               </button>
             </div>
 
             {/* Quick trust metrics panel */}
-            <div className="p-4 bg-brand-bg/40 border border-brand-border/60 rounded-xl space-y-3">
-              <span className="text-[9px] font-black uppercase text-brand-textMuted tracking-wider block">Live Network Status</span>
+            <div className="p-4 bg-white border border-slate-200/80 rounded-xl space-y-3 shadow-sm">
+              <span className="text-[9px] font-black uppercase text-slate-400 tracking-wider block">Live Network Status</span>
               <div className="grid grid-cols-2 gap-3 text-[11px]">
                 <div>
-                  <span className="text-brand-textMuted block">Active Hubs</span>
-                  <span className="text-white font-bold">12 Indian Ports</span>
+                  <span className="text-slate-500 block">Active Hubs</span>
+                  <span className="text-slate-800 font-bold">12 Indian Ports</span>
                 </div>
                 <div>
-                  <span className="text-brand-textMuted block">Target Markets</span>
-                  <span className="text-brand-accent font-bold">140+ Countries</span>
+                  <span className="text-slate-500 block">Target Markets</span>
+                  <span className="text-blue-600 font-bold">140+ Countries</span>
                 </div>
               </div>
             </div>
@@ -407,7 +392,7 @@ export default function Landing() {
 
         {/* Scroll indicator */}
         <div className="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1 cursor-pointer opacity-70 hover:opacity-100 transition-opacity" onClick={handleScrollDown}>
-          <span className="text-[9px] uppercase tracking-widest font-extrabold text-brand-textMuted">Scroll to Begin</span>
+          <span className="text-[9px] uppercase tracking-widest font-extrabold text-slate-500">Scroll to Begin</span>
           <ArrowDown size={14} className="animate-bounce mt-1 text-brand-primary" />
         </div>
       </section>
