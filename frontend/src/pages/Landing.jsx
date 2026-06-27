@@ -1044,6 +1044,64 @@ export default function Landing() {
         </div>
       </section>
 
+      {/* FINAL CHAPTER: THE JOURNEY'S HORIZON */}
+      <section 
+        id="final-scene"
+        className="min-h-screen py-32 px-6 relative border-t border-brand-border/20 flex flex-col justify-center bg-[#020512] overflow-hidden"
+      >
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[80vw] h-[80vw] bg-brand-primary/5 rounded-full blur-[140px] pointer-events-none" />
+
+        <div className="max-w-4xl mx-auto text-center space-y-8 relative z-10">
+          <span className="text-xs font-bold text-brand-primary uppercase tracking-widest font-mono">The Conclusion</span>
+          
+          <h2 className="font-display font-extrabold text-5xl md:text-7xl text-white leading-tight">
+            The World Is Waiting <br />
+            For What You Export.
+          </h2>
+
+          <p className="text-brand-textMuted text-base md:text-lg max-w-xl mx-auto leading-relaxed">
+            Your export onboarding quest starts today. Stop dealing with messy paperwork and build your global empire.
+          </p>
+
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-6">
+            <button 
+              onClick={handleCTA}
+              className="w-full sm:w-auto px-8 py-4 bg-gradient-to-r from-brand-primary to-brand-accent hover:opacity-95 text-white font-bold text-xs uppercase tracking-wider rounded-xl transition-all shadow-xl shadow-brand-primary/30 flex items-center justify-center gap-2 group"
+            >
+              Start Your Onboarding Quest
+              <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
+            </button>
+          </div>
+
+          {/* Cinematic container cargo ship vector graphic */}
+          <div className="pt-16 flex items-center justify-center opacity-40">
+            <svg viewBox="0 0 600 120" className="w-full max-w-[500px]">
+              {/* Sea waves line */}
+              <path d="M 0 100 Q 150 90 300 100 T 600 100" fill="none" stroke="rgba(255,255,255,0.15)" strokeWidth="2" />
+              <path d="M 0 110 Q 150 100 300 110 T 600 110" fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="1" />
+              
+              {/* Cargo Ship silhouette hull */}
+              <path d="M 120 100 L 150 75 L 420 75 L 450 100 Z" fill="#041138" stroke="rgba(255,255,255,0.12)" strokeWidth="1.5" />
+              
+              {/* Containers stacked */}
+              <rect x="180" y="55" width="40" height="20" fill="rgba(37,99,235,0.4)" stroke="rgba(255,255,255,0.1)" />
+              <rect x="225" y="55" width="45" height="20" fill="rgba(99,102,241,0.4)" stroke="rgba(255,255,255,0.1)" />
+              <rect x="275" y="55" width="40" height="20" fill="rgba(16,185,129,0.4)" stroke="rgba(255,255,255,0.1)" />
+              <rect x="320" y="55" width="45" height="20" fill="rgba(245,158,11,0.4)" stroke="rgba(255,255,255,0.1)" />
+              
+              <rect x="200" y="35" width="45" height="20" fill="rgba(37,99,235,0.5)" stroke="rgba(255,255,255,0.1)" />
+              <rect x="250" y="35" width="40" height="20" fill="rgba(16,185,129,0.5)" stroke="rgba(255,255,255,0.1)" />
+              <rect x="295" y="35" width="45" height="20" fill="rgba(245,158,11,0.5)" stroke="rgba(255,255,255,0.1)" />
+            </svg>
+          </div>
+        </div>
+
+        {/* Global Footer inside Final Chapter */}
+        <footer className="absolute bottom-6 left-6 right-6 text-center text-xs text-brand-textMuted border-t border-brand-border/20 pt-6">
+          <p>© 2026 EXIMARG. Built for elite exporters scaling globally.</p>
+        </footer>
+      </section>
+
       {/* Floating HUD Readiness Gauge */}
       <div className="fixed bottom-6 right-6 z-40 max-w-sm w-fit pointer-events-none">
         <div className="pointer-events-auto bg-[#020617]/95 border border-brand-border/80 p-4 rounded-xl shadow-2xl flex items-center gap-4 backdrop-blur-md">
