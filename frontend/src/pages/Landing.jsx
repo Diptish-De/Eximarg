@@ -51,6 +51,7 @@ export default function Landing() {
   const [unlockedBadges, setUnlockedBadges] = useState([]);
   const [recentNotification, setRecentNotification] = useState(null);
   const [isLightBg, setIsLightBg] = useState(false);
+  const [activeStep, setActiveStep] = useState(1);
 
   const handleCTA = () => {
     if (currentUser) {
@@ -79,33 +80,45 @@ export default function Landing() {
         const progress = self.progress;
         if (mainContainerRef.current) {
           let r, g, b;
-          if (progress < 0.33) {
-            const factor = progress / 0.33;
+          if (progress < 0.25) {
+            const factor = progress / 0.25;
             const color1 = [2, 6, 23]; // Midnight Blue
             const color2 = [24, 27, 34]; // Industrial Grey
             r = Math.round(color1[0] + (color2[0] - color1[0]) * factor);
             g = Math.round(color1[1] + (color2[1] - color1[1]) * factor);
             b = Math.round(color1[2] + (color2[2] - color1[2]) * factor);
             setIsLightBg(false);
-          } else if (progress < 0.66) {
-            const factor = (progress - 0.33) / 0.33;
+          } else if (progress < 0.50) {
+            const factor = (progress - 0.25) / 0.25;
             const color2 = [24, 27, 34]; // Industrial Grey
             const color3 = [12, 27, 64]; // Royal Blue
             r = Math.round(color2[0] + (color3[0] - color2[0]) * factor);
             g = Math.round(color2[1] + (color3[1] - color2[1]) * factor);
             b = Math.round(color2[2] + (color3[2] - color2[2]) * factor);
             setIsLightBg(false);
-          } else {
-            const factor = (progress - 0.66) / 0.34;
+          } else if (progress < 0.75) {
+            const factor = (progress - 0.50) / 0.25;
             const color3 = [12, 27, 64]; // Royal Blue
-            const color4 = [249, 246, 240]; // Warm White (#f9f6f0)
+            const color4 = [249, 246, 240]; // Warm White
             r = Math.round(color3[0] + (color4[0] - color3[0]) * factor);
             g = Math.round(color3[1] + (color4[1] - color3[1]) * factor);
             b = Math.round(color3[2] + (color4[2] - color3[2]) * factor);
-            if (progress > 0.8) {
+            if (progress > 0.70) {
               setIsLightBg(true);
             } else {
               setIsLightBg(false);
+            }
+          } else {
+            const factor = (progress - 0.75) / 0.25;
+            const color4 = [249, 246, 240]; // Warm White
+            const color5 = [41, 35, 18]; // Golden Port Lights (#292312)
+            r = Math.round(color4[0] + (color5[0] - color4[0]) * factor);
+            g = Math.round(color4[1] + (color5[1] - color4[1]) * factor);
+            b = Math.round(color4[2] + (color5[2] - color4[2]) * factor);
+            if (progress > 0.88) {
+              setIsLightBg(false);
+            } else {
+              setIsLightBg(true);
             }
           }
           mainContainerRef.current.style.backgroundColor = `rgb(${r}, ${g}, ${b})`;
@@ -652,6 +665,154 @@ export default function Landing() {
             </div>
 
           </div>
+        </div>
+      </section>
+
+      {/* CHAPTER 5: FIRST BUYER */}
+      <section 
+        id="buyer-scene"
+        className="min-h-screen py-32 px-6 relative border-t border-brand-border/20 flex flex-col justify-center transition-colors duration-500"
+      >
+        <div className="absolute inset-0 opacity-10 pointer-events-none bg-[radial-gradient(#f59e0b_1px,transparent_1px)] bg-[size:32px_32px]" />
+
+        <div className="max-w-6xl mx-auto w-full">
+          
+          <div className="text-center max-w-xl mx-auto mb-20">
+            <span className="text-xs font-bold text-amber-500 uppercase tracking-widest font-mono">Chapter 5: The Deal</span>
+            <h2 className="font-display font-extrabold text-4xl md:text-5xl text-white mt-3 leading-tight">
+              Germany discovers your product.
+            </h2>
+            <p className="text-brand-textMuted text-sm md:text-base mt-4">
+              Watch your Basmati Rice transaction flow from initial buyer discovery in Hamburg directly to port loading.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+            
+            {/* Stepper Selection */}
+            <div className="lg:col-span-5 space-y-4">
+              {[
+                { id: 1, title: 'Inquiry Arrives', desc: 'Hamburg Wholesale Gmbh requests custom basmati grades.' },
+                { id: 2, title: 'AI Reply Drafted', desc: 'Consultant drafts professional trade specs & pricing.' },
+                { id: 3, title: 'Proforma Invoice', desc: 'Create compliant invoice, packing lists, & trade declarations.' },
+                { id: 4, title: 'Payment Secured', desc: 'Buyer deposits $18,750 into escrow trade ledger.' },
+                { id: 5, title: 'Vessel Departs', desc: 'Shipment loaded at Mumbai port leaves for Hamburg.' }
+              ].map((s) => (
+                <div 
+                  key={s.id}
+                  onClick={() => setActiveStep(s.id)}
+                  className={`p-5 rounded-2xl border cursor-pointer transition-all duration-300 ${
+                    activeStep === s.id 
+                      ? 'border-amber-500/50 bg-amber-500/10 shadow-lg' 
+                      : 'border-brand-border hover:border-brand-border/80'
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    <span className={`w-7 h-7 rounded-full text-xs font-bold flex items-center justify-center border transition-all ${
+                      activeStep === s.id 
+                        ? 'bg-amber-500 text-[#020617] border-amber-500' 
+                        : 'bg-brand-bg text-brand-textMuted border-brand-border'
+                    }`}>
+                      {s.id}
+                    </span>
+                    <div>
+                      <h4 className="text-xs font-extrabold text-white uppercase tracking-wider">{s.title}</h4>
+                      <p className="text-[11px] text-brand-textMuted mt-0.5">{s.desc}</p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Stepper Visualizer screen */}
+            <div className="lg:col-span-7 flex justify-center">
+              <div className="w-full max-w-xl p-8 bg-[#0c1224]/90 border border-brand-border rounded-3xl shadow-2xl relative min-h-[360px] flex flex-col justify-between overflow-hidden">
+                <div className="absolute top-0 right-0 w-[200px] h-[200px] bg-amber-500/5 rounded-full blur-[80px] pointer-events-none" />
+
+                {/* Card Header */}
+                <div className="flex items-center justify-between border-b border-brand-border pb-4 mb-6">
+                  <div className="flex items-center gap-2">
+                    <Globe size={18} className="text-amber-500 animate-spin-slow" />
+                    <span className="text-[9px] font-black uppercase tracking-widest text-brand-textMuted font-mono">
+                      STAGE 0{activeStep}
+                    </span>
+                  </div>
+                  <span className="px-2.5 py-0.5 bg-amber-500/10 text-amber-400 border border-amber-500/25 text-[9px] font-black rounded-full uppercase tracking-wider">
+                    Transaction Live
+                  </span>
+                </div>
+
+                {/* Card Main Info */}
+                <div className="flex-1 flex flex-col justify-center space-y-4">
+                  {activeStep === 1 && (
+                    <div className="space-y-3">
+                      <h3 className="font-display font-bold text-lg text-white">Inquiry Received</h3>
+                      <div className="p-4 bg-brand-bg/60 border border-brand-border rounded-xl font-mono text-[11px] space-y-2 text-stone-200">
+                        <p className="text-amber-400">FROM: Hamburg_Wholesale_Gmbh</p>
+                        <p>&gt; "Request sample container Basmati 1121 Sella Rice. Price CIF Hamburg Port."</p>
+                      </div>
+                    </div>
+                  )}
+
+                  {activeStep === 2 && (
+                    <div className="space-y-3">
+                      <h3 className="font-display font-bold text-lg text-white">AI Consultation Output</h3>
+                      <div className="p-4 bg-brand-bg/60 border border-brand-border rounded-xl font-mono text-[11px] space-y-2 text-stone-200">
+                        <p className="text-green-400">STATUS: Draft Ready</p>
+                        <p>&gt; "Drafting CIF price proposal based on HSN 1006.30... Auto-calculated ocean freight and APEDA compliance checks passed."</p>
+                      </div>
+                    </div>
+                  )}
+
+                  {activeStep === 3 && (
+                    <div className="space-y-3">
+                      <h3 className="font-display font-bold text-lg text-white">Proforma Invoice Created</h3>
+                      <div className="p-4 bg-brand-bg/60 border border-brand-border rounded-xl font-mono text-[11px] space-y-1 text-stone-200">
+                        <p className="text-amber-400">EXIMARG DIGITAL LEDGER</p>
+                        <p>Invoice #: EXP-2026-904</p>
+                        <p>Total Value: $18,750 USD (FOB $17,200 + Ocean Freight)</p>
+                        <p className="text-green-400 font-bold">STATUS: COMPLIANT</p>
+                      </div>
+                    </div>
+                  )}
+
+                  {activeStep === 4 && (
+                    <div className="space-y-3">
+                      <h3 className="font-display font-bold text-lg text-white">Escrow Payment Secured</h3>
+                      <div className="p-4 bg-brand-bg/60 border border-brand-border rounded-xl font-mono text-[11px] space-y-2 text-stone-200">
+                        <p className="text-green-400">STATUS: Wire Confirmed</p>
+                        <p>&gt; "$18,750 USD deposited in EXIMARG Escrow Trade Wallet. Clearance authorized."</p>
+                      </div>
+                    </div>
+                  )}
+
+                  {activeStep === 5 && (
+                    <div className="space-y-3">
+                      <h3 className="font-display font-bold text-lg text-white"> Nhava Sheva Port Dispatch</h3>
+                      <div className="p-4 bg-brand-bg/60 border border-brand-border rounded-xl font-mono text-[11px] space-y-2 text-stone-200">
+                        <p className="text-amber-400">VESSEL NAME: MAERSK INTEGRITY</p>
+                        <p>&gt; "Container loaded. Vessel cleared customs. Left Nhava Sheva port, Mumbai. Live logistics tracker active."</p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Card Footer */}
+                <div className="mt-6 pt-4 border-t border-brand-border/40 flex items-center justify-between">
+                  <span className="text-[10px] text-brand-textMuted uppercase font-bold tracking-wider">Logistics Flow</span>
+                  <button 
+                    onClick={handleCTA}
+                    className="text-xs text-amber-500 font-bold hover:underline"
+                  >
+                    Simulate Your Trade &rarr;
+                  </button>
+                </div>
+
+              </div>
+            </div>
+
+          </div>
+
         </div>
       </section>
 
