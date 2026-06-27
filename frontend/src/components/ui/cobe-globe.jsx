@@ -20,14 +20,7 @@ export function Globe({
 
   useEffect(() => {
     let phi = 0;
-    let width = 0;
-    const onResize = () => {
-      if (canvasRef.current) {
-        width = canvasRef.current.offsetWidth;
-      }
-    };
-    window.addEventListener("resize", onResize);
-    onResize();
+    const width = 360; // Stable baseline width for WebGL buffers
 
     const formattedMarkers = markers.map((m) => ({
       location: m.location,
@@ -58,15 +51,12 @@ export function Globe({
       },
     });
 
-    setTimeout(() => {
-      if (canvasRef.current) {
-        canvasRef.current.style.opacity = "1";
-      }
-    });
+    if (canvasRef.current) {
+      canvasRef.current.style.opacity = "1";
+    }
 
     return () => {
       globe.destroy();
-      window.removeEventListener("resize", onResize);
     };
   }, [
     markers,
@@ -79,7 +69,7 @@ export function Globe({
   ]);
 
   return (
-    <div className="w-full aspect-square relative flex items-center justify-center">
+    <div className="w-full max-w-[360px] aspect-square relative flex items-center justify-center">
       <canvas
         ref={canvasRef}
         onPointerDown={(e) => {
@@ -106,7 +96,8 @@ export function Globe({
             rRef.current = delta / 200;
           }
         }}
-        className="w-full h-full opacity-0 transition-opacity duration-500 cursor-grab"
+        className="w-full h-full transition-opacity duration-500 cursor-grab"
+        style={{ width: "360px", height: "360px", maxWidth: "100%", aspectRatio: "1/1" }}
       />
     </div>
   );
