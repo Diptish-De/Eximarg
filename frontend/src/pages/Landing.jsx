@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useUser } from '../context/UserContext';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { 
@@ -12,10 +12,26 @@ import {
   FileText, 
   Check, 
   Sparkle, 
-  ArrowDown
+  ArrowDown,
+  User,
+  IdentificationCard,
+  ShieldCheck,
+  Storefront,
+  Users,
+  Trophy,
+  X
 } from '@phosphor-icons/react';
 
 gsap.registerPlugin(ScrollTrigger);
+
+const milestones = [
+  { id: 'identity', title: 'Identity', desc: 'Secure verification of director PAN & identity checks.', icon: User, xp: 100, badge: 'Verified Citizen' },
+  { id: 'profile', title: 'Exporter Profile', desc: 'Define your target commodities & export business model.', icon: IdentificationCard, xp: 150, badge: 'Global Aspirant' },
+  { id: 'verification', title: 'Verification', desc: 'Direct API validation with IEC & GST systems.', icon: ShieldCheck, xp: 200, badge: 'Legit business' },
+  { id: 'company', title: 'Company Review', desc: 'Automatic background check and entity verification.', icon: FileText, xp: 100, badge: 'Trusted Partner' },
+  { id: 'catalog', title: 'Digital Catalog', desc: 'Instantly construct your localized B2B global product storefront.', icon: Storefront, xp: 250, badge: 'Merchant King' },
+  { id: 'buyer', title: 'First Buyer', desc: 'Connect with verified buyers and manage initial inquiries.', icon: Users, xp: 300, badge: 'Dealmaker' }
+];
 
 export default function Landing() {
   const navigate = useNavigate();
@@ -26,6 +42,14 @@ export default function Landing() {
   // Chapter 2 Refs
   const chaosSectionRef = useRef(null);
   const chaosCardsRef = useRef([]);
+
+  // Chapter 3 Refs
+  const journeySectionRef = useRef(null);
+  const timelineProgressRef = useRef(null);
+  const [activeMilestoneIndex, setActiveMilestoneIndex] = useState(-1);
+  const [earnedXP, setEarnedXP] = useState(0);
+  const [unlockedBadges, setUnlockedBadges] = useState([]);
+  const [recentNotification, setRecentNotification] = useState(null);
 
   const handleCTA = () => {
     if (currentUser) {
@@ -43,7 +67,8 @@ export default function Landing() {
   };
 
   useEffect(() => {
-    // Background Color interpolation based on Scroll Position (Midnight Blue -> Industrial Grey)
+    // Background Color evolution based on scroll progress:
+    // Midnight Blue (#020617) -> Industrial Grey (#181b22) -> Royal Blue (#0c1b40)
     const bgTrigger = ScrollTrigger.create({
       trigger: mainContainerRef.current,
       start: 'top top',
@@ -51,15 +76,23 @@ export default function Landing() {
       scrub: true,
       onUpdate: (self) => {
         const progress = self.progress;
-        // Interpolate background color from #020617 (Midnight) to #181b22 (Industrial Grey)
         if (mainContainerRef.current) {
-          const color1 = [2, 6, 23]; // rgb for #020617
-          const color2 = [24, 27, 34]; // rgb for #181b22
-          
-          const r = Math.round(color1[0] + (color2[0] - color1[0]) * progress);
-          const g = Math.round(color1[1] + (color2[1] - color1[1]) * progress);
-          const b = Math.round(color1[2] + (color2[2] - color1[2]) * progress);
-          
+          let r, g, b;
+          if (progress < 0.5) {
+            const factor = progress * 2;
+            const color1 = [2, 6, 23]; // Midnight Blue
+            const color2 = [24, 27, 34]; // Industrial Grey
+            r = Math.round(color1[0] + (color2[0] - color1[0]) * factor);
+            g = Math.round(color1[1] + (color2[1] - color1[1]) * factor);
+            b = Math.round(color1[2] + (color2[2] - color1[2]) * factor);
+          } else {
+            const factor = (progress - 0.5) * 2;
+            const color2 = [24, 27, 34]; // Industrial Grey
+            const color3 = [12, 27, 64]; // Royal Blue
+            r = Math.round(color2[0] + (color3[0] - color2[0]) * factor);
+            g = Math.round(color2[1] + (color3[1] - color2[1]) * factor);
+            b = Math.round(color2[2] + (color3[2] - color2[2]) * factor);
+          }
           mainContainerRef.current.style.backgroundColor = `rgb(${r}, ${g}, ${b})`;
         }
       }
@@ -105,12 +138,69 @@ export default function Landing() {
       stagger: 0.05,
     });
 
+    // Chapter 3 timeline path scroll-drawing and unlocking logic
+    const journeyTrigger = ScrollTrigger.create({
+      trigger: journeySectionRef.current,
+      start: 'top 30%',
+      end: 'bottom 70%',
+      scrub: 0.5,
+      onUpdate: (self) => {
+        const progress = self.progress;
+        if (timelineProgressRef.current) {
+          timelineProgressRef.current.style.height = `${progress * 100}%`;
+        }
+
+        // Calculate active index
+        const index = Math.min(
+          Math.floor(progress * milestones.length),
+          milestones.length - 1
+        );
+
+        if (index !== activeMilestoneIndex && progress > 0.02) {
+          setActiveMilestoneIndex(index);
+
+          // Sum total XP and badges unlocked
+          let totalXp = 0;
+          let badges = [];
+          for (let i = 0; i <= index; i++) {
+            totalXp += milestones[i].xp;
+            badges.push(milestones[i].badge);
+          }
+          setEarnedXP(totalXp);
+          setUnlockedBadges(badges);
+
+          // Trigger toast notification
+          setRecentNotification({
+            title: milestones[index].title,
+            xp: milestones[index].xp,
+            badge: milestones[index].badge
+          });
+
+          // Automatically clear notifications
+          setTimeout(() => {
+            setRecentNotification(prev => {
+              if (prev && prev.title === milestones[index].title) {
+                return null;
+              }
+              return prev;
+            });
+          }, 2500);
+        } else if (progress <= 0.02) {
+          setActiveMilestoneIndex(-1);
+          setEarnedXP(0);
+          setUnlockedBadges([]);
+          setRecentNotification(null);
+        }
+      }
+    });
+
     return () => {
       bgTrigger.kill();
       globeTimeline.kill();
       chaosTimeline.kill();
+      journeyTrigger.kill();
     };
-  }, []);
+  }, [activeMilestoneIndex]);
 
   return (
     <div 
@@ -347,6 +437,147 @@ export default function Landing() {
 
         </div>
       </section>
+
+      {/* CHAPTER 3: YOUR GUIDE APPEARS */}
+      <section 
+        ref={journeySectionRef} 
+        className="py-32 px-6 relative border-t border-brand-border/20 min-h-screen"
+      >
+        <div className="max-w-4xl mx-auto text-center mb-20 relative z-10">
+          <span className="text-xs font-bold text-brand-primary uppercase tracking-widest font-mono">Chapter 3: The Pathway</span>
+          <h2 className="font-display font-extrabold text-4xl md:text-5xl text-white mt-3 leading-tight">
+            Your Guided Roadmap
+          </h2>
+          <p className="text-brand-textMuted text-sm md:text-base mt-4 max-w-xl mx-auto">
+            Scroll down to advance your exporter status. Unlock essential regulatory identity milestones as you scale.
+          </p>
+        </div>
+
+        {/* Vertical Timeline container */}
+        <div className="max-w-2xl mx-auto relative pt-12 pb-24">
+          
+          {/* Background Path line */}
+          <div className="absolute left-1/2 -translate-x-1/2 top-0 bottom-0 w-0.5 bg-brand-border/40" />
+          
+          {/* Active drawing path */}
+          <div 
+            ref={timelineProgressRef}
+            className="absolute left-1/2 -translate-x-1/2 top-0 w-0.5 bg-gradient-to-b from-brand-primary via-indigo-400 to-brand-accent transition-all duration-300 ease-out"
+            style={{ height: '0%' }}
+          />
+
+          <div className="relative space-y-16">
+            {milestones.map((milestone, idx) => {
+              const IconComponent = milestone.icon;
+              const isActive = idx <= activeMilestoneIndex;
+              const isCurrent = idx === activeMilestoneIndex;
+
+              return (
+                <div 
+                  key={milestone.id}
+                  className={`flex flex-col md:flex-row items-center gap-6 relative z-10 ${
+                    idx % 2 === 0 ? 'md:flex-row' : 'md:flex-row-reverse'
+                  }`}
+                >
+                  {/* Alternating layout spacing spacer */}
+                  <div className="flex-1 hidden md:block" />
+
+                  {/* Milestone Node Badge */}
+                  <div className="relative">
+                    <div 
+                      className={`w-12 h-12 rounded-full flex items-center justify-center border-4 transition-all duration-500 ${
+                        isCurrent 
+                          ? 'bg-gradient-to-tr from-brand-primary to-indigo-500 border-white scale-110 shadow-lg shadow-brand-primary/30' 
+                          : isActive 
+                            ? 'bg-[#0c1224] border-brand-primary text-brand-primary' 
+                            : 'bg-[#020617] border-brand-border/80 text-brand-textMuted'
+                      }`}
+                    >
+                      <IconComponent size={20} className={isCurrent ? 'text-white animate-pulse' : ''} />
+                    </div>
+                  </div>
+
+                  {/* Details Card */}
+                  <div className="flex-1 w-full text-center md:text-left">
+                    <div className={`p-5 rounded-2xl border transition-all duration-500 glass-panel ${
+                      isCurrent 
+                        ? 'border-brand-primary/50 shadow-xl bg-[#0c1b40]/80' 
+                        : isActive 
+                          ? 'border-brand-border' 
+                          : 'opacity-30 border-transparent'
+                    }`}>
+                      <div className="flex items-center justify-between gap-2 mb-2">
+                        <h4 className="font-display font-bold text-xs text-white uppercase tracking-wider">{milestone.title}</h4>
+                        <span className="text-[9px] text-yellow-400 font-extrabold bg-yellow-400/10 px-2 py-0.5 rounded-full uppercase tracking-wider">
+                          +{milestone.xp} XP
+                        </span>
+                      </div>
+                      <p className="text-xs text-brand-textMuted leading-relaxed">{milestone.desc}</p>
+                    </div>
+                  </div>
+
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
+      {/* Floating HUD Readiness Gauge */}
+      <div className="fixed bottom-6 right-6 z-40 max-w-sm w-fit pointer-events-none">
+        <div className="pointer-events-auto bg-[#020617]/95 border border-brand-border/80 p-4 rounded-xl shadow-2xl flex items-center gap-4 backdrop-blur-md">
+          <div className="relative w-10 h-10 flex items-center justify-center">
+            <svg className="w-10 h-10 transform -rotate-90">
+              <circle cx="20" cy="20" r="16" fill="transparent" stroke="rgba(255,255,255,0.05)" strokeWidth="3" />
+              <circle 
+                cx="20" 
+                cy="20" 
+                r="16" 
+                fill="transparent" 
+                stroke="#2563EB" 
+                strokeWidth="3" 
+                strokeDasharray={`${2 * Math.PI * 16}`} 
+                strokeDashoffset={`${2 * Math.PI * 16 * (1 - (activeMilestoneIndex === -1 ? 0 : Math.round(((activeMilestoneIndex + 1) / milestones.length) * 100)) / 100)}`}
+                className="transition-all duration-500 ease-out"
+              />
+            </svg>
+            <span className="absolute text-[8px] font-black text-white">
+              {activeMilestoneIndex === -1 ? 0 : Math.round(((activeMilestoneIndex + 1) / milestones.length) * 100)}%
+            </span>
+          </div>
+          <div>
+            <span className="text-[8px] font-black text-brand-textMuted uppercase tracking-widest block">Readiness Index</span>
+            <p className="text-xs font-bold text-white mt-0.5">{earnedXP} XP Earned</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Floating Unlock Toast Notification */}
+      <AnimatePresence>
+        {recentNotification && (
+          <motion.div 
+            initial={{ opacity: 0, y: 50, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 20, scale: 0.95 }}
+            className="fixed bottom-24 left-6 z-40 bg-gradient-to-r from-brand-primary to-indigo-500 p-4 rounded-xl shadow-2xl flex items-center gap-3 border border-white/20"
+          >
+            <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center">
+              <Trophy size={16} className="text-white" />
+            </div>
+            <div>
+              <p className="text-[8px] font-black uppercase text-white/80 tracking-widest">Milestone Unlocked</p>
+              <h5 className="text-xs font-extrabold text-white">{recentNotification.title}</h5>
+              <p className="text-[9px] text-yellow-300 font-bold">Badge: {recentNotification.badge}</p>
+            </div>
+            <button 
+              onClick={() => setRecentNotification(null)}
+              className="text-white/60 hover:text-white ml-2 pointer-events-auto"
+            >
+              <X size={12} />
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Global CSS animations */}
       <style dangerouslySetInnerHTML={{__html: `
