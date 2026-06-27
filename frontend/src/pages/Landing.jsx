@@ -50,6 +50,7 @@ export default function Landing() {
   const [earnedXP, setEarnedXP] = useState(0);
   const [unlockedBadges, setUnlockedBadges] = useState([]);
   const [recentNotification, setRecentNotification] = useState(null);
+  const [isLightBg, setIsLightBg] = useState(false);
 
   const handleCTA = () => {
     if (currentUser) {
@@ -68,7 +69,7 @@ export default function Landing() {
 
   useEffect(() => {
     // Background Color evolution based on scroll progress:
-    // Midnight Blue (#020617) -> Industrial Grey (#181b22) -> Royal Blue (#0c1b40)
+    // Midnight Blue -> Industrial Grey -> Royal Blue -> Warm White
     const bgTrigger = ScrollTrigger.create({
       trigger: mainContainerRef.current,
       start: 'top top',
@@ -78,20 +79,34 @@ export default function Landing() {
         const progress = self.progress;
         if (mainContainerRef.current) {
           let r, g, b;
-          if (progress < 0.5) {
-            const factor = progress * 2;
+          if (progress < 0.33) {
+            const factor = progress / 0.33;
             const color1 = [2, 6, 23]; // Midnight Blue
             const color2 = [24, 27, 34]; // Industrial Grey
             r = Math.round(color1[0] + (color2[0] - color1[0]) * factor);
             g = Math.round(color1[1] + (color2[1] - color1[1]) * factor);
             b = Math.round(color1[2] + (color2[2] - color1[2]) * factor);
-          } else {
-            const factor = (progress - 0.5) * 2;
+            setIsLightBg(false);
+          } else if (progress < 0.66) {
+            const factor = (progress - 0.33) / 0.33;
             const color2 = [24, 27, 34]; // Industrial Grey
             const color3 = [12, 27, 64]; // Royal Blue
             r = Math.round(color2[0] + (color3[0] - color2[0]) * factor);
             g = Math.round(color2[1] + (color3[1] - color2[1]) * factor);
             b = Math.round(color2[2] + (color3[2] - color2[2]) * factor);
+            setIsLightBg(false);
+          } else {
+            const factor = (progress - 0.66) / 0.34;
+            const color3 = [12, 27, 64]; // Royal Blue
+            const color4 = [249, 246, 240]; // Warm White (#f9f6f0)
+            r = Math.round(color3[0] + (color4[0] - color3[0]) * factor);
+            g = Math.round(color3[1] + (color4[1] - color3[1]) * factor);
+            b = Math.round(color3[2] + (color4[2] - color3[2]) * factor);
+            if (progress > 0.8) {
+              setIsLightBg(true);
+            } else {
+              setIsLightBg(false);
+            }
           }
           mainContainerRef.current.style.backgroundColor = `rgb(${r}, ${g}, ${b})`;
         }
@@ -205,7 +220,9 @@ export default function Landing() {
   return (
     <div 
       ref={mainContainerRef} 
-      className="min-h-screen text-[#eeefff] relative overflow-hidden font-sans transition-colors duration-300 selection:bg-brand-primary selection:text-white"
+      className={`min-h-screen relative overflow-hidden font-sans transition-colors duration-500 selection:bg-brand-primary selection:text-white ${
+        isLightBg ? 'text-stone-900' : 'text-[#eeefff]'
+      }`}
       style={{ backgroundColor: '#020617' }}
     >
       {/* Stars Background */}
@@ -519,6 +536,121 @@ export default function Landing() {
                 </div>
               );
             })}
+          </div>
+        </div>
+      </section>
+
+      {/* CHAPTER 4: YOUR DIGITAL DUKAN */}
+      <section 
+        id="dukan-scene"
+        className="min-h-screen py-32 px-6 relative border-t border-stone-200 flex flex-col justify-center transition-colors duration-500"
+      >
+        {/* Soft shadow warm glow */}
+        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[70vw] h-[30vw] bg-amber-500/5 rounded-full blur-[120px] pointer-events-none" />
+
+        <div className="max-w-6xl mx-auto w-full">
+          <div className="text-center max-w-xl mx-auto mb-20">
+            <span className="text-xs font-bold text-amber-600 uppercase tracking-widest font-mono">Chapter 4: The Showroom</span>
+            <h2 className="font-display font-extrabold text-4xl md:text-5xl mt-3 leading-tight text-stone-900">
+              Your Digital Dukan
+            </h2>
+            <p className="text-stone-600 text-sm md:text-base mt-4">
+              Watch your wholesale commodities align onto self-building digital shelves, illuminated and prepared for international buyer scrutiny.
+            </p>
+          </div>
+
+          {/* Self-building showroom shelves layout */}
+          <div className="space-y-16">
+            
+            {/* Shelf Line 1 */}
+            <div className="border-b-2 border-stone-300 pb-8 grid grid-cols-1 md:grid-cols-3 gap-8 relative">
+              
+              {/* Product 1: Silk Carpets */}
+              <div className="group flex flex-col justify-between p-6 bg-stone-50 border border-stone-200 rounded-2xl hover:shadow-2xl hover:border-amber-400/40 transition-all duration-500 transform hover:-translate-y-2">
+                <div className="space-y-4">
+                  <div className="h-40 bg-stone-100 rounded-xl flex items-center justify-center relative overflow-hidden">
+                    <span className="absolute top-3 right-3 px-2 py-0.5 bg-amber-500 text-white text-[8px] font-extrabold rounded-full uppercase tracking-wider">
+                      GI Tagged
+                    </span>
+                    <Globe size={48} className="text-stone-300 group-hover:scale-115 transition-transform duration-500" />
+                  </div>
+                  <div>
+                    <span className="text-[9px] font-mono text-stone-400">HSN Code 5701.10.00</span>
+                    <h4 className="font-display font-bold text-base text-stone-900 mt-1">Handwoven Silk Carpets</h4>
+                  </div>
+                  <p className="text-xs text-stone-600 leading-relaxed">Luxury knotting from Gujarat, curated for custom flooring distributors.</p>
+                </div>
+                
+                <div className="mt-6 pt-4 border-t border-stone-200/60 grid grid-cols-2 gap-4">
+                  <div>
+                    <span className="text-[8px] uppercase tracking-wider text-stone-400 block font-bold">MOQ</span>
+                    <span className="text-xs font-bold text-stone-800">50 Units</span>
+                  </div>
+                  <div>
+                    <span className="text-[8px] uppercase tracking-wider text-stone-400 block font-bold">Target Demand</span>
+                    <span className="text-xs font-bold text-amber-600">Germany, USA</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Product 2: Assam Tea */}
+              <div className="group flex flex-col justify-between p-6 bg-stone-50 border border-stone-200 rounded-2xl hover:shadow-2xl hover:border-amber-400/40 transition-all duration-500 transform hover:-translate-y-2">
+                <div className="space-y-4">
+                  <div className="h-40 bg-stone-100 rounded-xl flex items-center justify-center relative overflow-hidden">
+                    <span className="absolute top-3 right-3 px-2 py-0.5 bg-amber-500 text-white text-[8px] font-extrabold rounded-full uppercase tracking-wider">
+                      APEDA Certified
+                    </span>
+                    <Globe size={48} className="text-stone-300 group-hover:scale-115 transition-transform duration-500" />
+                  </div>
+                  <div>
+                    <span className="text-[9px] font-mono text-stone-400">HSN Code 0902.40.20</span>
+                    <h4 className="font-display font-bold text-base text-stone-900 mt-1">Organic Assam Tea</h4>
+                  </div>
+                  <p className="text-xs text-stone-600 leading-relaxed">Single-estate orthodox leaf grades packaged for luxury global brands.</p>
+                </div>
+                
+                <div className="mt-6 pt-4 border-t border-stone-200/60 grid grid-cols-2 gap-4">
+                  <div>
+                    <span className="text-[8px] uppercase tracking-wider text-stone-400 block font-bold">MOQ</span>
+                    <span className="text-xs font-bold text-stone-800">500 kg</span>
+                  </div>
+                  <div>
+                    <span className="text-[8px] uppercase tracking-wider text-stone-400 block font-bold">Target Demand</span>
+                    <span className="text-xs font-bold text-amber-600">UK, Singapore</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Product 3: Brassware */}
+              <div className="group flex flex-col justify-between p-6 bg-stone-50 border border-stone-200 rounded-2xl hover:shadow-2xl hover:border-amber-400/40 transition-all duration-500 transform hover:-translate-y-2">
+                <div className="space-y-4">
+                  <div className="h-40 bg-stone-100 rounded-xl flex items-center justify-center relative overflow-hidden">
+                    <span className="absolute top-3 right-3 px-2 py-0.5 bg-amber-500 text-white text-[8px] font-extrabold rounded-full uppercase tracking-wider">
+                      Quality Assured
+                    </span>
+                    <Globe size={48} className="text-stone-300 group-hover:scale-115 transition-transform duration-500" />
+                  </div>
+                  <div>
+                    <span className="text-[9px] font-mono text-stone-400">HSN Code 7419.80.30</span>
+                    <h4 className="font-display font-bold text-base text-stone-900 mt-1">Artisanal Brassware</h4>
+                  </div>
+                  <p className="text-xs text-stone-600 leading-relaxed">Traditional sand-cast engraved vases crafted by Moradabad artisans.</p>
+                </div>
+                
+                <div className="mt-6 pt-4 border-t border-stone-200/60 grid grid-cols-2 gap-4">
+                  <div>
+                    <span className="text-[8px] uppercase tracking-wider text-stone-400 block font-bold">MOQ</span>
+                    <span className="text-xs font-bold text-stone-800">100 Units</span>
+                  </div>
+                  <div>
+                    <span className="text-[8px] uppercase tracking-wider text-stone-400 block font-bold">Target Demand</span>
+                    <span className="text-xs font-bold text-amber-600">UAE, France</span>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+
           </div>
         </div>
       </section>
