@@ -80,46 +80,54 @@ export default function Landing() {
         const progress = self.progress;
         if (mainContainerRef.current) {
           let r, g, b;
-          if (progress < 0.25) {
-            const factor = progress / 0.25;
+          if (progress < 0.2) {
+            const factor = progress / 0.2;
             const color1 = [2, 6, 23]; // Midnight Blue
             const color2 = [24, 27, 34]; // Industrial Grey
             r = Math.round(color1[0] + (color2[0] - color1[0]) * factor);
             g = Math.round(color1[1] + (color2[1] - color1[1]) * factor);
             b = Math.round(color1[2] + (color2[2] - color1[2]) * factor);
             setIsLightBg(false);
-          } else if (progress < 0.50) {
-            const factor = (progress - 0.25) / 0.25;
+          } else if (progress < 0.4) {
+            const factor = (progress - 0.2) / 0.2;
             const color2 = [24, 27, 34]; // Industrial Grey
             const color3 = [12, 27, 64]; // Royal Blue
             r = Math.round(color2[0] + (color3[0] - color2[0]) * factor);
             g = Math.round(color2[1] + (color3[1] - color2[1]) * factor);
             b = Math.round(color2[2] + (color3[2] - color2[2]) * factor);
             setIsLightBg(false);
-          } else if (progress < 0.75) {
-            const factor = (progress - 0.50) / 0.25;
+          } else if (progress < 0.6) {
+            const factor = (progress - 0.4) / 0.2;
             const color3 = [12, 27, 64]; // Royal Blue
             const color4 = [249, 246, 240]; // Warm White
             r = Math.round(color3[0] + (color4[0] - color3[0]) * factor);
             g = Math.round(color3[1] + (color4[1] - color3[1]) * factor);
             b = Math.round(color3[2] + (color4[2] - color3[2]) * factor);
-            if (progress > 0.70) {
+            if (progress > 0.55) {
               setIsLightBg(true);
             } else {
               setIsLightBg(false);
             }
-          } else {
-            const factor = (progress - 0.75) / 0.25;
+          } else if (progress < 0.8) {
+            const factor = (progress - 0.6) / 0.2;
             const color4 = [249, 246, 240]; // Warm White
-            const color5 = [41, 35, 18]; // Golden Port Lights (#292312)
+            const color5 = [41, 35, 18]; // Golden Port Lights
             r = Math.round(color4[0] + (color5[0] - color4[0]) * factor);
             g = Math.round(color4[1] + (color5[1] - color4[1]) * factor);
             b = Math.round(color4[2] + (color5[2] - color4[2]) * factor);
-            if (progress > 0.88) {
+            if (progress > 0.72) {
               setIsLightBg(false);
             } else {
               setIsLightBg(true);
             }
+          } else {
+            const factor = (progress - 0.8) / 0.2;
+            const color5 = [41, 35, 18]; // Golden Port Lights
+            const color6 = [3, 7, 18]; // Deep Space Dark
+            r = Math.round(color5[0] + (color6[0] - color5[0]) * factor);
+            g = Math.round(color5[1] + (color6[1] - color5[1]) * factor);
+            b = Math.round(color5[2] + (color6[2] - color5[2]) * factor);
+            setIsLightBg(false);
           }
           mainContainerRef.current.style.backgroundColor = `rgb(${r}, ${g}, ${b})`;
         }
@@ -813,6 +821,98 @@ export default function Landing() {
 
           </div>
 
+        </div>
+      </section>
+
+      {/* CHAPTER 6: GLOBAL REACH */}
+      <section 
+        id="reach-scene"
+        className="min-h-screen py-32 px-6 relative border-t border-brand-border/20 flex flex-col justify-center"
+      >
+        <div className="absolute inset-0 opacity-10 pointer-events-none bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.1)_1px,transparent_1px)] bg-[size:32px_32px]" />
+
+        <div className="max-w-6xl mx-auto w-full">
+          <div className="text-center max-w-xl mx-auto mb-20">
+            <span className="text-xs font-bold text-brand-primary uppercase tracking-widest font-mono">Chapter 6: The Expansion</span>
+            <h2 className="font-display font-extrabold text-4xl md:text-5xl text-white mt-3 leading-tight">
+              Your Global Footprint
+            </h2>
+            <p className="text-brand-textMuted text-sm md:text-base mt-4">
+              Hover over destination markers to see products, FOB shipment values, and active trade routes originating from India.
+            </p>
+          </div>
+
+          {/* Interactive World Map SVG */}
+          <div className="glass-panel p-6 md:p-8 rounded-3xl border border-brand-border relative overflow-hidden flex flex-col items-center justify-center bg-[#030712]/40">
+            
+            {/* Country highlights detail info */}
+            <div className="absolute top-6 left-6 p-4 bg-[#030a21]/90 border border-brand-primary/20 rounded-2xl max-w-xs z-20">
+              <p className="text-[9px] uppercase tracking-wider text-brand-textMuted font-mono">Destination Highlight</p>
+              <h4 className="font-display font-bold text-sm text-white mt-0.5" id="map-country-name">Hover a Country</h4>
+              <p className="text-xs text-brand-accent font-semibold mt-1" id="map-country-desc">Select any glowing marker on the map.</p>
+            </div>
+
+            <svg viewBox="0 0 1000 450" className="w-full h-auto max-w-[850px] opacity-90">
+              {/* USA */}
+              <circle 
+                cx="200" cy="180" r="18" 
+                fill="rgba(37,99,235,0.15)" 
+                className="cursor-pointer hover:fill-brand-primary/45 transition-colors"
+                onMouseEnter={() => {
+                  document.getElementById('map-country-name').innerText = 'United States (USA)';
+                  document.getElementById('map-country-desc').innerText = 'Top Exports: Brass Artware ($12,450 FOB). 18 days transit.';
+                }}
+              />
+              <circle cx="200" cy="180" r="5" fill="#3B82F6" className="pointer-events-none" />
+
+              {/* Germany */}
+              <circle 
+                cx="510" cy="140" r="18" 
+                fill="rgba(37,99,235,0.15)" 
+                className="cursor-pointer hover:fill-brand-primary/45 transition-colors"
+                onMouseEnter={() => {
+                  document.getElementById('map-country-name').innerText = 'Germany (DE)';
+                  document.getElementById('map-country-desc').innerText = 'Top Exports: Organic Basmati Rice (15 Tons). 22 days transit.';
+                }}
+              />
+              <circle cx="510" cy="140" r="5" fill="#3B82F6" className="pointer-events-none" />
+
+              {/* UAE */}
+              <circle 
+                cx="580" cy="210" r="18" 
+                fill="rgba(37,99,235,0.15)" 
+                className="cursor-pointer hover:fill-brand-primary/45 transition-colors"
+                onMouseEnter={() => {
+                  document.getElementById('map-country-name').innerText = 'United Arab Emirates (UAE)';
+                  document.getElementById('map-country-desc').innerText = 'Top Exports: Handwoven Silk Rugs ($24,000 FOB). 6 days transit.';
+                }}
+              />
+              <circle cx="580" cy="210" r="5" fill="#3B82F6" className="pointer-events-none" />
+
+              {/* Singapore */}
+              <circle 
+                cx="740" cy="290" r="18" 
+                fill="rgba(37,99,235,0.15)" 
+                className="cursor-pointer hover:fill-brand-primary/45 transition-colors"
+                onMouseEnter={() => {
+                  document.getElementById('map-country-name').innerText = 'Singapore (SG)';
+                  document.getElementById('map-country-desc').innerText = 'Top Exports: Premium Tea Blends (500 kg). 9 days transit.';
+                }}
+              />
+              <circle cx="740" cy="290" r="5" fill="#3B82F6" className="pointer-events-none" />
+
+              {/* India Source Hub */}
+              <circle cx="630" cy="230" r="12" fill="rgba(245,158,11,0.2)" className="animate-pulse" />
+              <circle cx="630" cy="230" r="6" fill="#F59E0B" />
+              <text x="630" y="212" fill="#F59E0B" fontSize="10" fontWeight="bold" textAnchor="middle" letterSpacing="1">INDIA</text>
+
+              {/* Connective Paths */}
+              <path d="M 630 230 C 580 200 280 180 200 180" fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="1.5" strokeDasharray="5 3" />
+              <path d="M 630 230 Q 570 180 510 140" fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="1.5" strokeDasharray="5 3" />
+              <path d="M 630 230 Q 600 220 580 210" fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="1.5" strokeDasharray="5 3" />
+              <path d="M 630 230 Q 680 260 740 290" fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="1.5" strokeDasharray="5 3" />
+            </svg>
+          </div>
         </div>
       </section>
 
