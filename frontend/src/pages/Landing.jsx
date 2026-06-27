@@ -296,79 +296,81 @@ export default function Landing() {
       </header>
 
       {/* CHAPTER 1: THE WORLD IS WAITING */}
-      <section className="min-h-screen flex flex-col justify-center px-6 relative max-w-7xl mx-auto z-10">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
-          
-          {/* Hero Content */}
-          <div className="lg:col-span-6 flex flex-col text-left space-y-6">
-            <div className="inline-flex items-center gap-2 px-3 py-1 bg-brand-primary/10 border border-brand-primary/20 rounded-full w-fit">
-              <Sparkle size={14} className="text-brand-primary animate-pulse" />
-              <span className="text-[9px] font-extrabold tracking-widest text-brand-primary uppercase">The World Is Waiting</span>
-            </div>
-            
-            <h1 className="font-display font-extrabold text-5xl md:text-7xl text-white leading-[1.05] tracking-tight">
-              Your Export <br />
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-primary via-indigo-400 to-brand-accent">
-                Journey Starts Here.
-              </span>
-            </h1>
-            
-            <p className="text-brand-textMuted text-sm md:text-base max-w-xl leading-relaxed">
-              From your first export document to your first international shipment. One guided, cinematic experience mapping your business directly to the global stage.
-            </p>
-            
-            <div className="flex flex-wrap items-center gap-4 pt-4">
-              <button 
-                onClick={handleCTA}
-                className="px-8 py-4 bg-gradient-to-r from-brand-primary to-brand-accent hover:opacity-95 text-white font-bold text-xs uppercase tracking-wider rounded-xl transition-all shadow-xl shadow-brand-primary/25 flex items-center justify-center gap-2 group"
-                data-testid="hero-primary-cta"
-              >
-                Start Your Export Journey
-                <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
-              </button>
-              <button 
-                onClick={handleScrollDown}
-                className="px-6 py-4 bg-white/5 hover:bg-white/10 text-white font-bold text-xs uppercase tracking-wider rounded-xl border border-white/10 transition-all flex items-center justify-center gap-2"
-              >
-                Watch the Journey
-              </button>
-            </div>
+      <section className="min-h-screen flex flex-col justify-center items-center px-6 relative max-w-5xl mx-auto z-10 text-center">
+        
+        {/* Hero Content */}
+        <div className="flex flex-col items-center space-y-6 max-w-3xl">
+          <div className="inline-flex items-center gap-2 px-3 py-1 bg-brand-primary/10 border border-brand-primary/20 rounded-full w-fit">
+            <Sparkle size={14} className="text-brand-primary animate-pulse" />
+            <span className="text-[9px] font-extrabold tracking-widest text-brand-primary uppercase">The World Is Waiting</span>
           </div>
-
-          {/* Hero Globe */}
-          <div ref={globeContainerRef} className="lg:col-span-6 flex items-center justify-center relative">
-            <div className="absolute w-[450px] h-[450px] bg-brand-primary/5 rounded-full blur-[90px] pointer-events-none" />
-            <svg 
-              viewBox="0 0 600 600" 
-              className="w-full max-w-[480px] h-auto drop-shadow-[0_0_60px_rgba(37,99,235,0.12)]"
+          
+          <h1 className="font-display font-extrabold text-5xl md:text-7xl text-white leading-[1.05] tracking-tight">
+            Your Export <br />
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-primary via-indigo-400 to-brand-accent">
+              Journey Starts Here.
+            </span>
+          </h1>
+          
+          <p className="text-brand-textMuted text-sm md:text-base max-w-xl leading-relaxed">
+            From your first export document to your first international shipment. One guided, cinematic experience mapping your business directly to the global stage.
+          </p>
+          
+          <div className="flex flex-wrap items-center justify-center gap-4 pt-4">
+            <button 
+              onClick={handleCTA}
+              className="px-8 py-4 bg-gradient-to-r from-brand-primary to-brand-accent hover:opacity-95 text-white font-bold text-xs uppercase tracking-wider rounded-xl transition-all shadow-xl shadow-brand-primary/25 flex items-center justify-center gap-2 group"
+              data-testid="hero-primary-cta"
             >
-              {/* Globe sphere gradient */}
+              Start Your Export Journey
+              <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
+            </button>
+            <button 
+              onClick={handleScrollDown}
+              className="px-6 py-4 bg-white/5 hover:bg-white/10 text-white font-bold text-xs uppercase tracking-wider rounded-xl border border-white/10 transition-all flex items-center justify-center gap-2"
+            >
+              Watch the Journey
+            </button>
+          </div>
+        </div>
+
+        {/* Centered Hero Globe */}
+        <div ref={globeContainerRef} className="mt-12 flex items-center justify-center relative w-full max-w-[400px]">
+          <div className="absolute w-[350px] h-[350px] bg-brand-primary/5 rounded-full blur-[70px] pointer-events-none" />
+          <svg 
+            viewBox="0 0 600 600" 
+            className="w-full h-auto drop-shadow-[0_0_60px_rgba(37,99,235,0.12)]"
+          >
+            {/* Globe sphere gradient with spinning lines */}
+            <g className="animate-spin-slow origin-center">
               <circle cx="300" cy="300" r="220" fill="url(#globeAtmosphere)" />
               
               {/* Latitude/Longitude lines */}
-              <path d="M 80 300 A 220 220 0 0 0 520 300" fill="none" stroke="rgba(255,255,255,0.03)" strokeWidth="1" />
-              <path d="M 120 300 A 220 120 0 0 0 480 300" fill="none" stroke="rgba(255,255,255,0.03)" strokeWidth="1" />
-              <path d="M 300 80 A 220 220 0 0 0 300 520" fill="none" stroke="rgba(255,255,255,0.03)" strokeWidth="1" />
-              <path d="M 300 80 A 120 220 0 0 0 300 520" fill="none" stroke="rgba(255,255,255,0.03)" strokeWidth="1" />
-              
-              {/* India glow pointer */}
-              <circle cx="290" cy="280" r="25" fill="rgba(245,158,11,0.15)" className="animate-pulse" />
-              <circle cx="290" cy="280" r="6" fill="#F59E0B" />
-              
-              {/* Routes to Hamburg, USA, UAE */}
-              <path d="M 290 280 Q 210 200 170 190" fill="none" stroke="url(#routeGrad)" strokeWidth="2" strokeDasharray="6 3" className="animate-route" />
-              <path d="M 290 280 C 200 300 130 280 90 230" fill="none" stroke="url(#routeGrad)" strokeWidth="2" strokeDasharray="6 3" className="animate-route" />
-              <path d="M 290 280 Q 250 260 220 250" fill="none" stroke="url(#routeGrad)" strokeWidth="2" strokeDasharray="6 3" className="animate-route" />
+              <circle cx="300" cy="300" r="220" fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="1" />
+              <path d="M 80 300 A 220 220 0 0 0 520 300" fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="1.5" />
+              <path d="M 120 300 A 220 120 0 0 0 480 300" fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="1.5" />
+              <path d="M 300 80 A 220 220 0 0 0 300 520" fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="1.5" />
+              <path d="M 300 80 A 120 220 0 0 0 300 520" fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="1.5" />
+            </g>
+            
+            {/* India glow pointer - remains stable while lines rotate beneath to keep focus */}
+            <circle cx="290" cy="280" r="25" fill="rgba(245,158,11,0.15)" className="animate-pulse" />
+            <circle cx="290" cy="280" r="6" fill="#F59E0B" />
+            
+            {/* Routes to Hamburg, USA, UAE */}
+            <path d="M 290 280 Q 210 200 170 190" fill="none" stroke="url(#routeGrad)" strokeWidth="2" strokeDasharray="6 3" className="animate-route" />
+            <path d="M 290 280 C 200 300 130 280 90 230" fill="none" stroke="url(#routeGrad)" strokeWidth="2" strokeDasharray="6 3" className="animate-route" />
+            <path d="M 290 280 Q 250 260 220 250" fill="none" stroke="url(#routeGrad)" strokeWidth="2" strokeDasharray="6 3" className="animate-route" />
 
-              {/* Cargo dots moving */}
-              <circle r="3.5" fill="#F59E0B">
-                <animateMotion path="M 290 280 Q 210 200 170 190" dur="5s" repeatCount="indefinite" />
-              </circle>
-              <circle r="3.5" fill="#3B82F6">
-                <animateMotion path="M 290 280 C 200 300 130 280 90 230" dur="8s" repeatCount="indefinite" />
-              </circle>
+            {/* Cargo dots moving */}
+            <circle r="3.5" fill="#F59E0B">
+              <animateMotion path="M 290 280 Q 210 200 170 190" dur="5s" repeatCount="indefinite" />
+            </circle>
+            <circle r="3.5" fill="#3B82F6">
+              <animateMotion path="M 290 280 C 200 300 130 280 90 230" dur="8s" repeatCount="indefinite" />
+            </circle>
 
-              <defs>
+            <defs>
                 <radialGradient id="globeAtmosphere" cx="50%" cy="50%" r="50%" fx="30%" fy="30%">
                   <stop offset="0%" stopColor="#081e59" />
                   <stop offset="70%" stopColor="#030b21" />
@@ -381,8 +383,6 @@ export default function Landing() {
               </defs>
             </svg>
           </div>
-
-        </div>
 
         {/* Scroll indicator */}
         <div className="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1 cursor-pointer opacity-70 hover:opacity-100 transition-opacity" onClick={handleScrollDown}>
@@ -1168,6 +1168,17 @@ export default function Landing() {
         .animate-route {
           stroke-dasharray: 6 3;
           animation: dash 2.5s linear infinite;
+        }
+        @keyframes spinSlow {
+          from {
+            transform: rotate(0deg);
+          }
+          to {
+            transform: rotate(360deg);
+          }
+        }
+        .animate-spin-slow {
+          animation: spinSlow 40s linear infinite;
         }
       `}} />
     </div>
