@@ -80,53 +80,61 @@ export default function Landing() {
         const progress = self.progress;
         if (mainContainerRef.current) {
           let r, g, b;
-          if (progress < 0.2) {
-            const factor = progress / 0.2;
+          if (progress < 0.16) {
+            const factor = progress / 0.16;
             const color1 = [2, 6, 23]; // Midnight Blue
             const color2 = [24, 27, 34]; // Industrial Grey
             r = Math.round(color1[0] + (color2[0] - color1[0]) * factor);
             g = Math.round(color1[1] + (color2[1] - color1[1]) * factor);
             b = Math.round(color1[2] + (color2[2] - color1[2]) * factor);
             setIsLightBg(false);
-          } else if (progress < 0.4) {
-            const factor = (progress - 0.2) / 0.2;
+          } else if (progress < 0.32) {
+            const factor = (progress - 0.16) / 0.16;
             const color2 = [24, 27, 34]; // Industrial Grey
             const color3 = [12, 27, 64]; // Royal Blue
             r = Math.round(color2[0] + (color3[0] - color2[0]) * factor);
             g = Math.round(color2[1] + (color3[1] - color2[1]) * factor);
             b = Math.round(color2[2] + (color3[2] - color2[2]) * factor);
             setIsLightBg(false);
-          } else if (progress < 0.6) {
-            const factor = (progress - 0.4) / 0.2;
+          } else if (progress < 0.48) {
+            const factor = (progress - 0.32) / 0.16;
             const color3 = [12, 27, 64]; // Royal Blue
             const color4 = [249, 246, 240]; // Warm White
             r = Math.round(color3[0] + (color4[0] - color3[0]) * factor);
             g = Math.round(color3[1] + (color4[1] - color3[1]) * factor);
             b = Math.round(color3[2] + (color4[2] - color3[2]) * factor);
-            if (progress > 0.55) {
+            if (progress > 0.45) {
               setIsLightBg(true);
             } else {
               setIsLightBg(false);
             }
-          } else if (progress < 0.8) {
-            const factor = (progress - 0.6) / 0.2;
+          } else if (progress < 0.64) {
+            const factor = (progress - 0.48) / 0.16;
             const color4 = [249, 246, 240]; // Warm White
             const color5 = [41, 35, 18]; // Golden Port Lights
             r = Math.round(color4[0] + (color5[0] - color4[0]) * factor);
             g = Math.round(color4[1] + (color5[1] - color4[1]) * factor);
             b = Math.round(color4[2] + (color5[2] - color4[2]) * factor);
-            if (progress > 0.72) {
+            if (progress > 0.58) {
               setIsLightBg(false);
             } else {
               setIsLightBg(true);
             }
-          } else {
-            const factor = (progress - 0.8) / 0.2;
+          } else if (progress < 0.80) {
+            const factor = (progress - 0.64) / 0.16;
             const color5 = [41, 35, 18]; // Golden Port Lights
             const color6 = [3, 7, 18]; // Deep Space Dark
             r = Math.round(color5[0] + (color6[0] - color5[0]) * factor);
             g = Math.round(color5[1] + (color6[1] - color5[1]) * factor);
             b = Math.round(color5[2] + (color6[2] - color5[2]) * factor);
+            setIsLightBg(false);
+          } else {
+            const factor = (progress - 0.80) / 0.20;
+            const color6 = [3, 7, 18]; // Deep Space Dark
+            const color7 = [11, 15, 25]; // Premium Dark
+            r = Math.round(color6[0] + (color7[0] - color6[0]) * factor);
+            g = Math.round(color6[1] + (color7[1] - color6[1]) * factor);
+            b = Math.round(color6[2] + (color7[2] - color6[2]) * factor);
             setIsLightBg(false);
           }
           mainContainerRef.current.style.backgroundColor = `rgb(${r}, ${g}, ${b})`;
@@ -912,6 +920,126 @@ export default function Landing() {
               <path d="M 630 230 Q 600 220 580 210" fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="1.5" strokeDasharray="5 3" />
               <path d="M 630 230 Q 680 260 740 290" fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="1.5" strokeDasharray="5 3" />
             </svg>
+          </div>
+        </div>
+      </section>
+
+      {/* CHAPTER 7: THE COMMAND CENTER */}
+      <section 
+        id="dashboard-scene"
+        className="min-h-screen py-32 px-6 relative border-t border-brand-border/20 flex flex-col justify-center"
+      >
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[80vw] h-[40vw] bg-brand-primary/5 rounded-full blur-[140px] pointer-events-none" />
+
+        <div className="max-w-6xl mx-auto w-full">
+          <div className="text-center max-w-xl mx-auto mb-20">
+            <span className="text-xs font-bold text-brand-primary uppercase tracking-widest font-mono">Chapter 7: The Reward</span>
+            <h2 className="font-display font-extrabold text-4xl md:text-5xl text-white mt-3 leading-tight">
+              The Command Center
+            </h2>
+            <p className="text-brand-textMuted text-sm md:text-base mt-4">
+              Your entire B2B global trade ecosystem, consolidated into a single premium interface. Everything you earned, unified.
+            </p>
+          </div>
+
+          {/* Stripe-style Dashboard Grid Showcase */}
+          <div className="glass-panel p-6 md:p-8 rounded-3xl border border-brand-border/80 shadow-2xl space-y-8 bg-[#0b0f19]/60 backdrop-blur-md">
+            
+            {/* Header info bar */}
+            <div className="flex items-center justify-between border-b border-brand-border/60 pb-4">
+              <div className="flex items-center gap-3">
+                <span className="text-[10px] font-black text-white uppercase tracking-widest font-mono">EXIMARG Dashboard</span>
+                <span className="px-2 py-0.5 bg-brand-primary/10 text-brand-primary border border-brand-primary/20 text-[9px] font-black rounded-md uppercase tracking-wider">
+                  Live Exporter Status
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+                <span className="text-[10px] text-brand-textMuted uppercase font-bold tracking-wider">Port Channels Online</span>
+              </div>
+            </div>
+
+            {/* Dashboard Widgets Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              
+              {/* Widget 1: Profile */}
+              <div className="p-5 bg-brand-bg/40 border border-brand-border rounded-xl space-y-4">
+                <p className="text-[9px] text-brand-textMuted uppercase font-black tracking-wider">Identity & Compliance</p>
+                <div className="space-y-2 text-xs">
+                  <div className="flex justify-between items-center">
+                    <span className="text-brand-textMuted">IEC Code Status</span>
+                    <span className="text-green-400 font-bold">VERIFIED</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-brand-textMuted">GSTIN Link</span>
+                    <span className="text-green-400 font-bold">ACTIVE</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-brand-textMuted">Entity Verification</span>
+                    <span className="text-green-400 font-bold">PASSED</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Widget 2: Catalog */}
+              <div className="p-5 bg-brand-bg/40 border border-brand-border rounded-xl space-y-4">
+                <p className="text-[9px] text-brand-textMuted uppercase font-black tracking-wider">Digital Showcase</p>
+                <div className="space-y-2 text-xs">
+                  <div className="flex justify-between items-center">
+                    <span className="text-brand-textMuted">Basmati Rice HSN</span>
+                    <span className="text-white font-bold">1006.30</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-brand-textMuted">Assam Tea HSN</span>
+                    <span className="text-white font-bold">0902.40</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-brand-textMuted">Active Storefront</span>
+                    <span className="text-brand-primary font-bold">eximarg.com/shop</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Widget 3: Live Order Log */}
+              <div className="p-5 bg-brand-bg/40 border border-brand-border rounded-xl space-y-4">
+                <p className="text-[9px] text-brand-textMuted uppercase font-black tracking-wider">Logistics Ledger</p>
+                <div className="space-y-2 text-xs">
+                  <div className="flex justify-between items-center">
+                    <span className="text-brand-textMuted">Hamburg Order #904</span>
+                    <span className="text-amber-500 font-bold">PORT LAUNCH</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-brand-textMuted">Vessel</span>
+                    <span className="text-white font-bold">Maersk Integrity</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-brand-textMuted">Clearance Ledger</span>
+                    <span className="text-green-400 font-bold">CLEARED</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Widget 4: Financial ledger */}
+              <div className="p-5 bg-brand-bg/40 border border-brand-border rounded-xl space-y-4">
+                <p className="text-[9px] text-brand-textMuted uppercase font-black tracking-wider">Financial Overview</p>
+                <div className="space-y-2 text-xs">
+                  <div className="flex justify-between items-center">
+                    <span className="text-brand-textMuted">Escrow Account</span>
+                    <span className="text-green-400 font-bold">$18,750 USD</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-brand-textMuted">GST Drawback Claim</span>
+                    <span className="text-amber-500 font-bold">₹12,400 Claimed</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-brand-textMuted">Escrow Status</span>
+                    <span className="text-green-400 font-bold">SECURED</span>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+
           </div>
         </div>
       </section>
