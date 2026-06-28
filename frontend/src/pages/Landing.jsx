@@ -11,7 +11,7 @@ function Up({ children, delay = 0, className = "", }) {
       initial={{ opacity: 0, y: 36 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-48px" }}
-      transition={{ duration: 0.9, ease: EASE, delay }}
+      transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1], delay }}
       className={className}
     >
       {children}
@@ -25,7 +25,7 @@ function FadeIn({ children, delay = 0, className = "", }) {
       initial={{ opacity: 0 }}
       whileInView={{ opacity: 1 }}
       viewport={{ once: true }}
-      transition={{ duration: 1.1, ease: EASE, delay }}
+      transition={{ duration: 1.1, ease: [0.22, 1, 0.36, 1], delay }}
       className={className}
     >
       {children}
@@ -475,7 +475,7 @@ function HeroVisual() {
               initial={{ width: "0%" }}
               whileInView={{ width: "38%" }}
               viewport={{ once: true }}
-              transition={{ duration: 1.2, delay: 0.5, ease: EASE }}
+              transition={{ duration: 1.2, delay: 0.5, ease: [0.22, 1, 0.36, 1] }}
             />
           </div>
 
@@ -670,7 +670,7 @@ const TRADE_CARDS = [
 function FirstBuyerStory() {
   const [active, setActive] = useState(0);
   const [paused, setPaused] = useState(false);
-  const timerRef = useRef | null>(null);
+  const timerRef = useRef(null);
 
   const startTimer = () => {
     if (timerRef.current) clearInterval(timerRef.current);
@@ -822,7 +822,7 @@ function FirstBuyerStory() {
               initial={{ opacity: 0, y: 16, scale: 0.98 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: -12, scale: 0.98 }}
-              transition={{ duration: 0.4, ease: EASE }}
+              transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
               className="rounded-2xl overflow-hidden"
               style={{
                 background: "#ffffff",
@@ -978,14 +978,30 @@ function JourneyButton({ children,
       ? { background: "#4875EF", color: "#fff", boxShadow: "0 4px 20px rgba(72,117,239,0.38)" }
       : variant === "ghost-dark"
       ? { background: "transparent", color: "#0F1740" }
-      : { background: "rgba(255,255,255,0.09)", color: "rgba(255,255,255,0.85)", border: "1px solid rgba(255,255,255,0.15)" };
+      : { background: "rgba(255,255,255,0.09)", color: "rgba(255,255,255,0.85)", borderWidth: "1px", borderStyle: "solid", borderColor: "rgba(255,255,255,0.15)" };
+
+  if (variant === "primary") {
+    return (
+      <motion.button
+        onClick={onClick}
+        whileHover={{ y: -2, boxShadow: "0 10px 32px rgba(72,117,239,0.52)" }}
+        whileTap={{ scale: 0.96 }}
+        transition={{ duration: 0.15 }}
+        className={`rounded-full font-semibold flex items-center gap-2 group ${pad} ${txt} ${className}`}
+        style={baseStyle}
+      >
+        <span>{typeof children === "string" ? children.replace(" →", "") : children}</span>
+        {typeof children === "string" && children.includes("→") && (
+          <span className="inline-block transition-transform duration-200 group-hover:translate-x-1">→</span>
+        )}
+      </motion.button>
+    );
+  }
 
   return (
     <motion.button
       onClick={onClick}
-      whileHover={variant === "primary"
-        ? { y: -2, boxShadow: "0 10px 32px rgba(72,117,239,0.52)" }
-        : { opacity: 0.75 }}
+      whileHover={{ opacity: 0.75 }}
       whileTap={{ scale: 0.96 }}
       transition={{ duration: 0.15 }}
       className={`rounded-full font-semibold flex items-center gap-2 group ${pad} ${txt} ${className}`}
@@ -1026,7 +1042,7 @@ function OnboardingOverlay({ onSelectPath }) {
         initial={{ opacity: 0, scale: 0.95, y: 24 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.96, y: -12 }}
-        transition={{ duration: 0.45, ease: EASE, delay: 0.08 }}
+        transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1], delay: 0.08 }}
         className="w-full max-w-2xl text-center"
       >
         {/* Logo */}
@@ -1048,7 +1064,7 @@ function OnboardingOverlay({ onSelectPath }) {
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, ease: EASE, delay: 0.22 }}
+          transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1], delay: 0.22 }}
         >
           <h2
             style={{
@@ -1077,7 +1093,7 @@ function OnboardingOverlay({ onSelectPath }) {
               key={card.title}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.45, ease: EASE, delay: card.delay }}
+              transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1], delay: card.delay }}
               whileHover={{ y: -4, boxShadow: "0 16px 40px rgba(15,23,64,0.1)" }}
               className="rounded-2xl p-6 text-left cursor-pointer transition-shadow"
               style={{
@@ -1194,7 +1210,7 @@ function ChipSelect({ label, options, selected, onToggle }) {
           return (
             <motion.button key={o} type="button" whileTap={{ scale: 0.95 }} onClick={() => onToggle(o)}
               className="px-3 py-1.5 rounded-full text-xs font-semibold transition-all duration-150"
-              style={{ background: active ? "#4875EF" : "#F4F6FF", color: active ? "#fff" : "#6B7294", border: `1.5px solid ${active ? "#4875EF" : "rgba(15,23,64,0.1)"}` }}>
+              style={{ background: active ? "#4875EF" : "#F4F6FF", color: active ? "#fff" : "#6B7294", borderWidth: "1.5px", borderStyle: "solid", borderColor: active ? "#4875EF" : "rgba(15,23,64,0.1)" }}>
               {o}
             </motion.button>
           );
@@ -1209,7 +1225,7 @@ function ChipSelect({ label, options, selected, onToggle }) {
 function ProductScreen({ children, onBack, backLabel = "Back" }) {
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -16 }} transition={{ duration: 0.4, ease: EASE }}
+      exit={{ opacity: 0, y: -16 }} transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
       className="fixed inset-0 z-[150] overflow-y-auto"
       style={{ background: "#FAFBFF", fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
       <div className="sticky top-0 z-10 flex items-center justify-between px-6 md:px-10 h-14 border-b"
@@ -1243,7 +1259,7 @@ function AuthScreen({ mode, userPath, onAuth, onToggleMode }) {
     <ProductScreen>
       <div className="min-h-[calc(100vh-56px)] flex items-center justify-center px-6 py-12">
         <motion.div initial={{ opacity: 0, scale: 0.97 }} animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.4, ease: EASE }} className="w-full max-w-md">
+          transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }} className="w-full max-w-md">
           <div className="rounded-2xl px-8 py-10"
             style={{ background: "#ffffff", boxShadow: "0 24px 64px rgba(15,23,64,0.1), 0 4px 16px rgba(15,23,64,0.05)", border: "1px solid rgba(15,23,64,0.06)" }}>
             <div className="mb-8">
@@ -1349,7 +1365,7 @@ function WelcomeDashboard({ xp, completedLevels, onStartLevel, onGoToCommandCent
             </div>
             <div className="w-full h-2 rounded-full" style={{ background: "#EBF0FF" }}>
               <motion.div className="h-full rounded-full" style={{ background: "linear-gradient(to right, #4875EF, #7BA4FF)" }}
-                initial={{ width: "0%" }} animate={{ width: `${pct}%` }} transition={{ duration: 1, ease: EASE, delay: 0.3 }} />
+                initial={{ width: "0%" }} animate={{ width: `${pct}%` }} transition={{ duration: 1, ease: [0.22, 1, 0.36, 1], delay: 0.3 }} />
             </div>
             <p className="text-xs mt-2" style={{ color: "#9BA3C4" }}>{completedLevels.length} of 9 levels complete</p>
           </div>
@@ -1785,7 +1801,7 @@ function CommandCenter({ xp, onBack }) {
               { label: "Countries",     value: "22",       delta: "+3 new",         c: "#7C3AED" },
             ].map((s, i) => (
               <motion.div key={s.label} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.4, ease: EASE, delay: i * 0.06 }}
+                transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1], delay: i * 0.06 }}
                 className="rounded-2xl p-5" style={{ background: "#ffffff", border: "1px solid rgba(15,23,64,0.07)", boxShadow: "0 2px 12px rgba(15,23,64,0.05)" }}>
                 <p className="text-xs font-semibold tracking-widest uppercase mb-2" style={{ color: "#9BA3C4", fontFamily: "'DM Mono', monospace" }}>{s.label}</p>
                 <p style={{ fontFamily: "'Fraunces', serif", fontSize: "26px", fontWeight: 700, color: "#0F1740", letterSpacing: "-0.02em", lineHeight: 1.1 }}>{s.value}</p>
@@ -1979,7 +1995,7 @@ export default function Landing() {
               initial={{ opacity: 0, y: -8, scale: 0.97 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: -8, scale: 0.97 }}
-              transition={{ duration: 0.22, ease: EASE }}
+              transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
               className="absolute top-full left-4 right-4 mt-2 rounded-2xl overflow-hidden shadow-xl"
               style={{
                 background: "#ffffff",
@@ -2166,7 +2182,7 @@ export default function Landing() {
               initial={{ opacity: 0, y: 28 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ duration: 0.7, ease: EASE, delay: 0.1 }}
+              transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1], delay: 0.1 }}
               style={{ position: "absolute", top: 72, left: 24, width: 268 }}
             >
               <motion.div
@@ -2200,7 +2216,7 @@ export default function Landing() {
               initial={{ opacity: 0, y: 36 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ duration: 0.65, ease: EASE, delay: 0.22 }}
+              transition={{ duration: 0.65, ease: [0.22, 1, 0.36, 1], delay: 0.22 }}
               style={{ position: "absolute", top: 188, left: 80, width: 238 }}
             >
               <motion.div
@@ -2224,7 +2240,7 @@ export default function Landing() {
               initial={{ opacity: 0, x: 24 }}
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
-              transition={{ duration: 0.6, ease: EASE, delay: 0.18 }}
+              transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1], delay: 0.18 }}
               style={{ position: "absolute", top: 8, right: 10, width: 210 }}
             >
               <motion.div
@@ -2247,7 +2263,7 @@ export default function Landing() {
               initial={{ opacity: 0, y: 24 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ duration: 0.65, ease: EASE, delay: 0.3 }}
+              transition={{ duration: 0.65, ease: [0.22, 1, 0.36, 1], delay: 0.3 }}
               style={{ position: "absolute", top: 300, right: 14, width: 200 }}
             >
               <motion.div
@@ -2272,7 +2288,7 @@ export default function Landing() {
               initial={{ opacity: 0, y: 18 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ duration: 0.55, ease: EASE, delay: 0.38 }}
+              transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1], delay: 0.38 }}
               style={{ position: "absolute", bottom: 24, right: 4 }}
             >
               <motion.div
@@ -2293,7 +2309,7 @@ export default function Landing() {
               initial={{ opacity: 0 }}
               whileInView={{ opacity: 1 }}
               viewport={{ once: true }}
-              transition={{ duration: 0.5, ease: EASE, delay: 0.34 }}
+              transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1], delay: 0.34 }}
               style={{ position: "absolute", bottom: 108, left: 8 }}
             >
               <motion.div
@@ -2310,7 +2326,7 @@ export default function Landing() {
               initial={{ opacity: 0 }}
               whileInView={{ opacity: 1 }}
               viewport={{ once: true }}
-              transition={{ duration: 0.45, ease: EASE, delay: 0.14 }}
+              transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1], delay: 0.14 }}
               style={{ position: "absolute", top: 28, left: 200 }}
             >
               <motion.div
@@ -2327,7 +2343,7 @@ export default function Landing() {
               initial={{ opacity: 0 }}
               whileInView={{ opacity: 1 }}
               viewport={{ once: true }}
-              transition={{ duration: 0.5, ease: EASE, delay: 0.42 }}
+              transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1], delay: 0.42 }}
               style={{ position: "absolute", top: 410, left: 50 }}
             >
               <motion.div
@@ -2379,7 +2395,7 @@ export default function Landing() {
                   initial={{ opacity: 0, x: isLeft ? -28 : 28 }}
                   whileInView={{ opacity: 1, x: 0 }}
                   viewport={{ once: true, margin: "-32px" }}
-                  transition={{ duration: 0.7, ease: EASE, delay: i * 0.06 }}
+                  transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1], delay: i * 0.06 }}
                   className="relative grid items-center"
                   style={{ gridTemplateColumns: "1fr 56px 1fr" }}
                 >
@@ -2389,7 +2405,7 @@ export default function Landing() {
                       initial={{ opacity: 0, x: -20 }}
                       whileInView={{ opacity: 1, x: 0 }}
                       viewport={{ once: true }}
-                      transition={{ duration: 0.6, ease: EASE, delay: i * 0.06 + 0.15 }}
+                      transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1], delay: i * 0.06 + 0.15 }}
                     >
                       <RoadmapCard m={m} />
                     </motion.div>
@@ -2423,7 +2439,7 @@ export default function Landing() {
                       initial={{ opacity: 0, x: 20 }}
                       whileInView={{ opacity: 1, x: 0 }}
                       viewport={{ once: true }}
-                      transition={{ duration: 0.6, ease: EASE, delay: i * 0.06 + 0.15 }}
+                      transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1], delay: i * 0.06 + 0.15 }}
                     >
                       <RoadmapCard m={m} />
                     </motion.div>
