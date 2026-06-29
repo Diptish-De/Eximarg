@@ -1,17 +1,19 @@
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
-const EASE = [0.22, 1, 0.36, 1];
+const EASE = [0.22, 1, 0.36, 1] as const;
 
 // ── Shared animation wrappers ────────────────────────────────────────────────
 
-function Up({ children, delay = 0, className = "", }) {
+function Up({
+  children, delay = 0, className = "",
+}: { children: React.ReactNode; delay?: number; className?: string }) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 36 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-48px" }}
-      transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1], delay }}
+      transition={{ duration: 0.9, ease: EASE, delay }}
       className={className}
     >
       {children}
@@ -19,13 +21,15 @@ function Up({ children, delay = 0, className = "", }) {
   );
 }
 
-function FadeIn({ children, delay = 0, className = "", }) {
+function FadeIn({
+  children, delay = 0, className = "",
+}: { children: React.ReactNode; delay?: number; className?: string }) {
   return (
     <motion.div
       initial={{ opacity: 0 }}
       whileInView={{ opacity: 1 }}
       viewport={{ once: true }}
-      transition={{ duration: 1.1, ease: [0.22, 1, 0.36, 1], delay }}
+      transition={{ duration: 1.1, ease: EASE, delay }}
       className={className}
     >
       {children}
@@ -35,11 +39,11 @@ function FadeIn({ children, delay = 0, className = "", }) {
 
 // ── Globe Canvas Component ───────────────────────────────────────────────────
 
-
+interface Dest { name: string; lat: number; lon: number }
 
 const INDIA = { lat: 20, lon: 78 };
 
-const DESTINATIONS = [
+const DESTINATIONS: Dest[] = [
   { name: "Frankfurt",  lat: 50,  lon: 8   },
   { name: "New York",   lat: 41,  lon: -74 },
   { name: "Tokyo",      lat: 35,  lon: 139 },
@@ -50,7 +54,11 @@ const DESTINATIONS = [
   { name: "São Paulo",  lat: -23, lon: -46 },
 ];
 
-function slerp(lat1, lon1, lat2, lon2, t) {
+function slerp(
+  lat1: number, lon1: number,
+  lat2: number, lon2: number,
+  t: number,
+): [number, number] {
   const φ1 = (lat1 * Math.PI) / 180, λ1 = (lon1 * Math.PI) / 180;
   const φ2 = (lat2 * Math.PI) / 180, λ2 = (lon2 * Math.PI) / 180;
   const v1 = [Math.cos(φ1) * Math.cos(λ1), Math.cos(φ1) * Math.sin(λ1), Math.sin(φ1)];
@@ -70,7 +78,7 @@ function slerp(lat1, lon1, lat2, lon2, t) {
 
 const ARC_STEPS = 120;
 const ARC_PATHS = DESTINATIONS.map((d) => {
-  const pts = [];
+  const pts: [number, number][] = [];
   for (let i = 0; i <= ARC_STEPS; i++) {
     pts.push(slerp(INDIA.lat, INDIA.lon, d.lat, d.lon, i / ARC_STEPS));
   }
@@ -83,8 +91,8 @@ const GROW_END  = 0.42;
 const HOLD_END  = 0.72;
 const FADE_END  = 0.90;
 
-function GlobeCanvas({ className = "" }) {
-  const canvasRef = useRef(null);
+function GlobeCanvas({ className = "" }: { className?: string }) {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -92,11 +100,11 @@ function GlobeCanvas({ className = "" }) {
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    let rafId;
+    let rafId: number;
     let rotation = -INDIA.lon;
     const startTime = performance.now();
 
-    function project(lat, lon, S) {
+    function project(lat: number, lon: number, S: number) {
       const R = S * 0.41;
       const φ = (lat * Math.PI) / 180;
       const λ = ((lon + rotation) * Math.PI) / 180;
@@ -108,7 +116,7 @@ function GlobeCanvas({ className = "" }) {
       };
     }
 
-    function draw(now) {
+    function draw(now: number) {
       const DPR = Math.min(window.devicePixelRatio || 1, 2);
       const cssW = canvas.offsetWidth;
       if (!cssW) { rafId = requestAnimationFrame(draw); return; }
@@ -263,17 +271,17 @@ function GlobeCanvas({ className = "" }) {
 const MAP_W = 860;
 const MAP_H = 430;
 
-function ll(lat, lon) {
+function ll(lat: number, lon: number): string {
   const x = ((lon + 180) / 360) * MAP_W;
   const y = ((90 - lat) / 180) * MAP_H;
   return `${x.toFixed(1)},${y.toFixed(1)}`;
 }
 
-function ptsToD(pts) {
+function ptsToD(pts: [number, number][]): string {
   return pts.map(([lat, lon], i) => `${i === 0 ? "M" : "L"}${ll(lat, lon)}`).join(" ") + "Z";
 }
 
-const LAND_MASSES = [
+const LAND_MASSES: [number, number][][] = [
   // North America
   [[72,-140],[72,-82],[62,-64],[47,-53],[25,-80],[8,-77],[8,-83],[15,-87],[22,-105],[30,-117],[48,-124],[60,-138],[72,-140]],
   // South America
@@ -294,11 +302,11 @@ const LAND_MASSES = [
   [[50,-5],[58,-3],[58,0],[51,2],[50,-5]],
 ];
 
-const INDIA_OUTLINE = [
+const INDIA_OUTLINE: [number, number][] = [
   [35,73],[32,78],[28,84],[20,88],[10,79],[8,77],[8,78],[15,72],[23,68],[35,73],
 ];
 
-function arcD(destLat, destLon) {
+function arcD(destLat: number, destLon: number): string {
   const [x1, y1] = [((INDIA.lon + 180) / 360) * MAP_W, ((90 - INDIA.lat) / 180) * MAP_H];
   const [x2, y2] = [((destLon + 180) / 360) * MAP_W, ((90 - destLat) / 180) * MAP_H];
   const dist = Math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2);
@@ -475,7 +483,7 @@ function HeroVisual() {
               initial={{ width: "0%" }}
               whileInView={{ width: "38%" }}
               viewport={{ once: true }}
-              transition={{ duration: 1.2, delay: 0.5, ease: [0.22, 1, 0.36, 1] }}
+              transition={{ duration: 1.2, delay: 0.5, ease: EASE }}
             />
           </div>
 
@@ -564,7 +572,7 @@ const MILESTONES = [
   { step: "05", title: "Buyer Discovery",     desc: "AI matches your products to qualified buyers across 190+ countries, filtered by country and order size.", icon: "◉" },
   { step: "06", title: "Invoicing & Docs",    desc: "Generate commercial invoices, packing lists, certificates of origin — correctly, every time.", icon: "▤" },
   { step: "07", title: "Shipment Tracking",   desc: "Book freight, generate AWBs, and track every container from Mumbai to Munich in real time.", icon: "◎" },
-  { step: "08", title: "Scale Globally",      desc: "Manage payments, GST refunds, and buyer relationships grow into new markets.", icon: "◈" },
+  { step: "08", title: "Scale Globally",      desc: "Manage payments, GST refunds, and buyer relationships as you grow into new markets.", icon: "◈" },
 ];
 
 const DASHBOARD_STATS = [
@@ -670,7 +678,7 @@ const TRADE_CARDS = [
 function FirstBuyerStory() {
   const [active, setActive] = useState(0);
   const [paused, setPaused] = useState(false);
-  const timerRef = useRef(null);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const startTimer = () => {
     if (timerRef.current) clearInterval(timerRef.current);
@@ -684,7 +692,7 @@ function FirstBuyerStory() {
     return () => { if (timerRef.current) clearInterval(timerRef.current); };
   }, [paused]);
 
-  const handleStepClick = (i) => {
+  const handleStepClick = (i: number) => {
     setActive(i);
     startTimer();
   };
@@ -822,7 +830,7 @@ function FirstBuyerStory() {
               initial={{ opacity: 0, y: 16, scale: 0.98 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: -12, scale: 0.98 }}
-              transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+              transition={{ duration: 0.4, ease: EASE }}
               className="rounded-2xl overflow-hidden"
               style={{
                 background: "#ffffff",
@@ -965,11 +973,19 @@ function FirstBuyerStory() {
 
 // ── Journey Button ──────────────────────────────────────────────────────────
 
-function JourneyButton({ children,
+function JourneyButton({
+  children,
   onClick,
   variant = "primary",
   size = "md",
-  className = "", }) {
+  className = "",
+}: {
+  children: React.ReactNode;
+  onClick?: () => void;
+  variant?: "primary" | "ghost-light" | "ghost-dark";
+  size?: "sm" | "md" | "lg";
+  className?: string;
+}) {
   const pad = { sm: "px-5 py-2", md: "px-7 py-3.5", lg: "px-10 py-4" }[size];
   const txt = { sm: "text-sm", md: "text-sm", lg: "text-base" }[size];
 
@@ -978,30 +994,14 @@ function JourneyButton({ children,
       ? { background: "#4875EF", color: "#fff", boxShadow: "0 4px 20px rgba(72,117,239,0.38)" }
       : variant === "ghost-dark"
       ? { background: "transparent", color: "#0F1740" }
-      : { background: "rgba(255,255,255,0.09)", color: "rgba(255,255,255,0.85)", borderWidth: "1px", borderStyle: "solid", borderColor: "rgba(255,255,255,0.15)" };
-
-  if (variant === "primary") {
-    return (
-      <motion.button
-        onClick={onClick}
-        whileHover={{ y: -2, boxShadow: "0 10px 32px rgba(72,117,239,0.52)" }}
-        whileTap={{ scale: 0.96 }}
-        transition={{ duration: 0.15 }}
-        className={`rounded-full font-semibold flex items-center gap-2 group ${pad} ${txt} ${className}`}
-        style={baseStyle}
-      >
-        <span>{typeof children === "string" ? children.replace(" →", "") : children}</span>
-        {typeof children === "string" && children.includes("→") && (
-          <span className="inline-block transition-transform duration-200 group-hover:translate-x-1">→</span>
-        )}
-      </motion.button>
-    );
-  }
+      : { background: "rgba(255,255,255,0.09)", color: "rgba(255,255,255,0.85)", border: "1px solid rgba(255,255,255,0.15)" };
 
   return (
     <motion.button
       onClick={onClick}
-      whileHover={{ opacity: 0.75 }}
+      whileHover={variant === "primary"
+        ? { y: -2, boxShadow: "0 10px 32px rgba(72,117,239,0.52)" }
+        : { opacity: 0.75 }}
       whileTap={{ scale: 0.96 }}
       transition={{ duration: 0.15 }}
       className={`rounded-full font-semibold flex items-center gap-2 group ${pad} ${txt} ${className}`}
@@ -1017,7 +1017,7 @@ function JourneyButton({ children,
 
 // ── Onboarding Overlay ───────────────────────────────────────────────────────
 
-function OnboardingOverlay({ onSelectPath }) {
+function OnboardingOverlay({ onSelectPath }: { onSelectPath: (path: "new" | "existing" | "signin") => void }) {
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -1042,7 +1042,7 @@ function OnboardingOverlay({ onSelectPath }) {
         initial={{ opacity: 0, scale: 0.95, y: 24 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.96, y: -12 }}
-        transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1], delay: 0.08 }}
+        transition={{ duration: 0.45, ease: EASE, delay: 0.08 }}
         className="w-full max-w-2xl text-center"
       >
         {/* Logo */}
@@ -1064,7 +1064,7 @@ function OnboardingOverlay({ onSelectPath }) {
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1], delay: 0.22 }}
+          transition={{ duration: 0.5, ease: EASE, delay: 0.22 }}
         >
           <h2
             style={{
@@ -1086,14 +1086,14 @@ function OnboardingOverlay({ onSelectPath }) {
         {/* Path cards */}
         <div className="grid md:grid-cols-2 gap-4 max-w-xl mx-auto">
           {[
-            { emoji: "🌱", title: "New to Exporting",   desc: "Guide me from zero. I'll complete every step with EXIMARG.", cta: "Start Level 1 →",   path: "new",      delay: 0.3,  primary: true  },
-            { emoji: "🌍", title: "Already Exporting",  desc: "I already have export documents. Help me complete my profile.", cta: "Continue Setup →", path: "existing", delay: 0.38, primary: false },
+            { emoji: "🌱", title: "New to Exporting",   desc: "Guide me from zero. I'll complete every step with EXIMARG.", cta: "Start Level 1 →",   path: "new" as const,      delay: 0.3,  primary: true  },
+            { emoji: "🌍", title: "Already Exporting",  desc: "I already have export documents. Help me complete my profile.", cta: "Continue Setup →", path: "existing" as const, delay: 0.38, primary: false },
           ].map((card) => (
             <motion.div
               key={card.title}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1], delay: card.delay }}
+              transition={{ duration: 0.45, ease: EASE, delay: card.delay }}
               whileHover={{ y: -4, boxShadow: "0 16px 40px rgba(15,23,64,0.1)" }}
               className="rounded-2xl p-6 text-left cursor-pointer transition-shadow"
               style={{
@@ -1150,7 +1150,12 @@ function OnboardingOverlay({ onSelectPath }) {
 
 // ── Product screen types & level data ────────────────────────────────────────
 
-
+type ScreenType =
+  | "landing" | "auth-register" | "auth-login"
+  | "dashboard"
+  | "level-1" | "level-2" | "level-3" | "level-4" | "level-5" | "level-6"
+  | "level-7" | "level-8" | "level-9"
+  | "command-center";
 
 const LEVELS = [
   { number: 1, title: "Identity",      scene: "Identity & Trust",       badge: "🪪", color: "#4875EF", xp: 100, readiness: 11,  time: "5 min",  desc: "Verify your identity with Aadhaar and PAN to establish trust with international buyers." },
@@ -1166,7 +1171,10 @@ const LEVELS = [
 
 // ── Shared form components ────────────────────────────────────────────────────
 
-function Field({ label, type = "text", placeholder = "", value, onChange, hint }) {
+function Field({ label, type = "text", placeholder = "", value, onChange, hint }: {
+  label: string; type?: string; placeholder?: string;
+  value: string; onChange: (v: string) => void; hint?: string;
+}) {
   const [focused, setFocused] = useState(false);
   return (
     <div className="space-y-1.5">
@@ -1182,7 +1190,9 @@ function Field({ label, type = "text", placeholder = "", value, onChange, hint }
   );
 }
 
-function FieldSelect({ label, options, value, onChange }) {
+function FieldSelect({ label, options, value, onChange }: {
+  label: string; options: string[]; value: string; onChange: (v: string) => void;
+}) {
   const [focused, setFocused] = useState(false);
   return (
     <div className="space-y-1.5">
@@ -1199,7 +1209,9 @@ function FieldSelect({ label, options, value, onChange }) {
   );
 }
 
-function ChipSelect({ label, options, selected, onToggle }) {
+function ChipSelect({ label, options, selected, onToggle }: {
+  label: string; options: string[]; selected: string[]; onToggle: (o: string) => void;
+}) {
   return (
     <div className="space-y-2">
       <label className="block text-xs font-semibold tracking-widest uppercase"
@@ -1210,7 +1222,7 @@ function ChipSelect({ label, options, selected, onToggle }) {
           return (
             <motion.button key={o} type="button" whileTap={{ scale: 0.95 }} onClick={() => onToggle(o)}
               className="px-3 py-1.5 rounded-full text-xs font-semibold transition-all duration-150"
-              style={{ background: active ? "#4875EF" : "#F4F6FF", color: active ? "#fff" : "#6B7294", borderWidth: "1.5px", borderStyle: "solid", borderColor: active ? "#4875EF" : "rgba(15,23,64,0.1)" }}>
+              style={{ background: active ? "#4875EF" : "#F4F6FF", color: active ? "#fff" : "#6B7294", border: `1.5px solid ${active ? "#4875EF" : "rgba(15,23,64,0.1)"}` }}>
               {o}
             </motion.button>
           );
@@ -1222,10 +1234,12 @@ function ChipSelect({ label, options, selected, onToggle }) {
 
 // ── ProductScreen wrapper ─────────────────────────────────────────────────────
 
-function ProductScreen({ children, onBack, backLabel = "Back" }) {
+function ProductScreen({ children, onBack, backLabel = "Back" }: {
+  children: React.ReactNode; onBack?: () => void; backLabel?: string;
+}) {
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -16 }} transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+      exit={{ opacity: 0, y: -16 }} transition={{ duration: 0.4, ease: EASE }}
       className="fixed inset-0 z-[150] overflow-y-auto"
       style={{ background: "#FAFBFF", fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
       <div className="sticky top-0 z-10 flex items-center justify-between px-6 md:px-10 h-14 border-b"
@@ -1249,7 +1263,10 @@ function ProductScreen({ children, onBack, backLabel = "Back" }) {
 
 // ── AuthScreen ────────────────────────────────────────────────────────────────
 
-function AuthScreen({ mode, userPath, onAuth, onToggleMode }) {
+function AuthScreen({ mode, userPath, onAuth, onToggleMode }: {
+  mode: "register" | "login"; userPath: "new" | "existing";
+  onAuth: () => void; onToggleMode: () => void;
+}) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
@@ -1259,7 +1276,7 @@ function AuthScreen({ mode, userPath, onAuth, onToggleMode }) {
     <ProductScreen>
       <div className="min-h-[calc(100vh-56px)] flex items-center justify-center px-6 py-12">
         <motion.div initial={{ opacity: 0, scale: 0.97 }} animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }} className="w-full max-w-md">
+          transition={{ duration: 0.4, ease: EASE }} className="w-full max-w-md">
           <div className="rounded-2xl px-8 py-10"
             style={{ background: "#ffffff", boxShadow: "0 24px 64px rgba(15,23,64,0.1), 0 4px 16px rgba(15,23,64,0.05)", border: "1px solid rgba(15,23,64,0.06)" }}>
             <div className="mb-8">
@@ -1330,7 +1347,10 @@ function AuthScreen({ mode, userPath, onAuth, onToggleMode }) {
 
 // ── WelcomeDashboard ──────────────────────────────────────────────────────────
 
-function WelcomeDashboard({ xp, completedLevels, onStartLevel, onGoToCommandCenter }) {
+function WelcomeDashboard({ xp, completedLevels, onStartLevel, onGoToCommandCenter }: {
+  xp: number; completedLevels: number[];
+  onStartLevel: (n: number) => void; onGoToCommandCenter: () => void;
+}) {
   const next = Math.min(...[1,2,3,4,5,6,7,8,9].filter((n) => !completedLevels.includes(n)));
   const allDone = completedLevels.length === 9;
   const pct = Math.round((completedLevels.length / 6) * 100);
@@ -1365,7 +1385,7 @@ function WelcomeDashboard({ xp, completedLevels, onStartLevel, onGoToCommandCent
             </div>
             <div className="w-full h-2 rounded-full" style={{ background: "#EBF0FF" }}>
               <motion.div className="h-full rounded-full" style={{ background: "linear-gradient(to right, #4875EF, #7BA4FF)" }}
-                initial={{ width: "0%" }} animate={{ width: `${pct}%` }} transition={{ duration: 1, ease: [0.22, 1, 0.36, 1], delay: 0.3 }} />
+                initial={{ width: "0%" }} animate={{ width: `${pct}%` }} transition={{ duration: 1, ease: EASE, delay: 0.3 }} />
             </div>
             <p className="text-xs mt-2" style={{ color: "#9BA3C4" }}>{completedLevels.length} of 9 levels complete</p>
           </div>
@@ -1437,37 +1457,468 @@ function WelcomeDashboard({ xp, completedLevels, onStartLevel, onGoToCommandCent
   );
 }
 
+// ── Upload Zone ───────────────────────────────────────────────────────────────
+
+function UploadZone({ label, hint, wide = false }: { label: string; hint?: string; wide?: boolean }) {
+  const [hovered, setHovered] = useState(false);
+  const [uploaded, setUploaded] = useState(false);
+  return (
+    <motion.div
+      whileHover={{ scale: 1.01 }}
+      onHoverStart={() => setHovered(true)}
+      onHoverEnd={() => setHovered(false)}
+      onClick={() => setUploaded((p) => !p)}
+      className={`relative rounded-xl border-2 border-dashed cursor-pointer transition-all duration-200 flex flex-col items-center justify-center py-8 px-4 text-center ${wide ? "col-span-2" : ""}`}
+      style={{
+        borderColor: uploaded ? "#22C55E" : hovered ? "#4875EF" : "rgba(15,23,64,0.12)",
+        background: uploaded ? "#F0FDF4" : hovered ? "#EBF0FF" : "#FAFBFF",
+      }}
+    >
+      {uploaded ? (
+        <>
+          <div className="w-10 h-10 rounded-full flex items-center justify-center mb-2" style={{ background: "#22C55E" }}>
+            <span className="text-white text-lg">✓</span>
+          </div>
+          <p className="text-sm font-semibold" style={{ color: "#16A34A" }}>Uploaded</p>
+          <p className="text-xs mt-0.5" style={{ color: "#9BA3C4" }}>Click to replace</p>
+        </>
+      ) : (
+        <>
+          <div className="w-10 h-10 rounded-xl flex items-center justify-center mb-2" style={{ background: hovered ? "#EBF0FF" : "#F4F6FF" }}>
+            <span className="text-xl">⬆</span>
+          </div>
+          <p className="text-sm font-semibold" style={{ color: "#0F1740" }}>{label}</p>
+          {hint && <p className="text-xs mt-1" style={{ color: "#9BA3C4" }}>{hint}</p>}
+          <p className="text-xs mt-2" style={{ color: "#C8CEDF" }}>Drag & drop or click to browse</p>
+        </>
+      )}
+    </motion.div>
+  );
+}
+
+// ── Step Card ─────────────────────────────────────────────────────────────────
+
+function StepCard({ icon, title, description, children, onAskAI, completed }: {
+  icon: string; title: string; description?: string;
+  children: React.ReactNode; onAskAI?: () => void; completed?: boolean;
+}) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 16 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true }}
+      transition={{ duration: 0.5, ease: EASE }}
+      className="rounded-2xl p-6"
+      style={{
+        background: "#ffffff",
+        border: completed ? "1.5px solid #22C55E" : "1px solid rgba(15,23,64,0.08)",
+        boxShadow: "0 4px 20px rgba(15,23,64,0.06)",
+      }}
+    >
+      <div className="flex items-start justify-between mb-4">
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-xl flex items-center justify-center text-lg flex-shrink-0"
+            style={{ background: completed ? "#F0FDF4" : "#F4F6FF" }}>
+            {completed ? "✅" : icon}
+          </div>
+          <div>
+            <h3 className="font-bold text-base leading-tight" style={{ color: "#0F1740" }}>{title}</h3>
+            {description && <p className="text-xs mt-0.5" style={{ color: "#9BA3C4" }}>{description}</p>}
+          </div>
+        </div>
+        {onAskAI && (
+          <motion.button whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.96 }}
+            onClick={onAskAI}
+            className="text-xs font-semibold px-3 py-1.5 rounded-lg flex items-center gap-1.5 flex-shrink-0"
+            style={{ background: "#EBF0FF", color: "#4875EF", border: "1px solid rgba(72,117,239,0.2)" }}>
+            🤖 Ask AI
+          </motion.button>
+        )}
+      </div>
+      {children}
+    </motion.div>
+  );
+}
+
+// ── Sidebar Card ──────────────────────────────────────────────────────────────
+
+function SidebarCard({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <div className="rounded-2xl p-5"
+      style={{ background: "#ffffff", border: "1px solid rgba(15,23,64,0.07)", boxShadow: "0 2px 12px rgba(15,23,64,0.05)" }}>
+      <p className="text-xs font-bold tracking-widest uppercase mb-4"
+        style={{ color: "#9BA3C4", fontFamily: "'DM Mono', monospace" }}>{title}</p>
+      {children}
+    </div>
+  );
+}
+
+// ── Level 1 Content ───────────────────────────────────────────────────────────
+
+function Level1Content({ vals, set }: { vals: Record<string, string>; set: (k: string) => (v: string) => void }) {
+  const [phone, setPhone] = useState("");
+  const [otpSent, setOtpSent] = useState(false);
+  const [otp, setOtp] = useState("");
+
+  return (
+    <div className="space-y-5">
+      {/* Director Details */}
+      <StepCard icon="👤" title="Director Details" description="Personal information as per government records" onAskAI={() => {}}>
+        <div className="space-y-4">
+          <Field label="Full Name" placeholder="As per PAN card" value={vals.name || ""} onChange={set("name")} hint="Must match exactly with your PAN and Aadhaar" />
+          <div className="grid grid-cols-2 gap-4">
+            <Field label="Date of Birth" type="date" placeholder="DD/MM/YYYY" value={vals.dob || ""} onChange={set("dob")} />
+            <FieldSelect label="Gender" options={["Male", "Female", "Other", "Prefer not to say"]} value={vals.gender || ""} onChange={set("gender")} />
+          </div>
+        </div>
+      </StepCard>
+
+      {/* Aadhaar Card Upload */}
+      <StepCard icon="🪪" title="Aadhaar Card" description="Front and back images required (JPG/PNG, max 5MB)" onAskAI={() => {}}>
+        <div className="grid grid-cols-2 gap-4">
+          <UploadZone label="Upload Front Side" hint="Show your name, photo and Aadhaar number" />
+          <UploadZone label="Upload Back Side" hint="Show your address and QR code" />
+        </div>
+        <p className="text-xs mt-3 flex items-center gap-1.5" style={{ color: "#9BA3C4" }}>
+          <span>🔒</span> End-to-end encrypted verification
+        </p>
+      </StepCard>
+
+      {/* PAN Card Upload */}
+      <StepCard icon="📄" title="PAN Card" description="Front side scan clearly showing PAN number" onAskAI={() => {}}>
+        <UploadZone label="Upload PAN Card Front" hint="High resolution scans preferred for OCR speed" wide />
+        <div className="mt-4">
+          <Field label="PAN Number" placeholder="ABCDE1234F" value={vals.pan || ""} onChange={set("pan")} hint="We verify this against your uploaded document" />
+        </div>
+      </StepCard>
+
+      {/* Contact + OTP */}
+      <StepCard icon="📱" title="Contact Verification" description="Verify your Aadhaar-linked mobile number via OTP" onAskAI={() => {}}>
+        <div className="space-y-4">
+          <div className="flex items-end gap-3">
+            <div className="flex-1">
+              <Field label="Aadhaar-linked Mobile" type="tel" placeholder="+91 98765 43210"
+                value={phone} onChange={(v) => { setPhone(v); set("phone")(v); }} />
+            </div>
+            <motion.button whileTap={{ scale: 0.95 }}
+              onClick={() => setOtpSent(true)}
+              disabled={phone.length < 10}
+              className="px-4 py-3 rounded-xl text-sm font-semibold flex-shrink-0 transition-all"
+              style={{
+                background: phone.length >= 10 ? "#4875EF" : "#F4F6FF",
+                color: phone.length >= 10 ? "#fff" : "#C8CEDF",
+                cursor: phone.length >= 10 ? "pointer" : "not-allowed",
+              }}>
+              {otpSent ? "Resend OTP" : "Send OTP"}
+            </motion.button>
+          </div>
+
+          {otpSent && (
+            <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }}
+              transition={{ duration: 0.3, ease: EASE }}>
+              <Field label="Enter 6-digit OTP" placeholder="• • • • • •" value={otp}
+                onChange={(v) => { setOtp(v); set("otp")(v); }}
+                hint="OTP sent to your Aadhaar-linked number. Valid for 10 minutes." />
+            </motion.div>
+          )}
+
+          <Field label="Email Address" type="email" placeholder="you@company.com" value={vals.email || ""} onChange={set("email")} hint="Used for all trade communications and notifications" />
+        </div>
+      </StepCard>
+    </div>
+  );
+}
+
+// ── Level 2 Content ───────────────────────────────────────────────────────────
+
+function Level2Content({ vals, set, chips, setChips }: {
+  vals: Record<string, string>;
+  set: (k: string) => (v: string) => void;
+  chips: string[];
+  setChips: React.Dispatch<React.SetStateAction<string[]>>;
+}) {
+  const toggle = (o: string) => setChips((p) => p.includes(o) ? p.filter((x) => x !== o) : [...p, o]);
+
+  return (
+    <div className="space-y-5">
+      <StepCard icon="🏭" title="Business Type" description="How do you operate your export business?" onAskAI={() => {}}>
+        <div className="grid grid-cols-3 gap-3 mt-1">
+          {[
+            { key: "Manufacturer", icon: "🏗️", desc: "You produce goods" },
+            { key: "Merchant", icon: "🛒", desc: "You source & resell" },
+            { key: "Both", icon: "⚡", desc: "You do both" },
+          ].map((opt) => (
+            <motion.button key={opt.key} whileHover={{ y: -2 }} whileTap={{ scale: 0.97 }}
+              onClick={() => set("type")(opt.key)}
+              className="rounded-xl p-4 text-center transition-all duration-150"
+              style={{
+                background: vals.type === opt.key ? "#EBF0FF" : "#F8F9FF",
+                border: `2px solid ${vals.type === opt.key ? "#4875EF" : "rgba(15,23,64,0.08)"}`,
+              }}>
+              <div className="text-2xl mb-2">{opt.icon}</div>
+              <p className="text-sm font-bold" style={{ color: "#0F1740" }}>{opt.key}</p>
+              <p className="text-xs mt-0.5" style={{ color: "#9BA3C4" }}>{opt.desc}</p>
+            </motion.button>
+          ))}
+        </div>
+      </StepCard>
+
+      <StepCard icon="📦" title="Export Categories" description="Select all product categories you export" onAskAI={() => {}}>
+        <ChipSelect label="" options={["Spices & Herbs","Textiles & Fabrics","Machinery","Chemicals","Food Products","Handicrafts","Gems & Jewellery","Leather","Rice & Grains","Pharmaceuticals","Engineering Goods","Agri Produce"]} selected={chips} onToggle={toggle} />
+      </StepCard>
+
+      <StepCard icon="📅" title="Business History" description="Tell us about your experience and scale" onAskAI={() => {}}>
+        <div className="space-y-4">
+          <Field label="Operating Since" placeholder="e.g. 2018" value={vals.since || ""} onChange={set("since")} hint="Year your business started export operations" />
+          <FieldSelect label="Monthly Shipment Range" options={["First shipment (new)","1–5 shipments","6–15 shipments","16–30 shipments","30+ shipments"]} value={vals.ships || ""} onChange={set("ships")} />
+          <FieldSelect label="Export Intent" options={["Build buyer relationships","Increase order volume","Enter new markets","Launch new product line","Establish brand globally"]} value={vals.intent || ""} onChange={set("intent")} />
+        </div>
+      </StepCard>
+
+      <StepCard icon="📋" title="AI-Suggested RCMC" description="Based on your categories, EXIMARG recommends these licences" onAskAI={() => {}}>
+        <div className="space-y-2 mt-1">
+          {[
+            { org: "APEDA", desc: "Agricultural & Processed Food", recommended: true },
+            { org: "FIEO", desc: "Federation of Indian Export Organisations", recommended: true },
+            { org: "FSSAI", desc: "Food Safety Standards (if exporting food)", recommended: chips.includes("Food Products") || chips.includes("Spices & Herbs") },
+          ].map((r) => (
+            r.recommended && (
+              <div key={r.org} className="flex items-center justify-between px-4 py-3 rounded-xl"
+                style={{ background: "#F0FDF4", border: "1px solid rgba(22,163,74,0.15)" }}>
+                <div>
+                  <p className="text-sm font-bold" style={{ color: "#0F1740" }}>{r.org}</p>
+                  <p className="text-xs" style={{ color: "#6B7294" }}>{r.desc}</p>
+                </div>
+                <span className="text-xs font-semibold px-2 py-0.5 rounded-full" style={{ background: "#DCFCE7", color: "#16A34A" }}>Recommended</span>
+              </div>
+            )
+          ))}
+        </div>
+      </StepCard>
+    </div>
+  );
+}
+
+// ── Level 3 Content ───────────────────────────────────────────────────────────
+
+function Level3Content({ vals, set }: { vals: Record<string, string>; set: (k: string) => (v: string) => void }) {
+  const [trustScore, setTrustScore] = useState(0);
+  const verified = Object.keys(vals).filter((k) => vals[k] && vals[k].length > 3).length;
+
+  useEffect(() => {
+    setTrustScore(Math.min(100, verified * 14));
+  }, [verified]);
+
+  return (
+    <div className="space-y-5">
+      {/* Stage A */}
+      <div>
+        <p className="text-xs font-bold tracking-widest uppercase mb-3" style={{ color: "#9BA3C4", fontFamily: "'DM Mono', monospace" }}>Stage A — Business Verification</p>
+        <StepCard icon="🏢" title="Legal Registration" description="Primary government registrations for your export entity" onAskAI={() => {}}>
+          <div className="space-y-4">
+            <Field label="GST Number" placeholder="27ABCDE1234F1Z5" value={vals.gst || ""} onChange={set("gst")} hint="Mandatory for all export invoices" />
+            <Field label="CIN (if applicable)" placeholder="U12345MH2020PTC123456" value={vals.cin || ""} onChange={set("cin")} hint="Corporate Identity Number for registered companies" />
+            <Field label="IEC Code" placeholder="AABCE0010M" value={vals.iec || ""} onChange={set("iec")} hint="Importer Exporter Code issued by DGFT — required to export" />
+          </div>
+        </StepCard>
+      </div>
+
+      {/* Stage B */}
+      <div>
+        <p className="text-xs font-bold tracking-widest uppercase mb-3" style={{ color: "#9BA3C4", fontFamily: "'DM Mono', monospace" }}>Stage B — Address & Banking</p>
+        <StepCard icon="🏦" title="Banking Details" description="Your export banking information for payments and refunds" onAskAI={() => {}}>
+          <div className="space-y-4">
+            <Field label="Registered Business Address" placeholder="Full registered address" value={vals.address || ""} onChange={set("address")} />
+            <div className="grid grid-cols-2 gap-4">
+              <Field label="Bank Account Number" placeholder="Account number" value={vals.bank || ""} onChange={set("bank")} />
+              <Field label="IFSC Code" placeholder="SBIN0001234" value={vals.ifsc || ""} onChange={set("ifsc")} />
+            </div>
+            <Field label="AD Code" placeholder="Authorised Dealer Code" value={vals.adcode || ""} onChange={set("adcode")} hint="Required for customs clearance. Get from your bank." />
+          </div>
+        </StepCard>
+      </div>
+
+      {/* Stage C */}
+      <div>
+        <p className="text-xs font-bold tracking-widest uppercase mb-3" style={{ color: "#9BA3C4", fontFamily: "'DM Mono', monospace" }}>Stage C — Export Compliance</p>
+        <StepCard icon="✅" title="Export Licences" description="Compliance certifications based on your product categories" onAskAI={() => {}}>
+          <div className="space-y-3">
+            {[
+              { label: "RCMC Number", key: "rcmc", hint: "Registration-cum-Membership Certificate from Export Promotion Council" },
+              { label: "FSSAI Licence (if applicable)", key: "fssai", hint: "Required for food and agri product exports" },
+              { label: "APEDA Registration (if applicable)", key: "apeda", hint: "Agricultural & Processed Food Products Export Development Authority" },
+            ].map((f) => (
+              <div key={f.key}>
+                <Field label={f.label} placeholder="Enter number" value={vals[f.key] || ""} onChange={set(f.key)} hint={f.hint} />
+                {vals[f.key] && vals[f.key].length > 3 && (
+                  <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}
+                    className="mt-1.5 flex items-center gap-1.5">
+                    <span className="text-xs font-semibold px-2 py-0.5 rounded-full" style={{ background: "#DCFCE7", color: "#16A34A" }}>✓ Verified</span>
+                  </motion.div>
+                )}
+              </div>
+            ))}
+          </div>
+        </StepCard>
+      </div>
+    </div>
+  );
+}
+
+// ── Level 4 Content ───────────────────────────────────────────────────────────
+
+function Level4Content({ vals, set }: { vals: Record<string, string>; set: (k: string) => (v: string) => void }) {
+  return (
+    <div className="space-y-5">
+      <StepCard icon="🏢" title="Company Identity" description="Your brand as international buyers will see it" onAskAI={() => {}}>
+        <div className="space-y-4">
+          <div className="flex items-center justify-center h-24 rounded-xl border-2 border-dashed cursor-pointer transition-all hover:border-blue-400"
+            style={{ borderColor: "rgba(72,117,239,0.25)", background: "#F8F9FF" }}>
+            <div className="text-center">
+              <div className="text-3xl mb-1">🏢</div>
+              <p className="text-xs font-medium" style={{ color: "#9BA3C4" }}>Upload company logo (SVG, PNG, max 2MB)</p>
+            </div>
+          </div>
+          <Field label="Company Name" placeholder="Official registered name" value={vals.company || ""} onChange={set("company")} />
+          <Field label="Tagline" placeholder="e.g. Premium Spices from India" value={vals.tagline || ""} onChange={set("tagline")} hint="Optional — shown to buyers on your profile" />
+        </div>
+      </StepCard>
+
+      <StepCard icon="🌐" title="Online Presence" description="Help buyers discover and trust your company online" onAskAI={() => {}}>
+        <div className="space-y-4">
+          <Field label="Website" type="url" placeholder="https://yourcompany.com" value={vals.website || ""} onChange={set("website")} />
+          <Field label="LinkedIn" type="url" placeholder="https://linkedin.com/company/…" value={vals.linkedin || ""} onChange={set("linkedin")} />
+          <Field label="Trademark / Brand Name (optional)" placeholder="Registered trademark if any" value={vals.trademark || ""} onChange={set("trademark")} hint="Helps buyers identify your brand internationally" />
+        </div>
+      </StepCard>
+
+      {/* Brand Preview */}
+      {vals.company && (
+        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}
+          className="rounded-2xl p-6"
+          style={{ background: "linear-gradient(135deg, #EBF0FF 0%, #F0F4FF 100%)", border: "1.5px solid rgba(72,117,239,0.15)" }}>
+          <p className="text-xs font-bold tracking-widest uppercase mb-4" style={{ color: "#9BA3C4", fontFamily: "'DM Mono', monospace" }}>Brand Preview</p>
+          <div className="flex items-center gap-4">
+            <div className="w-14 h-14 rounded-xl flex items-center justify-center text-2xl font-bold"
+              style={{ background: "#4875EF", color: "#fff" }}>
+              {vals.company[0].toUpperCase()}
+            </div>
+            <div>
+              <p className="font-bold text-lg" style={{ fontFamily: "'Fraunces', serif", color: "#0F1740", letterSpacing: "-0.02em" }}>{vals.company}</p>
+              {vals.tagline && <p className="text-sm mt-0.5" style={{ color: "#6B7294" }}>{vals.tagline}</p>}
+              {vals.website && <p className="text-xs mt-1" style={{ color: "#4875EF" }}>{vals.website}</p>}
+            </div>
+          </div>
+        </motion.div>
+      )}
+    </div>
+  );
+}
+
+// ── Level Sidebar ─────────────────────────────────────────────────────────────
+
+const SIDEBAR_DATA: Record<number, {
+  whyMatters: { icon: string; text: string }[];
+  tip: string;
+  security?: string;
+}> = {
+  1: {
+    whyMatters: [
+      { icon: "🏛️", text: "KYC Compliance — Mandatory per SEBI and RBI guidelines for all Indian export activities." },
+      { icon: "🏅", text: "Trusted Seller Badge — Verified identities receive trusted seller access in the global marketplace." },
+      { icon: "⚡", text: "Faster Processing — OCR-assisted verification typically takes less than 2 hours." },
+    ],
+    tip: "Ensure all four corners of the document are visible. Avoid glare or flash to ensure the AI can read your details instantly.",
+    security: "Your documents are encrypted end-to-end and never shared with third parties without your consent.",
+  },
+  2: {
+    whyMatters: [
+      { icon: "🎯", text: "Better Buyer Matches — EXIMARG's AI matches you with buyers based on your exact category and scale." },
+      { icon: "📈", text: "Unlock Higher Tier — Accurate profile data unlocks Growth and Premium buyer access." },
+      { icon: "🌍", text: "Global Credibility — Verified exporter profiles receive 3x more buyer inquiries." },
+    ],
+    tip: "Select all categories that apply — even secondary ones. Buyers search across multiple categories when placing large orders.",
+  },
+  3: {
+    whyMatters: [
+      { icon: "✅", text: "Legal Compliance — All documents are verified against government databases in real time." },
+      { icon: "💰", text: "GST Refund Eligibility — A verified IEC and GST enables you to claim export GST refunds." },
+      { icon: "🔒", text: "Buyer Trust — Verified exporters are shown first in buyer search results." },
+    ],
+    tip: "Your AD Code is issued by your bank's foreign exchange department. It is required for customs clearance of every shipment.",
+    security: "All banking information is encrypted using bank-grade security (AES-256).",
+  },
+  4: {
+    whyMatters: [
+      { icon: "👁️", text: "First Impression — Your company profile is the first thing buyers see. Make it count." },
+      { icon: "🔍", text: "Search Visibility — Profiles with logos and taglines appear higher in buyer search results." },
+      { icon: "🤝", text: "Conversion Rate — Complete profiles convert 4x more buyer inquiries into deals." },
+    ],
+    tip: "Use your brand's official tagline or mission statement. Keep it under 10 words. International buyers appreciate clarity.",
+  },
+  5: {
+    whyMatters: [
+      { icon: "🚀", text: "Unlock Features — Each plan unlocks progressively more buyer access and AI tools." },
+      { icon: "📊", text: "Scale at Your Pace — Upgrade or downgrade at any time based on your growth." },
+      { icon: "💎", text: "Premium Buyers — Growth and Premium plans get access to Fortune 500 buyer inquiries." },
+    ],
+    tip: "Most exporters start with Growth and upgrade to Premium after their first 5 successful shipments.",
+  },
+  6: {
+    whyMatters: [
+      { icon: "🌐", text: "Global Visibility — Your products are instantly visible to 50,000+ verified buyers." },
+      { icon: "🤖", text: "AI Matching — Products with complete specs receive 5x more buyer inquiries." },
+      { icon: "📦", text: "Export Ready — A complete catalogue enables buyers to place orders without back-and-forth." },
+    ],
+    tip: "Use professional photos with a white or neutral background. Products with multiple angles receive significantly more inquiries.",
+  },
+};
+
 // ── LevelScreen ───────────────────────────────────────────────────────────────
 
-function LevelScreen({ levelNum, xp, onComplete, onBack }) {
+function LevelScreen({ levelNum, xp, onComplete, onBack }: {
+  levelNum: number; xp: number;
+  onComplete: (earnedXp: number) => void; onBack: () => void;
+}) {
   const lvl = LEVELS[levelNum - 1];
-  const [vals, setVals] = useState>({});
-  const [chips, setChips] = useState([]);
+  const [vals, setVals] = useState<Record<string, string>>({});
+  const [chips, setChips] = useState<string[]>([]);
   const [done, setDone] = useState(false);
-  const set = (k) => (v) => setVals((p) => ({ ...p, [k]: v }));
+  const set = (k: string) => (v: string) => setVals((p) => ({ ...p, [k]: v }));
+  const sidebar = SIDEBAR_DATA[Math.min(levelNum, 6)];
 
+  // ── Completion celebration ──
   if (done) {
     return (
       <ProductScreen>
         <div className="min-h-[calc(100vh-56px)] flex items-center justify-center px-6">
-          <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.5, ease: [0.34, 1.56, 0.64, 1] }} className="text-center max-w-sm">
-            <motion.div animate={{ rotate: [0, 10, -10, 8, -8, 0] }} transition={{ duration: 0.8, delay: 0.2 }}
-              className="text-7xl mb-6">{lvl.badge}</motion.div>
+          <motion.div initial={{ opacity: 0, scale: 0.88 }} animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.55, ease: [0.34, 1.56, 0.64, 1] }}
+            className="text-center max-w-sm">
+            <motion.div animate={{ rotate: [0, 12, -12, 8, -8, 0] }}
+              transition={{ duration: 0.9, delay: 0.15 }} className="text-7xl mb-6">
+              {lvl.badge}
+            </motion.div>
             <h2 style={{ fontFamily: "'Fraunces', serif", fontSize: "clamp(28px,5vw,40px)", fontWeight: 700, color: "#0F1740", letterSpacing: "-0.025em" }}>
               Level {levelNum} Complete!
             </h2>
-            <p className="text-base mt-3 mb-6" style={{ color: "#6B7294" }}>{lvl.title} verified.</p>
-            <div className="flex items-center justify-center gap-8 mb-8">
+            <p className="text-base mt-3 mb-8" style={{ color: "#6B7294" }}>{lvl.title} — done.</p>
+            <div className="flex items-center justify-center gap-10 mb-10">
               <div className="text-center">
-                <motion.p initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}
-                  style={{ fontFamily: "'Fraunces', serif", fontSize: "32px", fontWeight: 700, color: "#F59E0B" }}>+{lvl.xp}</motion.p>
-                <p className="text-xs" style={{ color: "#9BA3C4", fontFamily: "'DM Mono', monospace" }}>XP EARNED</p>
+                <motion.p initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.4 }}
+                  style={{ fontFamily: "'Fraunces', serif", fontSize: "36px", fontWeight: 700, color: "#F59E0B", letterSpacing: "-0.025em" }}>
+                  +{lvl.xp}
+                </motion.p>
+                <p className="text-xs font-semibold tracking-widest uppercase mt-1" style={{ color: "#9BA3C4", fontFamily: "'DM Mono', monospace" }}>XP Earned</p>
               </div>
               <div className="text-center">
-                <motion.p initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }}
-                  style={{ fontFamily: "'Fraunces', serif", fontSize: "32px", fontWeight: 700, color: "#22C55E" }}>{lvl.readiness}%</motion.p>
-                <p className="text-xs" style={{ color: "#9BA3C4", fontFamily: "'DM Mono', monospace" }}>READINESS</p>
+                <motion.p initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.5 }}
+                  style={{ fontFamily: "'Fraunces', serif", fontSize: "36px", fontWeight: 700, color: "#22C55E", letterSpacing: "-0.025em" }}>
+                  {lvl.readiness}%
+                </motion.p>
+                <p className="text-xs font-semibold tracking-widest uppercase mt-1" style={{ color: "#9BA3C4", fontFamily: "'DM Mono', monospace" }}>Readiness</p>
               </div>
             </div>
             <JourneyButton variant="primary" size="md" className="mx-auto" onClick={() => onComplete(lvl.xp)}>
@@ -1481,260 +1932,192 @@ function LevelScreen({ levelNum, xp, onComplete, onBack }) {
 
   return (
     <ProductScreen onBack={onBack} backLabel="Dashboard">
-      <div className="max-w-2xl mx-auto px-6 md:px-10 py-10">
-        {/* Progress segments */}
-        <div className="flex items-center gap-2 mb-8">
-          {LEVELS.map((l) => (
-            <div key={l.number} className="flex-1 h-1.5 rounded-full transition-all duration-300"
-              style={{ background: l.number <= levelNum ? lvl.color : "rgba(15,23,64,0.1)" }} />
-          ))}
+      {/* Progress bar */}
+      <div className="flex items-center gap-2 px-6 md:px-10 pt-6 pb-2">
+        {LEVELS.map((l) => (
+          <div key={l.number} className="flex-1 h-1 rounded-full transition-all duration-500"
+            style={{ background: l.number <= levelNum ? lvl.color : "rgba(15,23,64,0.1)" }} />
+        ))}
+      </div>
+
+      {/* Chapter header */}
+      <div className="px-6 md:px-10 pt-4 pb-6 border-b" style={{ borderColor: "rgba(15,23,64,0.07)" }}>
+        <div className="flex flex-wrap items-center gap-3 mb-3">
+          <span className="text-xs font-bold tracking-widest uppercase px-3 py-1 rounded-full"
+            style={{ background: `${lvl.color}18`, color: lvl.color, fontFamily: "'DM Mono', monospace", border: `1px solid ${lvl.color}30` }}>
+            Chapter 0{levelNum} · {lvl.scene}
+          </span>
+          <span className="text-xs" style={{ color: "#9BA3C4" }}>⏱ {lvl.time}</span>
+          <span className="text-xs" style={{ color: "#9BA3C4" }}>⚡ +{lvl.xp} XP</span>
+          <span className="text-xs" style={{ color: "#9BA3C4" }}>📈 +{lvl.readiness}% Readiness</span>
         </div>
+        <h1 style={{ fontFamily: "'Fraunces', serif", fontSize: "clamp(26px,3.5vw,38px)", fontWeight: 700, letterSpacing: "-0.025em", color: "#0F1740", lineHeight: 1.15 }}>
+          {lvl.title}
+        </h1>
+        <p className="text-base mt-2" style={{ color: "#6B7294" }}>{lvl.desc}</p>
+      </div>
 
-        {/* Header */}
-        <div className="mb-10">
-          <div className="flex items-center gap-3 mb-4">
-            <span className="text-xs font-semibold tracking-widest uppercase px-3 py-1 rounded-full"
-              style={{ background: `${lvl.color}18`, color: lvl.color, fontFamily: "'DM Mono', monospace", border: `1px solid ${lvl.color}30` }}>
-              Level 0{levelNum} · {lvl.scene}
-            </span>
-            <span className="text-xs" style={{ color: "#9BA3C4" }}>⏱ {lvl.time} · ⚡ +{lvl.xp} XP</span>
-          </div>
-          <h1 style={{ fontFamily: "'Fraunces', serif", fontSize: "clamp(28px,4vw,42px)", fontWeight: 700, letterSpacing: "-0.025em", color: "#0F1740", lineHeight: 1.15 }}>
-            {lvl.title}
-          </h1>
-          <p className="text-base mt-3" style={{ color: "#6B7294" }}>{lvl.desc}</p>
-        </div>
+      {/* Two-column body */}
+      <div className="px-6 md:px-10 py-8 grid md:grid-cols-[1fr_300px] xl:grid-cols-[1fr_320px] gap-8 items-start">
 
-        {/* Level content */}
-        <div className="space-y-5">
-          {levelNum === 1 && <>
-            {/* Section: Personal Identity */}
-            <div className="pb-2">
-              <p className="text-xs font-semibold tracking-widest uppercase mb-4" style={{ color: "#9BA3C4", fontFamily: "'DM Mono', monospace" }}>Director Details</p>
-              <div className="space-y-4">
-                <Field label="Full Name" placeholder="As per PAN card" value={vals.name||""} onChange={set("name")} hint="Must match exactly with your PAN card" />
-                <div className="grid grid-cols-2 gap-4">
-                  <Field label="Date of Birth" type="date" placeholder="DD/MM/YYYY" value={vals.dob||""} onChange={set("dob")} />
-                  <FieldSelect label="Gender" options={["Male","Female","Other"]} value={vals.gender||""} onChange={set("gender")} />
-                </div>
-              </div>
-            </div>
-
-            {/* Section: PAN Verification */}
-            <div className="pb-2">
-              <p className="text-xs font-semibold tracking-widest uppercase mb-4" style={{ color: "#9BA3C4", fontFamily: "'DM Mono', monospace" }}>PAN Verification</p>
-              <div className="space-y-4">
-                <Field label="PAN Number" placeholder="ABCDE1234F" value={vals.pan||""} onChange={set("pan")} hint="10-character Permanent Account Number" />
-                <div className="rounded-xl p-4 flex items-start gap-3" style={{ background: "#F0FDF4", border: "1px solid rgba(5,150,105,0.15)" }}>
-                  <span className="text-lg mt-0.5">🔒</span>
-                  <div>
-                    <p className="text-xs font-semibold mb-0.5" style={{ color: "#059669" }}>Secure Verification</p>
-                    <p className="text-xs leading-relaxed" style={{ color: "#6B7294" }}>Your PAN is verified directly with the Income Tax Department. We never store raw PAN data.</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Section: Aadhaar Verification */}
-            <div className="pb-2">
-              <p className="text-xs font-semibold tracking-widest uppercase mb-4" style={{ color: "#9BA3C4", fontFamily: "'DM Mono', monospace" }}>Aadhaar Verification</p>
-              <div className="space-y-4">
-                <Field label="Aadhaar Number" placeholder="1234 5678 9012" value={vals.aadhaar||""} onChange={set("aadhaar")} hint="12-digit Aadhaar linked to your registered mobile" />
-                <Field label="Aadhaar-linked Mobile" type="tel" placeholder="+91 98765 43210" value={vals.phone||""} onChange={set("phone")} hint="OTP will be sent to this number for verification" />
-                {vals.phone && vals.phone.length >= 10 && (
-                  <div className="flex items-center gap-3">
-                    <Field label="Enter OTP" placeholder="6-digit OTP" value={vals.otp||""} onChange={set("otp")} />
-                    <div className="pt-6">
-                      <motion.button whileTap={{ scale: 0.95 }} className="px-4 py-3 rounded-xl text-sm font-semibold whitespace-nowrap"
-                        style={{ background: "#EBF0FF", color: "#4875EF", border: "1.5px solid rgba(72,117,239,0.2)" }}>
-                        Send OTP
-                      </motion.button>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Section: Contact */}
-            <div>
-              <p className="text-xs font-semibold tracking-widest uppercase mb-4" style={{ color: "#9BA3C4", fontFamily: "'DM Mono', monospace" }}>Contact Details</p>
-              <div className="space-y-4">
-                <Field label="Email Address" type="email" placeholder="you@company.com" value={vals.email||""} onChange={set("email")} hint="Official email — used for all trade communications" />
-                <Field label="Director Photo" type="file" placeholder="" value={""} onChange={() => {}} hint="Clear passport-size photo (JPG or PNG, max 2MB)" />
-              </div>
-            </div>
-          </>}
-          {levelNum === 2 && <>
-            <FieldSelect label="Business Type" options={["Manufacturer","Merchant Exporter","Both"]} value={vals.type||""} onChange={set("type")} />
-            <ChipSelect label="Export Categories" options={["Spices","Textiles","Machinery","Chemicals","Food Products","Handicrafts","Gems & Jewellery","Leather","Rice & Grains","Pharmaceuticals"]} selected={chips} onToggle={(o) => setChips((p) => p.includes(o) ? p.filter((x) => x!==o) : [...p,o])} />
-            <Field label="Operating Since" placeholder="e.g. 2018" value={vals.since||""} onChange={set("since")} />
-            <FieldSelect label="Monthly Shipment Range" options={["1–5 shipments","6–15 shipments","16–30 shipments","30+ shipments"]} value={vals.ships||""} onChange={set("ships")} />
-          </>}
-          {levelNum === 3 && <>
-            <p className="text-xs font-semibold tracking-widest uppercase" style={{ color: "#9BA3C4", fontFamily: "'DM Mono', monospace" }}>Legal</p>
-            <Field label="GST Number" placeholder="27ABCDE1234F1Z5" value={vals.gst||""} onChange={set("gst")} hint="From GST portal" />
-            <Field label="IEC Code" placeholder="AABCE0010M" value={vals.iec||""} onChange={set("iec")} hint="Importer Exporter Code from DGFT" />
-            <p className="text-xs font-semibold tracking-widest uppercase pt-2" style={{ color: "#9BA3C4", fontFamily: "'DM Mono', monospace" }}>Business</p>
-            <Field label="Registered Address" placeholder="Full registered business address" value={vals.address||""} onChange={set("address")} />
-            <Field label="Bank Account Number" value={vals.bank||""} onChange={set("bank")} />
-            <Field label="IFSC Code" placeholder="SBIN0001234" value={vals.ifsc||""} onChange={set("ifsc")} />
-          </>}
-          {levelNum === 4 && <>
-            <div className="flex items-center justify-center h-24 rounded-2xl border-2 border-dashed" style={{ borderColor: "rgba(72,117,239,0.25)", background: "#F8F9FF" }}>
-              <div className="text-center"><p className="text-2xl mb-1">🏢</p><p className="text-xs font-medium" style={{ color: "#9BA3C4" }}>Upload company logo</p></div>
-            </div>
-            <Field label="Company Name" placeholder="Official registered name" value={vals.company||""} onChange={set("company")} />
-            <Field label="Tagline" placeholder="e.g. Premium Spices from India" value={vals.tagline||""} onChange={set("tagline")} hint="Optional — shown to buyers" />
-            <Field label="Website" type="url" placeholder="https://yourcompany.com" value={vals.website||""} onChange={set("website")} />
-            <Field label="LinkedIn" type="url" placeholder="https://linkedin.com/company/…" value={vals.linkedin||""} onChange={set("linkedin")} />
-          </>}
+        {/* LEFT: step cards */}
+        <div>
+          {levelNum === 1 && <Level1Content vals={vals} set={set} />}
+          {levelNum === 2 && <Level2Content vals={vals} set={set} chips={chips} setChips={setChips} />}
+          {levelNum === 3 && <Level3Content vals={vals} set={set} />}
+          {levelNum === 4 && <Level4Content vals={vals} set={set} />}
           {levelNum === 5 && (
-            <div className="grid md:grid-cols-3 gap-4">
-              {[
-                { name: "Starter",  price: "₹0",     period: "Free forever", color: "#6B7294", features: ["1 product listing","5 buyer inquiries/mo","Basic analytics","Email support"], highlight: false },
-                { name: "Growth",   price: "₹2,999", period: "per month",     color: "#4875EF", features: ["25 product listings","Unlimited buyer inquiries","AI buyer matching","IEC & document support","Priority support"], highlight: true },
-                { name: "Premium",  price: "₹7,999", period: "per month",     color: "#7C3AED", features: ["Unlimited listings","Dedicated account manager","White-label catalogue","Custom invoicing","Trade finance support"], highlight: false },
-              ].map((plan) => (
-                <motion.div key={plan.name} whileHover={{ y: -4 }} className="rounded-2xl p-6 cursor-pointer"
-                  style={{ background: plan.highlight ? "#0F1740" : "#ffffff", border: `1.5px solid ${plan.highlight ? "transparent" : "rgba(15,23,64,0.08)"}`, boxShadow: plan.highlight ? "0 12px 40px rgba(15,23,64,0.2)" : "0 4px 20px rgba(15,23,64,0.05)" }}
-                  onClick={() => setDone(true)}>
-                  {plan.highlight && <p className="text-xs font-bold tracking-widest uppercase mb-3" style={{ color: "#F59E0B", fontFamily: "'DM Mono', monospace" }}>Most Popular</p>}
-                  <p className="font-bold mb-1" style={{ color: plan.highlight ? "#fff" : "#0F1740" }}>{plan.name}</p>
-                  <p style={{ fontFamily: "'Fraunces', serif", fontSize: "28px", fontWeight: 700, color: plan.highlight ? "#fff" : "#0F1740", letterSpacing: "-0.02em" }}>{plan.price}</p>
-                  <p className="text-xs mb-5" style={{ color: plan.highlight ? "rgba(255,255,255,0.4)" : "#9BA3C4" }}>{plan.period}</p>
-                  <div className="space-y-2">
-                    {plan.features.map((f) => (
-                      <div key={f} className="flex items-center gap-2 text-sm">
-                        <span style={{ color: plan.highlight ? "#60A5FA" : "#22C55E" }}>✓</span>
-                        <span style={{ color: plan.highlight ? "rgba(255,255,255,0.7)" : "#6B7294" }}>{f}</span>
+            <div className="space-y-5">
+              <StepCard icon="⭐" title="Choose Your Plan" description="Select the plan that matches your export ambitions. Upgrade anytime." onAskAI={() => {}}>
+                <div className="grid md:grid-cols-3 gap-4 mt-2">
+                  {[
+                    { name: "Starter", price: "₹0", period: "Free forever", features: ["1 product listing","5 buyer inquiries/mo","Basic analytics","Email support"], highlight: false },
+                    { name: "Growth", price: "₹2,999", period: "per month", features: ["25 listings","Unlimited inquiries","AI buyer matching","Document support","Priority support"], highlight: true },
+                    { name: "Premium", price: "₹7,999", period: "per month", features: ["Unlimited listings","Dedicated manager","White-label catalogue","Custom invoicing","Trade finance"], highlight: false },
+                  ].map((plan) => (
+                    <motion.div key={plan.name} whileHover={{ y: -4 }} className="rounded-2xl p-5 cursor-pointer"
+                      style={{ background: plan.highlight ? "#0F1740" : "#ffffff", border: `1.5px solid ${plan.highlight ? "transparent" : "rgba(15,23,64,0.08)"}`, boxShadow: plan.highlight ? "0 12px 40px rgba(15,23,64,0.2)" : "0 4px 20px rgba(15,23,64,0.05)" }}
+                      onClick={() => setDone(true)}>
+                      {plan.highlight && <p className="text-xs font-bold tracking-widest uppercase mb-2" style={{ color: "#F59E0B", fontFamily: "'DM Mono', monospace" }}>Most Popular</p>}
+                      <p className="font-bold mb-1" style={{ color: plan.highlight ? "#fff" : "#0F1740" }}>{plan.name}</p>
+                      <p style={{ fontFamily: "'Fraunces', serif", fontSize: "24px", fontWeight: 700, color: plan.highlight ? "#fff" : "#0F1740", letterSpacing: "-0.02em" }}>{plan.price}</p>
+                      <p className="text-xs mb-4" style={{ color: plan.highlight ? "rgba(255,255,255,0.4)" : "#9BA3C4" }}>{plan.period}</p>
+                      <div className="space-y-1.5">
+                        {plan.features.map((f) => (
+                          <div key={f} className="flex items-center gap-2 text-xs">
+                            <span style={{ color: plan.highlight ? "#60A5FA" : "#22C55E" }}>✓</span>
+                            <span style={{ color: plan.highlight ? "rgba(255,255,255,0.7)" : "#6B7294" }}>{f}</span>
+                          </div>
+                        ))}
                       </div>
-                    ))}
-                  </div>
-                </motion.div>
-              ))}
+                    </motion.div>
+                  ))}
+                </div>
+              </StepCard>
             </div>
           )}
-          {levelNum === 6 && <>
-            <div className="flex items-center justify-center h-32 rounded-2xl border-2 border-dashed" style={{ borderColor: "rgba(72,117,239,0.25)", background: "#F8F9FF" }}>
-              <div className="text-center"><p className="text-3xl mb-1">📸</p><p className="text-xs font-medium" style={{ color: "#9BA3C4" }}>Upload product photos</p></div>
-            </div>
-            <Field label="Product Name" placeholder="e.g. Premium Basmati Rice 1121" value={vals.product||""} onChange={set("product")} />
-            <div className="rounded-xl p-4 flex items-start gap-3" style={{ background: "#EBF0FF", border: "1px solid rgba(72,117,239,0.15)" }}>
-              <span className="text-lg">🤖</span>
-              <div>
-                <p className="text-xs font-semibold mb-1" style={{ color: "#4875EF" }}>AI Suggestion</p>
-                <p className="text-sm" style={{ color: "#0F1740" }}>HS Code: <strong>1006.30</strong> — Rice, semi-milled or wholly milled</p>
-                <button className="text-xs font-semibold mt-1 hover:opacity-70" style={{ color: "#4875EF" }}>Apply suggestion</button>
-              </div>
-            </div>
-            <Field label="Minimum Order Quantity" placeholder="e.g. 500 kg" value={vals.moq||""} onChange={set("moq")} />
-            <Field label="Price (FOB)" placeholder="USD per MT" value={vals.price||""} onChange={set("price")} hint="Free on Board — excludes freight" />
-          </>}
-
-          {levelNum === 7 && <>
-            <div className="pb-2">
-              <p className="text-xs font-semibold tracking-widest uppercase mb-4" style={{ color: "#9BA3C4", fontFamily: "'DM Mono', monospace" }}>Invoice Template</p>
-              <div className="space-y-4">
-                <Field label="Company Letterhead Name" placeholder="As it appears on invoices" value={vals.letterhead||""} onChange={set("letterhead")} />
-                <Field label="Invoice Prefix" placeholder="e.g. INV-2024-" value={vals.prefix||""} onChange={set("prefix")} hint="Auto-appended to invoice numbers" />
-                <FieldSelect label="Default Currency" options={["USD","EUR","GBP","AED","JPY","SGD"]} value={vals.currency||""} onChange={set("currency")} />
-              </div>
-            </div>
-            <div>
-              <p className="text-xs font-semibold tracking-widest uppercase mb-4" style={{ color: "#9BA3C4", fontFamily: "'DM Mono', monospace" }}>Payment Terms</p>
-              <div className="space-y-4">
-                <FieldSelect label="Default Payment Terms" options={["30% advance, 70% before shipment","50% advance, 50% on BL","100% advance","LC at sight","DP — Documents against Payment"]} value={vals.terms||""} onChange={set("terms")} />
-                <Field label="Bank Details for Invoice" placeholder="Bank name, account number, SWIFT" value={vals.bankdetails||""} onChange={set("bankdetails")} hint="Shown at the bottom of every invoice" />
-              </div>
-            </div>
-          </>}
-
-          {levelNum === 8 && <>
-            <div className="pb-2">
-              <p className="text-xs font-semibold tracking-widest uppercase mb-4" style={{ color: "#9BA3C4", fontFamily: "'DM Mono', monospace" }}>Buyer Preferences</p>
-              <div className="space-y-4">
-                <ChipSelect label="Target Markets" options={["Germany","USA","UAE","UK","Japan","Australia","Canada","France","Netherlands","Singapore"]} selected={chips} onToggle={(o) => setChips((p) => p.includes(o) ? p.filter((x) => x!==o) : [...p,o])} />
-                <FieldSelect label="Preferred Buyer Type" options={["Wholesale Distributor","Retail Chain","Industrial Buyer","Government Tender","Supermarket / Hypermarket"]} value={vals.buyertype||""} onChange={set("buyertype")} />
-              </div>
-            </div>
-            <div>
-              <p className="text-xs font-semibold tracking-widest uppercase mb-4" style={{ color: "#9BA3C4", fontFamily: "'DM Mono', monospace" }}>First Inquiry</p>
-              <div className="rounded-xl p-5" style={{ background: "#EBF0FF", border: "1.5px solid rgba(72,117,239,0.2)" }}>
-                <div className="flex items-start gap-3 mb-4">
-                  <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold" style={{ background: "#4875EF", color: "#fff", flexShrink: 0 }}>M</div>
-                  <div>
-                    <p className="text-xs font-semibold" style={{ color: "#0F1740" }}>Müller GmbH · Hamburg, Germany</p>
-                    <p className="text-xs mt-0.5 leading-relaxed" style={{ color: "#6B7294" }}>"We are looking for premium Basmati rice suppliers. Interested in CIF Hamburg pricing for 20MT trial order."</p>
+          {levelNum === 6 && (
+            <div className="space-y-5">
+              <StepCard icon="🛍️" title="Add Your First Product" description="Create your export catalogue. Start with your hero product." onAskAI={() => {}}>
+                <div className="grid grid-cols-2 gap-4 mb-5">
+                  <UploadZone label="Product Photos" hint="Multiple angles, white background" />
+                  <UploadZone label="Technical Sheet" hint="Spec sheet, certificates (PDF)" />
+                </div>
+                <div className="space-y-4">
+                  <Field label="Product Name" placeholder="e.g. Premium Basmati Rice 1121" value={vals.product || ""} onChange={set("product")} />
+                  <div className="rounded-xl p-4 flex items-start gap-3" style={{ background: "#EBF0FF", border: "1px solid rgba(72,117,239,0.15)" }}>
+                    <span className="text-base">🤖</span>
+                    <div className="flex-1">
+                      <p className="text-xs font-semibold mb-0.5" style={{ color: "#4875EF" }}>AI HS Code Suggestion</p>
+                      <p className="text-sm" style={{ color: "#0F1740" }}>HS Code: <strong>1006.30</strong> — Rice, semi-milled or wholly milled</p>
+                      <button className="text-xs font-semibold mt-1.5 hover:opacity-70 transition-opacity" style={{ color: "#4875EF" }}>Apply suggestion →</button>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <Field label="Minimum Order Quantity" placeholder="e.g. 500 kg" value={vals.moq || ""} onChange={set("moq")} />
+                    <Field label="Price (FOB USD)" placeholder="per MT" value={vals.price || ""} onChange={set("price")} />
                   </div>
                 </div>
-                <p className="text-xs font-semibold mb-1" style={{ color: "#4875EF" }}>🤖 AI-matched based on your catalogue</p>
-                <p className="text-xs" style={{ color: "#9BA3C4" }}>Respond within 24 hours to increase conversion by 3x</p>
-              </div>
-              <div className="mt-4">
-                <Field label="Your Reply" placeholder="Write your introductory message to the buyer..." value={vals.reply||""} onChange={set("reply")} hint="Keep it professional — this is your first impression" />
+              </StepCard>
+            </div>
+          )}
+          {levelNum > 6 && (
+            <div className="space-y-5">
+              <StepCard icon={lvl.badge} title={lvl.title} description={lvl.desc} onAskAI={() => {}}>
+                <div className="space-y-4">
+                  <Field label="Details" placeholder="Enter relevant information" value={vals.details || ""} onChange={set("details")} />
+                </div>
+              </StepCard>
+            </div>
+          )}
+        </div>
+
+        {/* RIGHT: contextual sidebar */}
+        <div className="space-y-4 md:sticky md:top-20">
+          {/* Reward card */}
+          <SidebarCard title="Your Reward">
+            <div className="flex items-center gap-4">
+              <div className="text-3xl">{lvl.badge}</div>
+              <div>
+                <p className="font-bold text-sm" style={{ color: "#0F1740" }}>{lvl.title} Badge</p>
+                <p className="text-xs mt-0.5" style={{ color: "#9BA3C4" }}>Earned on completion</p>
               </div>
             </div>
-          </>}
-
-          {levelNum === 9 && <>
-            <div className="pb-2">
-              <p className="text-xs font-semibold tracking-widest uppercase mb-4" style={{ color: "#9BA3C4", fontFamily: "'DM Mono', monospace" }}>Command Center Access</p>
-              <div className="rounded-xl p-5 mb-4" style={{ background: "linear-gradient(135deg, #0F1740 0%, #1C3B8A 100%)", border: "none" }}>
-                <p className="text-xs font-semibold tracking-widest uppercase mb-2" style={{ color: "rgba(255,255,255,0.45)", fontFamily: "'DM Mono', monospace" }}>You have earned</p>
-                <p style={{ fontFamily: "'Fraunces', serif", fontSize: "28px", fontWeight: 700, color: "#F59E0B", letterSpacing: "-0.02em" }}>{[100,150,200,75,50,200,150,200].reduce((a,b)=>a+b,0) + 250} XP</p>
-                <p className="text-sm mt-1" style={{ color: "rgba(255,255,255,0.55)" }}>across 9 completed levels</p>
+            <div className="grid grid-cols-2 gap-3 mt-4">
+              <div className="rounded-xl p-3 text-center" style={{ background: "#FEF3C7" }}>
+                <p style={{ fontFamily: "'Fraunces', serif", fontSize: "22px", fontWeight: 700, color: "#D97706" }}>+{lvl.xp}</p>
+                <p className="text-xs" style={{ color: "#9BA3C4" }}>XP Earned</p>
               </div>
+              <div className="rounded-xl p-3 text-center" style={{ background: "#DCFCE7" }}>
+                <p style={{ fontFamily: "'Fraunces', serif", fontSize: "22px", fontWeight: 700, color: "#16A34A" }}>+{lvl.readiness - (levelNum > 1 ? LEVELS[levelNum - 2].readiness : 0)}%</p>
+                <p className="text-xs" style={{ color: "#9BA3C4" }}>Readiness</p>
+              </div>
+            </div>
+          </SidebarCard>
+
+          {/* Why this matters */}
+          {sidebar && (
+            <SidebarCard title="Why This Matters">
               <div className="space-y-3">
-                {[
-                  { label: "Export Dashboard", desc: "Revenue, shipments, buyers — all in one view", icon: "🏠" },
-                  { label: "Order Management", desc: "Track every deal from inquiry to delivery", icon: "📦" },
-                  { label: "AI Buyer Matching", desc: "Continuous buyer discovery across 190+ countries", icon: "🤝" },
-                  { label: "Document Automation", desc: "Invoices, packing lists, certificates — generated instantly", icon: "📄" },
-                  { label: "Global Trade Map", desc: "Visualize your export footprint in real time", icon: "🌐" },
-                ].map((f) => (
-                  <div key={f.label} className="flex items-center gap-3 px-4 py-3 rounded-xl" style={{ background: "#ffffff", border: "1px solid rgba(15,23,64,0.07)" }}>
-                    <span className="text-xl">{f.icon}</span>
-                    <div>
-                      <p className="text-sm font-semibold" style={{ color: "#0F1740" }}>{f.label}</p>
-                      <p className="text-xs" style={{ color: "#9BA3C4" }}>{f.desc}</p>
-                    </div>
-                    <span className="ml-auto text-xs font-semibold px-2 py-0.5 rounded-full" style={{ background: "#DCFCE7", color: "#16A34A" }}>Unlocked</span>
+                {sidebar.whyMatters.map((item, i) => (
+                  <div key={i} className="flex items-start gap-3">
+                    <span className="text-base flex-shrink-0">{item.icon}</span>
+                    <p className="text-xs leading-relaxed" style={{ color: "#6B7294" }}>{item.text}</p>
                   </div>
                 ))}
               </div>
-            </div>
-          </>}
-        </div>
+            </SidebarCard>
+          )}
 
-        {/* Sticky footer */}
-        <div
-          className="sticky bottom-0 left-0 right-0 mt-10 -mx-6 md:-mx-10 px-6 md:px-10 py-4 flex items-center justify-between"
-          style={{ background: "rgba(250,251,255,0.95)", backdropFilter: "blur(12px)", borderTop: "1px solid rgba(15,23,64,0.07)" }}
-        >
-          <div className="flex items-center gap-4">
-            <div>
-              <p className="text-xs font-semibold" style={{ color: "#9BA3C4", fontFamily: "'DM Mono', monospace" }}>
-                +{lvl.xp} XP · +{lvl.readiness}% Readiness
+          {/* Pro Tip */}
+          {sidebar?.tip && (
+            <SidebarCard title="Pro Tip">
+              <p className="text-xs leading-relaxed" style={{ color: "#6B7294" }}>💡 {sidebar.tip}</p>
+            </SidebarCard>
+          )}
+
+          {/* Security note */}
+          {sidebar?.security && (
+            <SidebarCard title="Security">
+              <p className="text-xs leading-relaxed flex items-start gap-2" style={{ color: "#6B7294" }}>
+                <span>🔒</span> {sidebar.security}
               </p>
-              <p className="text-xs mt-0.5" style={{ color: "#C8CEDF" }}>Total after: {xp + lvl.xp} XP</p>
+            </SidebarCard>
+          )}
+
+          {/* Ask AI */}
+          <SidebarCard title="Ask AI">
+            <div className="rounded-xl px-4 py-3 mb-3" style={{ background: "#F4F6FF", border: "1px solid rgba(72,117,239,0.12)" }}>
+              <p className="text-xs" style={{ color: "#9BA3C4" }}>e.g. "What documents do I need for Aadhaar verification?"</p>
             </div>
-          </div>
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => setDone(true)}
-              className="text-xs font-medium transition-opacity hover:opacity-60"
-              style={{ color: "#C8CEDF" }}
-            >
-              Skip for now
-            </button>
-            {levelNum !== 5 && (
-              <JourneyButton variant="primary" size="md" onClick={() => setDone(true)}>
-                {levelNum === 6 ? "Lock Catalogue →"
-                  : levelNum === 9 ? "Enter Command Center →"
-                  : `Complete Level ${levelNum} →`}
-              </JourneyButton>
-            )}
-          </div>
+            <motion.button whileTap={{ scale: 0.97 }} whileHover={{ y: -1 }}
+              className="w-full py-2.5 rounded-xl text-sm font-semibold"
+              style={{ background: "#EBF0FF", color: "#4875EF", border: "1.5px solid rgba(72,117,239,0.2)" }}>
+              🤖 Ask EXIMARG AI
+            </motion.button>
+          </SidebarCard>
+        </div>
+      </div>
+
+      {/* Sticky footer */}
+      <div className="sticky bottom-0 left-0 right-0 border-t px-6 md:px-10 py-4 flex items-center justify-between"
+        style={{ background: "rgba(250,251,255,0.97)", backdropFilter: "blur(12px)", borderColor: "rgba(15,23,64,0.07)" }}>
+        <div>
+          <p className="text-xs font-semibold" style={{ color: "#9BA3C4", fontFamily: "'DM Mono', monospace" }}>
+            +{lvl.xp} XP · +{lvl.readiness}% Readiness
+          </p>
+          <p className="text-xs mt-0.5" style={{ color: "#C8CEDF" }}>Total after: {xp + lvl.xp} XP</p>
+        </div>
+        <div className="flex items-center gap-3">
+          <button onClick={() => setDone(true)} className="text-xs font-medium transition-opacity hover:opacity-60"
+            style={{ color: "#C8CEDF" }}>
+            Skip for now
+          </button>
+          {levelNum !== 5 && (
+            <JourneyButton variant="primary" size="md" onClick={() => setDone(true)}>
+              {levelNum === 6 ? "Lock Catalogue →" : levelNum === 9 ? "Enter Command Center →" : `Complete Level ${levelNum} →`}
+            </JourneyButton>
+          )}
         </div>
       </div>
     </ProductScreen>
@@ -1743,97 +2126,945 @@ function LevelScreen({ levelNum, xp, onComplete, onBack }) {
 
 // ── CommandCenter ─────────────────────────────────────────────────────────────
 
-const CC_NAV = [
-  { icon: "🏠", label: "Overview" }, { icon: "📦", label: "Products" },
-  { icon: "🤝", label: "Buyers" },   { icon: "📄", label: "Orders" },
-  { icon: "📃", label: "Invoices" }, { icon: "🗂", label: "Documents" },
-  { icon: "💬", label: "AI Chat" },
+// ── Command Center ─────────────────────────────────────────────────────────────
+
+const SIDEBAR_NAV = [
+  { icon: "🏠", label: "Command Center", id: "overview"   },
+  { icon: "📦", label: "Products",       id: "products"   },
+  { icon: "🤝", label: "Buyers",         id: "buyers"     },
+  { icon: "📋", label: "Orders",         id: "orders"     },
+  { icon: "🧾", label: "Invoices",       id: "invoices"   },
+  { icon: "📁", label: "Documents",      id: "documents"  },
+  { icon: "✨", label: "AI Consultant",  id: "ai"         },
+  { icon: "⚙️", label: "Settings",       id: "settings"   },
 ];
 
-function CommandCenter({ xp, onBack }) {
-  const [activeNav, setActiveNav] = useState(0);
+// ── Shared card ───────────────────────────────────────────────────────────────
+function DashCard({ children, className = "", style = {} }: { children: React.ReactNode; className?: string; style?: React.CSSProperties }) {
   return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-      transition={{ duration: 0.4 }} className="fixed inset-0 z-[150] flex"
-      style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", background: "#F4F6FF" }}>
-      {/* Sidebar */}
-      <aside className="hidden md:flex flex-col w-56 flex-shrink-0 border-r" style={{ background: "#ffffff", borderColor: "rgba(15,23,64,0.08)" }}>
-        <div className="flex items-center gap-2.5 px-6 h-14 border-b" style={{ borderColor: "rgba(15,23,64,0.07)" }}>
-          <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: "#4875EF" }}>
-            <span className="text-white text-xs font-bold">E</span>
-          </div>
-          <span className="font-bold text-sm" style={{ color: "#0F1740" }}>eximarg</span>
-        </div>
-        <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
-          {CC_NAV.map((item, i) => (
-            <button key={item.label} onClick={() => setActiveNav(i)}
-              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-left transition-all duration-150"
-              style={{ background: activeNav === i ? "#EBF0FF" : "transparent", color: activeNav === i ? "#4875EF" : "#6B7294" }}>
-              <span className="text-base">{item.icon}</span>{item.label}
-            </button>
-          ))}
-        </nav>
-        <div className="px-4 py-4 border-t" style={{ borderColor: "rgba(15,23,64,0.07)" }}>
-          <div className="rounded-xl px-4 py-3" style={{ background: "#F4F6FF" }}>
-            <p className="text-xs font-semibold tracking-widest uppercase mb-0.5" style={{ color: "#9BA3C4", fontFamily: "'DM Mono', monospace" }}>Total XP</p>
-            <p style={{ fontFamily: "'Fraunces', serif", fontSize: "20px", fontWeight: 700, color: "#F59E0B" }}>{xp} XP</p>
-          </div>
-        </div>
-      </aside>
-      {/* Main */}
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <div className="flex items-center justify-between px-6 md:px-10 h-14 border-b flex-shrink-0"
-          style={{ background: "#ffffff", borderColor: "rgba(15,23,64,0.08)" }}>
-          <h2 style={{ fontFamily: "'Fraunces', serif", fontSize: "18px", fontWeight: 700, color: "#0F1740", letterSpacing: "-0.02em" }}>
-            {CC_NAV[activeNav].label}
+    <div className={`rounded-2xl ${className}`}
+      style={{ background: "#ffffff", border: "1px solid rgba(15,23,64,0.07)", boxShadow: "0 2px 16px rgba(15,23,64,0.05)", ...style }}>
+      {children}
+    </div>
+  );
+}
+
+// ── Empty state ───────────────────────────────────────────────────────────────
+function EmptyState({ icon, title, desc, cta, onCta }: { icon: string; title: string; desc: string; cta: string; onCta?: () => void }) {
+  return (
+    <div className="flex flex-col items-center justify-center py-24 text-center">
+      <div className="text-6xl mb-4">{icon}</div>
+      <h3 style={{ fontFamily: "'Fraunces', serif", fontSize: "22px", fontWeight: 700, color: "#0F1740", letterSpacing: "-0.02em" }}>{title}</h3>
+      <p className="text-sm mt-2 mb-6 max-w-xs" style={{ color: "#9BA3C4" }}>{desc}</p>
+      <JourneyButton variant="primary" size="sm" onClick={onCta}>{cta}</JourneyButton>
+    </div>
+  );
+}
+
+// ── Overview page ─────────────────────────────────────────────────────────────
+function OverviewPage({ xp }: { xp: number }) {
+  const ACTIVITY = [
+    { icon: "🚢", e: "Shipment #183 departed Mumbai Port",      t: "2h ago",     c: "#4875EF" },
+    { icon: "📩", e: "New buyer inquiry from Stockholm, Sweden", t: "5h ago",     c: "#4875EF" },
+    { icon: "✅", e: "Invoice #047 approved by Müller GmbH",    t: "Yesterday",  c: "#22C55E" },
+    { icon: "📄", e: "Certificate of Origin issued — FIEO",     t: "Yesterday",  c: "#22C55E" },
+    { icon: "🔄", e: "RCMC renewal completed successfully",      t: "3 days ago", c: "#F59E0B" },
+  ];
+
+  return (
+    <div className="space-y-6">
+      {/* Welcome + priority */}
+      <div className="grid md:grid-cols-[1fr_320px] gap-6">
+        <DashCard className="p-6">
+          <p className="text-xs font-semibold tracking-widest uppercase mb-1" style={{ color: "#9BA3C4", fontFamily: "'DM Mono', monospace" }}>Good morning</p>
+          <h2 style={{ fontFamily: "'Fraunces', serif", fontSize: "clamp(24px,3vw,32px)", fontWeight: 700, color: "#0F1740", letterSpacing: "-0.025em", lineHeight: 1.2 }}>
+            Rajesh Kumar
           </h2>
-          <div className="flex items-center gap-4">
-            <button onClick={onBack} className="text-xs font-medium hover:opacity-60 transition-opacity" style={{ color: "#9BA3C4" }}>← Dashboard</button>
-            <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold" style={{ background: "#4875EF", color: "#fff" }}>R</div>
+          <p className="text-sm mt-1 mb-5" style={{ color: "#6B7294" }}>Ravi Exports Pvt. Ltd. · Level 6 Bronze Exporter</p>
+
+          {/* XP + Readiness */}
+          <div className="grid grid-cols-2 gap-4 mb-5">
+            <div className="rounded-xl p-4" style={{ background: "#FEF3C7" }}>
+              <p className="text-xs font-semibold mb-1" style={{ color: "#9BA3C4", fontFamily: "'DM Mono', monospace" }}>Total XP</p>
+              <p style={{ fontFamily: "'Fraunces', serif", fontSize: "24px", fontWeight: 700, color: "#D97706" }}>{xp || 1375} XP</p>
+            </div>
+            <div className="rounded-xl p-4" style={{ background: "#DCFCE7" }}>
+              <p className="text-xs font-semibold mb-1" style={{ color: "#9BA3C4", fontFamily: "'DM Mono', monospace" }}>Readiness</p>
+              <p style={{ fontFamily: "'Fraunces', serif", fontSize: "24px", fontWeight: 700, color: "#16A34A" }}>66%</p>
+            </div>
           </div>
-        </div>
-        <div className="flex-1 overflow-y-auto px-6 md:px-10 py-8">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+
+          {/* Quick actions */}
+          <div className="grid grid-cols-3 gap-2">
             {[
-              { label: "Total Revenue", value: "₹1.8 Cr", delta: "+24%", c: "#4875EF" },
-              { label: "Active Buyers", value: "47",       delta: "+8 this month", c: "#22C55E" },
-              { label: "Shipments",     value: "183",      delta: "12 in transit",  c: "#F59E0B" },
-              { label: "Countries",     value: "22",       delta: "+3 new",         c: "#7C3AED" },
-            ].map((s, i) => (
-              <motion.div key={s.label} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1], delay: i * 0.06 }}
-                className="rounded-2xl p-5" style={{ background: "#ffffff", border: "1px solid rgba(15,23,64,0.07)", boxShadow: "0 2px 12px rgba(15,23,64,0.05)" }}>
-                <p className="text-xs font-semibold tracking-widest uppercase mb-2" style={{ color: "#9BA3C4", fontFamily: "'DM Mono', monospace" }}>{s.label}</p>
-                <p style={{ fontFamily: "'Fraunces', serif", fontSize: "26px", fontWeight: 700, color: "#0F1740", letterSpacing: "-0.02em", lineHeight: 1.1 }}>{s.value}</p>
-                <p className="text-xs font-medium mt-1.5" style={{ color: s.c }}>↑ {s.delta}</p>
-              </motion.div>
+              { icon: "📦", label: "Add Product" },
+              { icon: "🤝", label: "Find Buyers" },
+              { icon: "🧾", label: "Create Invoice" },
+              { icon: "📁", label: "Upload Doc" },
+              { icon: "✨", label: "Ask AI" },
+              { icon: "📋", label: "View Orders" },
+            ].map((a) => (
+              <motion.button key={a.label} whileHover={{ y: -2 }} whileTap={{ scale: 0.96 }}
+                className="flex flex-col items-center gap-1.5 py-3 rounded-xl text-xs font-medium transition-all"
+                style={{ background: "#F8F9FF", border: "1px solid rgba(15,23,64,0.07)", color: "#6B7294" }}>
+                <span className="text-base">{a.icon}</span>
+                {a.label}
+              </motion.button>
             ))}
           </div>
-          <div className="grid md:grid-cols-2 gap-6">
-            <div className="rounded-2xl p-6" style={{ background: "#ffffff", border: "1px solid rgba(15,23,64,0.07)", boxShadow: "0 2px 12px rgba(15,23,64,0.05)" }}>
-              <p className="text-xs font-semibold tracking-widest uppercase mb-5" style={{ color: "#9BA3C4", fontFamily: "'DM Mono', monospace" }}>Recent Activity</p>
-              {[
-                { e: "Shipment #183 departed Mumbai",          t: "2h ago",     d: "#4875EF" },
-                { e: "New buyer inquiry — Stockholm",          t: "5h ago",     d: "#4875EF" },
-                { e: "Invoice #047 approved by Müller GmbH",  t: "Yesterday",  d: "#22C55E" },
-                { e: "Certificate of Origin issued — FIEO",   t: "Yesterday",  d: "#22C55E" },
-                { e: "RCMC renewal completed",                 t: "3 days ago", d: "#22C55E" },
-              ].map((a, i) => (
-                <div key={i} className="flex items-center justify-between py-3 border-b last:border-0" style={{ borderColor: "rgba(15,23,64,0.05)" }}>
-                  <div className="flex items-center gap-3">
-                    <div className="w-2 h-2 rounded-full" style={{ background: a.d }} /><span className="text-sm" style={{ color: "#374151" }}>{a.e}</span>
-                  </div>
-                  <span className="text-xs ml-4 flex-shrink-0" style={{ color: "#9BA3C4", fontFamily: "'DM Mono', monospace" }}>{a.t}</span>
+        </DashCard>
+
+        {/* Today's Priority */}
+        <DashCard className="p-6" style={{ background: "linear-gradient(135deg,#EBF0FF 0%,#F0F4FF 100%)", border: "1.5px solid rgba(72,117,239,0.18)" }}>
+          <p className="text-xs font-bold tracking-widest uppercase mb-3" style={{ color: "#4875EF", fontFamily: "'DM Mono', monospace" }}>Today's Priority</p>
+          <div className="text-3xl mb-3">🛍️</div>
+          <h3 style={{ fontFamily: "'Fraunces', serif", fontSize: "18px", fontWeight: 700, color: "#0F1740", letterSpacing: "-0.02em", lineHeight: 1.3 }}>
+            Add your first product
+          </h3>
+          <p className="text-xs mt-2 mb-5" style={{ color: "#6B7294" }}>
+            Your Digital Dukan is ready. Add products to start receiving buyer inquiries from 190+ countries.
+          </p>
+          <JourneyButton variant="primary" size="sm" className="w-full justify-center">
+            Add First Product →
+          </JourneyButton>
+          <p className="text-xs text-center mt-3" style={{ color: "#9BA3C4" }}>⚡ +200 XP · 📈 +11% Readiness</p>
+        </DashCard>
+      </div>
+
+      {/* Stats row */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        {[
+          { label: "Total Revenue",  value: "₹1.8 Cr", delta: "+24% YoY",       c: "#4875EF" },
+          { label: "Active Buyers",  value: "47",       delta: "+8 this month",  c: "#22C55E" },
+          { label: "Shipments",      value: "183",      delta: "12 in transit",  c: "#F59E0B" },
+          { label: "Countries",      value: "22",       delta: "+3 new markets", c: "#7C3AED" },
+        ].map((s, i) => (
+          <motion.div key={s.label} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, ease: EASE, delay: i * 0.07 }}>
+            <DashCard className="p-5">
+              <p className="text-xs font-semibold tracking-widest uppercase mb-2" style={{ color: "#9BA3C4", fontFamily: "'DM Mono', monospace" }}>{s.label}</p>
+              <p style={{ fontFamily: "'Fraunces', serif", fontSize: "26px", fontWeight: 700, color: "#0F1740", letterSpacing: "-0.02em", lineHeight: 1.1 }}>{s.value}</p>
+              <p className="text-xs font-medium mt-1.5" style={{ color: s.c }}>↑ {s.delta}</p>
+            </DashCard>
+          </motion.div>
+        ))}
+      </div>
+
+      {/* Activity + Global */}
+      <div className="grid md:grid-cols-[1.2fr_1fr] gap-6">
+        <DashCard className="p-6">
+          <p className="text-xs font-bold tracking-widest uppercase mb-5" style={{ color: "#9BA3C4", fontFamily: "'DM Mono', monospace" }}>Recent Activity</p>
+          <div className="space-y-0">
+            {ACTIVITY.map((a, i) => (
+              <div key={i} className="flex items-center justify-between py-3.5 border-b last:border-0" style={{ borderColor: "rgba(15,23,64,0.05)" }}>
+                <div className="flex items-center gap-3">
+                  <span className="text-base flex-shrink-0">{a.icon}</span>
+                  <span className="text-sm" style={{ color: "#374151" }}>{a.e}</span>
                 </div>
+                <span className="text-xs ml-4 flex-shrink-0" style={{ color: "#9BA3C4", fontFamily: "'DM Mono', monospace" }}>{a.t}</span>
+              </div>
+            ))}
+          </div>
+        </DashCard>
+        <DashCard className="p-6">
+          <p className="text-xs font-bold tracking-widest uppercase mb-4" style={{ color: "#9BA3C4", fontFamily: "'DM Mono', monospace" }}>Global Footprint</p>
+          <FlatWorldMap />
+        </DashCard>
+      </div>
+
+      {/* Journey progress */}
+      <DashCard className="p-6">
+        <div className="flex items-center justify-between mb-5">
+          <p className="text-xs font-bold tracking-widest uppercase" style={{ color: "#9BA3C4", fontFamily: "'DM Mono', monospace" }}>Your Journey</p>
+          <span className="text-xs font-semibold px-2.5 py-1 rounded-full" style={{ background: "#DCFCE7", color: "#16A34A" }}>6 of 9 complete</span>
+        </div>
+        <div className="grid grid-cols-3 md:grid-cols-9 gap-3">
+          {LEVELS.map((lvl, i) => {
+            const done = i < 6;
+            return (
+              <div key={lvl.number} className="text-center">
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center text-xl mx-auto mb-1.5"
+                  style={{ background: done ? lvl.color : "#F4F6FF", opacity: done ? 1 : 0.4, boxShadow: done ? `0 4px 12px ${lvl.color}40` : "none" }}>
+                  {done ? "✓" : lvl.badge}
+                </div>
+                <p className="text-xs font-semibold" style={{ color: done ? "#0F1740" : "#C8CEDF" }}>{`0${lvl.number}`}</p>
+                <p className="text-xs" style={{ color: "#9BA3C4" }}>{lvl.title.split(" ")[0]}</p>
+              </div>
+            );
+          })}
+        </div>
+      </DashCard>
+    </div>
+  );
+}
+
+// ── Products page ─────────────────────────────────────────────────────────────
+function ProductsPage() {
+  const [search, setSearch] = useState("");
+  const SAMPLE = [
+    { name: "Premium Basmati Rice 1121", hs: "1006.30", moq: "500 kg", price: "$480/MT", status: "Active",   cat: "Rice & Grains" },
+    { name: "Kashmiri Saffron Grade A",  hs: "0910.20", moq: "100 g",  price: "$12.40/g", status: "Active",   cat: "Spices & Herbs" },
+    { name: "Darjeeling First Flush Tea",hs: "0902.10", moq: "50 kg",  price: "$6.20/100g",status: "Draft",  cat: "Food Products" },
+  ];
+  return (
+    <div className="space-y-5">
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 style={{ fontFamily: "'Fraunces', serif", fontSize: "clamp(22px,3vw,30px)", fontWeight: 700, color: "#0F1740", letterSpacing: "-0.025em" }}>Your Products</h2>
+          <p className="text-sm mt-0.5" style={{ color: "#9BA3C4" }}>{SAMPLE.length} products · all categories</p>
+        </div>
+        <JourneyButton variant="primary" size="sm">+ Add Product</JourneyButton>
+      </div>
+
+      {/* Search + filters */}
+      <div className="flex items-center gap-3">
+        <div className="flex-1 relative">
+          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm" style={{ color: "#9BA3C4" }}>🔍</span>
+          <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search products, HS codes…"
+            className="w-full pl-9 pr-4 py-2.5 rounded-xl text-sm outline-none"
+            style={{ background: "#F4F6FF", border: "1.5px solid rgba(15,23,64,0.08)", color: "#0F1740" }} />
+        </div>
+        <select className="px-3 py-2.5 rounded-xl text-sm outline-none appearance-none"
+          style={{ background: "#F4F6FF", border: "1.5px solid rgba(15,23,64,0.08)", color: "#6B7294" }}>
+          <option>All categories</option>
+          <option>Spices & Herbs</option>
+          <option>Rice & Grains</option>
+        </select>
+        <select className="px-3 py-2.5 rounded-xl text-sm outline-none appearance-none"
+          style={{ background: "#F4F6FF", border: "1.5px solid rgba(15,23,64,0.08)", color: "#6B7294" }}>
+          <option>All status</option>
+          <option>Active</option>
+          <option>Draft</option>
+        </select>
+      </div>
+
+      {/* Product grid */}
+      <div className="grid md:grid-cols-3 gap-5">
+        {SAMPLE.filter((p) => !search || p.name.toLowerCase().includes(search.toLowerCase())).map((p, i) => (
+          <motion.div key={p.name} whileHover={{ y: -3 }} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.35, delay: i * 0.07 }}>
+            <DashCard>
+              <div className="h-36 rounded-t-2xl flex items-center justify-center text-5xl"
+                style={{ background: "linear-gradient(135deg,#EBF0FF,#F4F6FF)" }}>
+                📦
+              </div>
+              <div className="p-5">
+                <div className="flex items-start justify-between gap-2 mb-3">
+                  <p className="font-bold text-sm leading-tight" style={{ color: "#0F1740" }}>{p.name}</p>
+                  <span className="text-xs font-semibold px-2 py-0.5 rounded-full flex-shrink-0"
+                    style={{ background: p.status === "Active" ? "#DCFCE7" : "#F3F4F6", color: p.status === "Active" ? "#16A34A" : "#6B7280" }}>
+                    {p.status}
+                  </span>
+                </div>
+                <div className="space-y-1.5">
+                  {[{ l: "HS Code", v: p.hs }, { l: "MOQ", v: p.moq }, { l: "Price (FOB)", v: p.price }].map((r) => (
+                    <div key={r.l} className="flex items-center justify-between">
+                      <span className="text-xs" style={{ color: "#9BA3C4" }}>{r.l}</span>
+                      <span className="text-xs font-semibold" style={{ color: "#0F1740", fontFamily: "'DM Mono', monospace" }}>{r.v}</span>
+                    </div>
+                  ))}
+                </div>
+                <div className="mt-4 pt-3 border-t" style={{ borderColor: "rgba(15,23,64,0.06)" }}>
+                  <span className="text-xs px-2 py-0.5 rounded-full" style={{ background: "#EBF0FF", color: "#4875EF" }}>{p.cat}</span>
+                </div>
+              </div>
+            </DashCard>
+          </motion.div>
+        ))}
+
+        {/* Add product card */}
+        <motion.div whileHover={{ y: -3, scale: 1.01 }}>
+          <DashCard className="h-full flex flex-col items-center justify-center py-12 cursor-pointer"
+            style={{ border: "2px dashed rgba(72,117,239,0.2)", background: "#FAFBFF", boxShadow: "none" }}>
+            <div className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl mb-3" style={{ background: "#EBF0FF" }}>+</div>
+            <p className="font-semibold text-sm" style={{ color: "#4875EF" }}>Add Product</p>
+            <p className="text-xs mt-1" style={{ color: "#9BA3C4" }}>+200 XP on completion</p>
+          </DashCard>
+        </motion.div>
+      </div>
+    </div>
+  );
+}
+
+// ── Buyers page ───────────────────────────────────────────────────────────────
+function BuyersPage() {
+  const BUYERS = [
+    { name: "Müller GmbH",     country: "🇩🇪 Germany",     last: "2h ago",     deals: 3, trust: 94, status: "Active"   },
+    { name: "Nordic Foods AB", country: "🇸🇪 Sweden",      last: "Yesterday",  deals: 1, trust: 87, status: "New"      },
+    { name: "Gulf Traders LLC",country: "🇦🇪 UAE",         last: "3 days ago", deals: 5, trust: 96, status: "Active"   },
+    { name: "Sakura Imports",  country: "🇯🇵 Japan",       last: "1 week ago", deals: 2, trust: 91, status: "Inactive" },
+  ];
+  return (
+    <div className="space-y-5">
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 style={{ fontFamily: "'Fraunces', serif", fontSize: "clamp(22px,3vw,30px)", fontWeight: 700, color: "#0F1740", letterSpacing: "-0.025em" }}>Your Buyers</h2>
+          <p className="text-sm mt-0.5" style={{ color: "#9BA3C4" }}>{BUYERS.length} buyers · across 4 countries</p>
+        </div>
+        <JourneyButton variant="primary" size="sm">+ Add Buyer</JourneyButton>
+      </div>
+      <div className="relative">
+        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm" style={{ color: "#9BA3C4" }}>🔍</span>
+        <input placeholder="Search buyers by name or country…" className="w-full pl-9 pr-4 py-2.5 rounded-xl text-sm outline-none"
+          style={{ background: "#F4F6FF", border: "1.5px solid rgba(15,23,64,0.08)", color: "#0F1740" }} />
+      </div>
+      <div className="space-y-3">
+        {BUYERS.map((b, i) => (
+          <motion.div key={b.name} initial={{ opacity: 0, x: -12 }} animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.35, delay: i * 0.07 }} whileHover={{ x: 2 }}>
+            <DashCard className="px-6 py-4">
+              <div className="flex items-center justify-between gap-4">
+                <div className="flex items-center gap-4">
+                  <div className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0"
+                    style={{ background: "#4875EF", color: "#fff" }}>{b.name[0]}</div>
+                  <div>
+                    <p className="font-bold text-sm" style={{ color: "#0F1740" }}>{b.name}</p>
+                    <p className="text-xs mt-0.5" style={{ color: "#9BA3C4" }}>{b.country} · Last contact {b.last}</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-6">
+                  <div className="text-center hidden md:block">
+                    <p className="text-xs" style={{ color: "#9BA3C4" }}>Deals</p>
+                    <p className="font-bold text-sm" style={{ color: "#0F1740" }}>{b.deals}</p>
+                  </div>
+                  <div className="text-center hidden md:block">
+                    <p className="text-xs" style={{ color: "#9BA3C4" }}>Trust</p>
+                    <p className="font-bold text-sm" style={{ color: "#22C55E" }}>{b.trust}%</p>
+                  </div>
+                  <span className="text-xs font-semibold px-2.5 py-1 rounded-full"
+                    style={{ background: b.status === "Active" ? "#DCFCE7" : b.status === "New" ? "#EBF0FF" : "#F3F4F6", color: b.status === "Active" ? "#16A34A" : b.status === "New" ? "#4875EF" : "#9CA3AF" }}>
+                    {b.status}
+                  </span>
+                  <motion.button whileHover={{ scale: 1.05 }} className="text-xs font-semibold px-3 py-1.5 rounded-lg" style={{ background: "#F4F6FF", color: "#6B7294" }}>
+                    View →
+                  </motion.button>
+                </div>
+              </div>
+            </DashCard>
+          </motion.div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ── Orders page ───────────────────────────────────────────────────────────────
+function OrdersPage() {
+  const [filter, setFilter] = useState("All");
+  const ORDERS = [
+    { id: "#ORD-2024-183", buyer: "Müller GmbH",      product: "Basmati Rice 1121",  value: "$22,800", date: "Dec 12, 2024", status: "Completed"  },
+    { id: "#ORD-2024-182", buyer: "Gulf Traders LLC",  product: "Kashmiri Saffron",    value: "$4,960",  date: "Dec 10, 2024", status: "Processing" },
+    { id: "#ORD-2024-181", buyer: "Nordic Foods AB",   product: "Darjeeling Tea",      value: "$3,100",  date: "Dec 8, 2024",  status: "Pending"    },
+    { id: "#ORD-2024-180", buyer: "Sakura Imports",    product: "Basmati Rice 1121",  value: "$18,400", date: "Dec 5, 2024",  status: "Completed"  },
+  ];
+  const statuses = ["All", "Pending", "Processing", "Completed", "Cancelled"];
+  const filtered = filter === "All" ? ORDERS : ORDERS.filter((o) => o.status === filter);
+  const statusColor: Record<string, { bg: string; c: string }> = {
+    Completed:  { bg: "#DCFCE7", c: "#16A34A" },
+    Processing: { bg: "#EBF0FF", c: "#4875EF" },
+    Pending:    { bg: "#FEF3C7", c: "#D97706" },
+    Cancelled:  { bg: "#FEE2E2", c: "#DC2626" },
+  };
+  return (
+    <div className="space-y-5">
+      <div className="flex items-center justify-between">
+        <h2 style={{ fontFamily: "'Fraunces', serif", fontSize: "clamp(22px,3vw,30px)", fontWeight: 700, color: "#0F1740", letterSpacing: "-0.025em" }}>Orders</h2>
+        <p className="text-sm" style={{ color: "#9BA3C4" }}>{ORDERS.length} total orders</p>
+      </div>
+      <div className="flex items-center gap-2 flex-wrap">
+        {statuses.map((s) => (
+          <button key={s} onClick={() => setFilter(s)}
+            className="px-4 py-1.5 rounded-full text-xs font-semibold transition-all"
+            style={{ background: filter === s ? "#4875EF" : "#F4F6FF", color: filter === s ? "#fff" : "#6B7294" }}>
+            {s}
+          </button>
+        ))}
+      </div>
+      <div className="space-y-3">
+        {filtered.map((o, i) => (
+          <motion.div key={o.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3, delay: i * 0.06 }}>
+            <DashCard className="px-6 py-4">
+              <div className="flex items-center justify-between gap-4 flex-wrap">
+                <div className="flex items-center gap-4">
+                  <div>
+                    <p className="font-bold text-sm" style={{ color: "#0F1740", fontFamily: "'DM Mono', monospace" }}>{o.id}</p>
+                    <p className="text-xs mt-0.5" style={{ color: "#9BA3C4" }}>{o.buyer} · {o.product}</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-6">
+                  <div className="hidden md:block">
+                    <p className="text-xs" style={{ color: "#9BA3C4" }}>Value</p>
+                    <p className="font-bold text-sm" style={{ color: "#0F1740" }}>{o.value}</p>
+                  </div>
+                  <div className="hidden md:block">
+                    <p className="text-xs" style={{ color: "#9BA3C4" }}>Date</p>
+                    <p className="text-xs font-semibold" style={{ color: "#6B7294" }}>{o.date}</p>
+                  </div>
+                  <span className="text-xs font-semibold px-2.5 py-1 rounded-full"
+                    style={{ background: statusColor[o.status]?.bg, color: statusColor[o.status]?.c }}>
+                    {o.status}
+                  </span>
+                  <motion.button whileHover={{ scale: 1.05 }} className="text-xs font-semibold px-3 py-1.5 rounded-lg" style={{ background: "#F4F6FF", color: "#6B7294" }}>View</motion.button>
+                </div>
+              </div>
+            </DashCard>
+          </motion.div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ── Invoices page ─────────────────────────────────────────────────────────────
+function InvoicesPage() {
+  const [selected, setSelected] = useState(0);
+  const INVOICES = [
+    { id: "INV-2024-047", buyer: "Müller GmbH",     amount: "$22,800", date: "Dec 12", status: "Paid",    terms: "30% advance + 70% before shipment" },
+    { id: "INV-2024-046", buyer: "Gulf Traders LLC", amount: "$4,960",  date: "Dec 10", status: "Pending", terms: "50% advance + 50% on BL" },
+    { id: "INV-2024-045", buyer: "Nordic Foods AB",  amount: "$3,100",  date: "Dec 8",  status: "Sent",    terms: "100% advance" },
+  ];
+  const inv = INVOICES[selected];
+  const sc: Record<string, { bg: string; c: string }> = {
+    Paid:    { bg: "#DCFCE7", c: "#16A34A" },
+    Pending: { bg: "#FEF3C7", c: "#D97706" },
+    Sent:    { bg: "#EBF0FF", c: "#4875EF" },
+  };
+  return (
+    <div className="space-y-5">
+      <div className="flex items-center justify-between">
+        <h2 style={{ fontFamily: "'Fraunces', serif", fontSize: "clamp(22px,3vw,30px)", fontWeight: 700, color: "#0F1740", letterSpacing: "-0.025em" }}>Invoice Center</h2>
+        <JourneyButton variant="primary" size="sm">+ New Invoice</JourneyButton>
+      </div>
+      <div className="grid md:grid-cols-[300px_1fr] gap-5">
+        {/* List */}
+        <div className="space-y-3">
+          {INVOICES.map((inv, i) => (
+            <DashCard key={inv.id} className={`px-4 py-4 cursor-pointer transition-all ${selected === i ? "ring-2 ring-blue-400" : ""}`}
+              onClick={() => setSelected(i)}>
+              <div className="flex items-center justify-between mb-1">
+                <p className="text-xs font-bold" style={{ color: "#0F1740", fontFamily: "'DM Mono', monospace" }}>{inv.id}</p>
+                <span className="text-xs font-semibold px-2 py-0.5 rounded-full" style={{ background: sc[inv.status].bg, color: sc[inv.status].c }}>{inv.status}</span>
+              </div>
+              <p className="text-xs" style={{ color: "#9BA3C4" }}>{inv.buyer}</p>
+              <p className="font-bold text-sm mt-1" style={{ fontFamily: "'Fraunces', serif", color: "#0F1740" }}>{inv.amount}</p>
+              <p className="text-xs" style={{ color: "#C8CEDF" }}>{inv.date}</p>
+            </DashCard>
+          ))}
+        </div>
+
+        {/* Preview */}
+        <DashCard className="p-8">
+          <div className="flex items-start justify-between mb-8">
+            <div>
+              <div className="flex items-center gap-3 mb-2">
+                <div className="w-8 h-8 rounded-lg flex items-center justify-center text-sm font-bold" style={{ background: "#4875EF", color: "#fff" }}>E</div>
+                <span className="font-bold" style={{ color: "#0F1740" }}>EXIMARG</span>
+              </div>
+              <p className="text-xs" style={{ color: "#9BA3C4" }}>Ravi Exports Pvt. Ltd.</p>
+              <p className="text-xs" style={{ color: "#9BA3C4" }}>Mumbai, Maharashtra, India</p>
+            </div>
+            <div className="text-right">
+              <p style={{ fontFamily: "'Fraunces', serif", fontSize: "22px", fontWeight: 700, color: "#0F1740" }}>INVOICE</p>
+              <p className="text-xs font-bold mt-1" style={{ color: "#4875EF", fontFamily: "'DM Mono', monospace" }}>{inv.id}</p>
+              <p className="text-xs mt-0.5" style={{ color: "#9BA3C4" }}>Date: {inv.date}, 2024</p>
+            </div>
+          </div>
+          <div className="border-t pt-6 mb-6" style={{ borderColor: "rgba(15,23,64,0.07)" }}>
+            <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: "#9BA3C4", fontFamily: "'DM Mono', monospace" }}>Bill To</p>
+            <p className="font-bold" style={{ color: "#0F1740" }}>{inv.buyer}</p>
+          </div>
+          <div className="rounded-xl overflow-hidden mb-6" style={{ border: "1px solid rgba(15,23,64,0.07)" }}>
+            <div className="grid grid-cols-4 px-4 py-2.5" style={{ background: "#F4F6FF" }}>
+              {["Description", "Qty", "Unit Price", "Total"].map((h) => (
+                <p key={h} className="text-xs font-bold uppercase tracking-widest" style={{ color: "#9BA3C4", fontFamily: "'DM Mono', monospace" }}>{h}</p>
               ))}
             </div>
-            <div className="rounded-2xl p-6" style={{ background: "#ffffff", border: "1px solid rgba(15,23,64,0.07)", boxShadow: "0 2px 12px rgba(15,23,64,0.05)" }}>
-              <p className="text-xs font-semibold tracking-widest uppercase mb-4" style={{ color: "#9BA3C4", fontFamily: "'DM Mono', monospace" }}>Global Footprint</p>
-              <FlatWorldMap />
+            <div className="grid grid-cols-4 px-4 py-3 border-t" style={{ borderColor: "rgba(15,23,64,0.06)" }}>
+              <p className="text-sm" style={{ color: "#0F1740" }}>Basmati Rice 1121</p>
+              <p className="text-sm" style={{ color: "#6B7294" }}>20 MT</p>
+              <p className="text-sm" style={{ color: "#6B7294" }}>$480/MT</p>
+              <p className="text-sm font-bold" style={{ color: "#0F1740" }}>{inv.amount}</p>
             </div>
+          </div>
+          <div className="flex items-center justify-between mb-6">
+            <p className="text-xs" style={{ color: "#9BA3C4" }}>Payment Terms: {inv.terms}</p>
+            <div className="text-right">
+              <p className="text-xs" style={{ color: "#9BA3C4" }}>Total Amount</p>
+              <p style={{ fontFamily: "'Fraunces', serif", fontSize: "24px", fontWeight: 700, color: "#0F1740" }}>{inv.amount}</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-3">
+            <JourneyButton variant="primary" size="sm">Download PDF</JourneyButton>
+            <JourneyButton variant="ghost-dark" size="sm">Send to Buyer</JourneyButton>
+          </div>
+        </DashCard>
+      </div>
+    </div>
+  );
+}
+
+// ── Documents page ────────────────────────────────────────────────────────────
+function DocumentsPage() {
+  const FOLDERS = [
+    { icon: "📋", name: "Identity Documents", count: 3, color: "#4875EF" },
+    { icon: "🏢", name: "Business Registration", count: 5, color: "#7C3AED" },
+    { icon: "✅", name: "Compliance & Licences", count: 4, color: "#059669" },
+    { icon: "🧾", name: "Invoices & POs", count: 12, color: "#D97706" },
+    { icon: "🚢", name: "Shipping Documents", count: 8, color: "#DC2626" },
+    { icon: "📊", name: "Financial Records", count: 6, color: "#0F1740" },
+  ];
+  const RECENT = [
+    { name: "IEC_Certificate.pdf",     size: "245 KB", date: "Dec 12", icon: "📄", verified: true  },
+    { name: "GST_Registration.pdf",    size: "180 KB", date: "Dec 10", icon: "📄", verified: true  },
+    { name: "Packing_List_183.pdf",    size: "92 KB",  date: "Dec 8",  icon: "📄", verified: false },
+  ];
+  return (
+    <div className="space-y-5">
+      <div className="flex items-center justify-between">
+        <h2 style={{ fontFamily: "'Fraunces', serif", fontSize: "clamp(22px,3vw,30px)", fontWeight: 700, color: "#0F1740", letterSpacing: "-0.025em" }}>Document Vault</h2>
+        <JourneyButton variant="primary" size="sm">⬆ Upload</JourneyButton>
+      </div>
+
+      {/* Upload zone */}
+      <DashCard className="flex items-center justify-center py-8 border-2 border-dashed cursor-pointer transition-all hover:border-blue-400"
+        style={{ borderColor: "rgba(72,117,239,0.2)", background: "#FAFBFF", boxShadow: "none" }}>
+        <div className="text-center">
+          <div className="text-3xl mb-2">⬆</div>
+          <p className="font-semibold text-sm" style={{ color: "#4875EF" }}>Drag & drop documents here</p>
+          <p className="text-xs mt-1" style={{ color: "#9BA3C4" }}>PDF, JPG, PNG — up to 10MB per file</p>
+        </div>
+      </DashCard>
+
+      {/* Folders */}
+      <div>
+        <p className="text-xs font-bold tracking-widest uppercase mb-3" style={{ color: "#9BA3C4", fontFamily: "'DM Mono', monospace" }}>Categories</p>
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+          {FOLDERS.map((f) => (
+            <motion.div key={f.name} whileHover={{ y: -2 }}>
+              <DashCard className="p-5 cursor-pointer">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl flex items-center justify-center text-xl" style={{ background: `${f.color}18` }}>{f.icon}</div>
+                  <div>
+                    <p className="font-semibold text-sm" style={{ color: "#0F1740" }}>{f.name}</p>
+                    <p className="text-xs mt-0.5" style={{ color: "#9BA3C4" }}>{f.count} files</p>
+                  </div>
+                </div>
+              </DashCard>
+            </motion.div>
+          ))}
+        </div>
+      </div>
+
+      {/* Recent uploads */}
+      <div>
+        <p className="text-xs font-bold tracking-widest uppercase mb-3" style={{ color: "#9BA3C4", fontFamily: "'DM Mono', monospace" }}>Recent Uploads</p>
+        <DashCard>
+          {RECENT.map((f, i) => (
+            <div key={f.name} className="flex items-center justify-between px-5 py-3.5 border-b last:border-0" style={{ borderColor: "rgba(15,23,64,0.05)" }}>
+              <div className="flex items-center gap-3">
+                <span className="text-xl">{f.icon}</span>
+                <div>
+                  <p className="text-sm font-medium" style={{ color: "#0F1740" }}>{f.name}</p>
+                  <p className="text-xs mt-0.5" style={{ color: "#9BA3C4" }}>{f.size} · {f.date}</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                {f.verified && <span className="text-xs font-semibold px-2 py-0.5 rounded-full" style={{ background: "#DCFCE7", color: "#16A34A" }}>✓ Verified</span>}
+                <motion.button whileHover={{ scale: 1.05 }} className="text-xs px-3 py-1.5 rounded-lg" style={{ background: "#F4F6FF", color: "#6B7294" }}>View</motion.button>
+              </div>
+            </div>
+          ))}
+        </DashCard>
+      </div>
+    </div>
+  );
+}
+
+// ── AI Trade Consultant page ───────────────────────────────────────────────────
+function AIPage() {
+  const [input, setInput] = useState("");
+  const [messages, setMessages] = useState([
+    { role: "ai", text: "Good morning! I'm your EXIMARG AI Trade Consultant. I can help with HS codes, export compliance, buyer responses, invoice queries, and trade regulations. What would you like to know?" },
+  ]);
+  const send = () => {
+    if (!input.trim()) return;
+    setMessages((p) => [...p, { role: "user", text: input }, { role: "ai", text: "Great question! Based on your export profile, I recommend checking the DGFT guidelines for this. Let me pull the latest compliance requirements for your product category..." }]);
+    setInput("");
+  };
+  const PROMPTS = ["What HS code for Basmati Rice?", "How to reply to a Hamburg buyer?", "GST refund for exporters", "IEC renewal process", "Best Incoterms for UAE?"];
+  return (
+    <div className="flex flex-col h-[calc(100vh-180px)]">
+      <div className="flex items-center justify-between mb-5">
+        <div>
+          <h2 style={{ fontFamily: "'Fraunces', serif", fontSize: "clamp(22px,3vw,30px)", fontWeight: 700, color: "#0F1740", letterSpacing: "-0.025em" }}>AI Trade Consultant</h2>
+          <p className="text-sm mt-0.5" style={{ color: "#9BA3C4" }}>Powered by EXIMARG Intelligence · Always current</p>
+        </div>
+        <span className="text-xs font-semibold px-3 py-1.5 rounded-full flex items-center gap-1.5" style={{ background: "#DCFCE7", color: "#16A34A" }}>
+          <span className="w-1.5 h-1.5 rounded-full" style={{ background: "#16A34A" }} /> Online
+        </span>
+      </div>
+
+      {/* Chat area */}
+      <DashCard className="flex-1 flex flex-col overflow-hidden mb-4">
+        <div className="flex-1 overflow-y-auto p-6 space-y-4">
+          {messages.map((m, i) => (
+            <div key={i} className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}>
+              {m.role === "ai" && (
+                <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm mr-3 flex-shrink-0" style={{ background: "#4875EF", color: "#fff" }}>✨</div>
+              )}
+              <div className="max-w-lg px-4 py-3 rounded-2xl text-sm leading-relaxed"
+                style={{ background: m.role === "user" ? "#4875EF" : "#F4F6FF", color: m.role === "user" ? "#fff" : "#374151" }}>
+                {m.text}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Suggested prompts */}
+        <div className="px-6 pb-3 flex gap-2 flex-wrap">
+          {PROMPTS.map((p) => (
+            <button key={p} onClick={() => setInput(p)}
+              className="text-xs font-medium px-3 py-1.5 rounded-full transition-all hover:bg-blue-50"
+              style={{ background: "#EBF0FF", color: "#4875EF", border: "1px solid rgba(72,117,239,0.2)" }}>
+              {p}
+            </button>
+          ))}
+        </div>
+
+        {/* Input */}
+        <div className="px-4 pb-4 flex items-center gap-3" style={{ borderTop: "1px solid rgba(15,23,64,0.07)" }}>
+          <input value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => e.key === "Enter" && send()}
+            placeholder="Ask anything about exporting, compliance, buyers…"
+            className="flex-1 px-4 py-3 rounded-xl text-sm outline-none mt-3"
+            style={{ background: "#F4F6FF", border: "1.5px solid rgba(15,23,64,0.08)", color: "#0F1740" }} />
+          <motion.button whileTap={{ scale: 0.95 }} onClick={send}
+            className="mt-3 px-4 py-3 rounded-xl text-sm font-semibold"
+            style={{ background: "#4875EF", color: "#fff" }}>Send</motion.button>
+        </div>
+      </DashCard>
+    </div>
+  );
+}
+
+// ── Settings page ─────────────────────────────────────────────────────────────
+function SettingsPage() {
+  const sections = [
+    { title: "General", icon: "⚙️", items: [{ label: "Company Name", value: "Ravi Exports Pvt. Ltd." }, { label: "Time Zone", value: "Asia/Kolkata (IST)" }, { label: "Language", value: "English" }] },
+    { title: "Notifications", icon: "🔔", items: [{ label: "Buyer Inquiries", value: "toggle" }, { label: "Shipment Updates", value: "toggle" }, { label: "Invoice Reminders", value: "toggle" }] },
+    { title: "Security", icon: "🔒", items: [{ label: "Two-Factor Authentication", value: "toggle" }, { label: "Login Alerts", value: "toggle" }] },
+    { title: "Billing", icon: "💳", items: [{ label: "Current Plan", value: "Growth · ₹2,999/mo" }, { label: "Next Billing", value: "Jan 1, 2025" }] },
+  ];
+  return (
+    <div className="space-y-5 max-w-2xl">
+      <h2 style={{ fontFamily: "'Fraunces', serif", fontSize: "clamp(22px,3vw,30px)", fontWeight: 700, color: "#0F1740", letterSpacing: "-0.025em" }}>Settings</h2>
+      {sections.map((s) => (
+        <DashCard key={s.title} className="overflow-hidden">
+          <div className="flex items-center gap-3 px-6 py-4 border-b" style={{ borderColor: "rgba(15,23,64,0.07)" }}>
+            <span className="text-base">{s.icon}</span>
+            <p className="font-bold text-sm" style={{ color: "#0F1740" }}>{s.title}</p>
+          </div>
+          <div className="divide-y" style={{ borderColor: "rgba(15,23,64,0.05)" }}>
+            {s.items.map((item) => (
+              <div key={item.label} className="flex items-center justify-between px-6 py-4">
+                <p className="text-sm" style={{ color: "#374151" }}>{item.label}</p>
+                {item.value === "toggle" ? (
+                  <div className="w-10 h-5 rounded-full cursor-pointer relative" style={{ background: "#4875EF" }}>
+                    <div className="absolute right-0.5 top-0.5 w-4 h-4 rounded-full bg-white" />
+                  </div>
+                ) : (
+                  <p className="text-sm font-medium" style={{ color: "#6B7294" }}>{item.value}</p>
+                )}
+              </div>
+            ))}
+          </div>
+        </DashCard>
+      ))}
+      <DashCard className="overflow-hidden" style={{ border: "1px solid rgba(220,38,38,0.15)" }}>
+        <div className="flex items-center gap-3 px-6 py-4 border-b" style={{ borderColor: "rgba(220,38,38,0.1)" }}>
+          <span>⚠️</span>
+          <p className="font-bold text-sm" style={{ color: "#DC2626" }}>Danger Zone</p>
+        </div>
+        <div className="px-6 py-4 flex items-center justify-between">
+          <div>
+            <p className="text-sm font-medium" style={{ color: "#374151" }}>Delete Account</p>
+            <p className="text-xs mt-0.5" style={{ color: "#9BA3C4" }}>Permanently delete your EXIMARG account and all data.</p>
+          </div>
+          <button className="text-xs font-semibold px-4 py-2 rounded-lg" style={{ background: "#FEE2E2", color: "#DC2626" }}>Delete</button>
+        </div>
+      </DashCard>
+    </div>
+  );
+}
+
+// ── Profile dropdown ──────────────────────────────────────────────────────────
+function ProfileDropdown({ xp, onClose, onBack }: { xp: number; onClose: () => void; onBack: () => void }) {
+  const items = [
+    { icon: "👤", label: "My Profile" },
+    { icon: "🏢", label: "Company Profile" },
+    { icon: "⭐", label: "Subscription" },
+    { icon: "⚙️", label: "Settings" },
+    { icon: "💬", label: "Support" },
+  ];
+  return (
+    <motion.div initial={{ opacity: 0, y: -8, scale: 0.97 }} animate={{ opacity: 1, y: 0, scale: 1 }}
+      exit={{ opacity: 0, y: -8, scale: 0.97 }} transition={{ duration: 0.2, ease: EASE }}
+      className="absolute right-0 top-full mt-2 w-72 rounded-2xl overflow-hidden z-50"
+      style={{ background: "#ffffff", boxShadow: "0 16px 48px rgba(15,23,64,0.16)", border: "1px solid rgba(15,23,64,0.08)" }}>
+      {/* Profile card */}
+      <div className="px-5 py-4 border-b" style={{ borderColor: "rgba(15,23,64,0.07)", background: "#F8F9FF" }}>
+        <div className="flex items-center gap-3 mb-3">
+          <div className="w-10 h-10 rounded-full flex items-center justify-center font-bold" style={{ background: "#4875EF", color: "#fff" }}>R</div>
+          <div>
+            <p className="font-bold text-sm" style={{ color: "#0F1740" }}>Rajesh Kumar</p>
+            <p className="text-xs" style={{ color: "#9BA3C4" }}>Ravi Exports Pvt. Ltd.</p>
+          </div>
+        </div>
+        <div className="grid grid-cols-3 gap-2">
+          <div className="text-center rounded-lg py-2" style={{ background: "#EBF0FF" }}>
+            <p className="text-xs font-bold" style={{ color: "#4875EF" }}>Growth</p>
+            <p className="text-xs" style={{ color: "#9BA3C4" }}>Plan</p>
+          </div>
+          <div className="text-center rounded-lg py-2" style={{ background: "#FEF3C7" }}>
+            <p className="text-xs font-bold" style={{ color: "#D97706" }}>{xp || 1375}</p>
+            <p className="text-xs" style={{ color: "#9BA3C4" }}>XP</p>
+          </div>
+          <div className="text-center rounded-lg py-2" style={{ background: "#DCFCE7" }}>
+            <p className="text-xs font-bold" style={{ color: "#16A34A" }}>66%</p>
+            <p className="text-xs" style={{ color: "#9BA3C4" }}>Ready</p>
           </div>
         </div>
       </div>
+      {/* Menu items */}
+      <div className="py-2">
+        {items.map((item) => (
+          <button key={item.label} onClick={onClose}
+            className="w-full flex items-center gap-3 px-5 py-2.5 text-sm font-medium transition-colors hover:bg-gray-50 text-left"
+            style={{ color: "#374151" }}>
+            <span>{item.icon}</span>{item.label}
+          </button>
+        ))}
+      </div>
+      <div className="border-t py-2" style={{ borderColor: "rgba(15,23,64,0.07)" }}>
+        <button onClick={onBack}
+          className="w-full flex items-center gap-3 px-5 py-2.5 text-sm font-medium transition-colors hover:bg-red-50 text-left"
+          style={{ color: "#DC2626" }}>
+          <span>↩</span> Back to Dashboard
+        </button>
+      </div>
+    </motion.div>
+  );
+}
+
+// ── Notifications panel ───────────────────────────────────────────────────────
+function NotificationsPanel({ onClose }: { onClose: () => void }) {
+  const NOTIFS = [
+    { icon: "📩", title: "New buyer inquiry",         desc: "Müller GmbH from Hamburg is interested in Basmati Rice.", time: "2h ago",     unread: true  },
+    { icon: "✅", title: "Invoice approved",           desc: "Invoice #047 has been approved and payment is processing.", time: "5h ago",     unread: true  },
+    { icon: "🚢", title: "Shipment departed",          desc: "Shipment #183 has departed Mumbai Port. ETA: Dec 30.",     time: "Yesterday",  unread: false },
+    { icon: "🔄", title: "RCMC renewal reminder",      desc: "Your RCMC certificate expires in 30 days.",                time: "2 days ago", unread: false },
+    { icon: "🏅", title: "Level 6 complete!",          desc: "You earned 200 XP. Your Digital Dukan is live.",           time: "3 days ago", unread: false },
+  ];
+  return (
+    <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}
+      exit={{ opacity: 0, x: 20 }} transition={{ duration: 0.25, ease: EASE }}
+      className="absolute right-0 top-full mt-2 w-80 rounded-2xl overflow-hidden z-50"
+      style={{ background: "#ffffff", boxShadow: "0 16px 48px rgba(15,23,64,0.16)", border: "1px solid rgba(15,23,64,0.08)" }}>
+      <div className="flex items-center justify-between px-5 py-4 border-b" style={{ borderColor: "rgba(15,23,64,0.07)" }}>
+        <p className="font-bold text-sm" style={{ color: "#0F1740" }}>Notifications</p>
+        <button onClick={onClose} className="text-xs" style={{ color: "#9BA3C4" }}>Mark all read</button>
+      </div>
+      <div className="divide-y max-h-80 overflow-y-auto" style={{ borderColor: "rgba(15,23,64,0.05)" }}>
+        {NOTIFS.map((n, i) => (
+          <div key={i} className="flex items-start gap-3 px-5 py-3.5 transition-colors hover:bg-gray-50"
+            style={{ background: n.unread ? "#FAFBFF" : "transparent" }}>
+            <span className="text-xl flex-shrink-0">{n.icon}</span>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2">
+                <p className="text-xs font-bold" style={{ color: "#0F1740" }}>{n.title}</p>
+                {n.unread && <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: "#4875EF" }} />}
+              </div>
+              <p className="text-xs mt-0.5 leading-relaxed" style={{ color: "#6B7294" }}>{n.desc}</p>
+              <p className="text-xs mt-1" style={{ color: "#C8CEDF", fontFamily: "'DM Mono', monospace" }}>{n.time}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+    </motion.div>
+  );
+}
+
+// ── CommandCenter shell ───────────────────────────────────────────────────────
+function CommandCenter({ xp, onBack }: { xp: number; onBack: () => void }) {
+  const [page, setPage] = useState("overview");
+  const [collapsed, setCollapsed] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
+  const [notifOpen, setNotifOpen] = useState(false);
+  const [search, setSearch] = useState("");
+
+  const currentNav = SIDEBAR_NAV.find((n) => n.id === page) ?? SIDEBAR_NAV[0];
+
+  const PageContent = () => {
+    switch (page) {
+      case "overview":  return <OverviewPage xp={xp} />;
+      case "products":  return <ProductsPage />;
+      case "buyers":    return <BuyersPage />;
+      case "orders":    return <OrdersPage />;
+      case "invoices":  return <InvoicesPage />;
+      case "documents": return <DocumentsPage />;
+      case "ai":        return <AIPage />;
+      case "settings":  return <SettingsPage />;
+      default:          return <OverviewPage xp={xp} />;
+    }
+  };
+
+  return (
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+      transition={{ duration: 0.4 }} className="fixed inset-0 z-[150] flex"
+      style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", background: "#F4F6FF", color: "#0F1740" }}>
+
+      {/* ── Sidebar ── */}
+      <motion.aside
+        animate={{ width: collapsed ? "64px" : "224px" }}
+        transition={{ duration: 0.3, ease: EASE }}
+        className="hidden md:flex flex-col flex-shrink-0 border-r overflow-hidden"
+        style={{ background: "#ffffff", borderColor: "rgba(15,23,64,0.08)" }}>
+
+        {/* Logo */}
+        <div className="flex items-center gap-2.5 px-4 h-14 border-b flex-shrink-0" style={{ borderColor: "rgba(15,23,64,0.07)" }}>
+          <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: "#4875EF" }}>
+            <span className="text-white text-xs font-bold">E</span>
+          </div>
+          {!collapsed && <span className="font-bold text-sm whitespace-nowrap" style={{ color: "#0F1740" }}>eximarg</span>}
+        </div>
+
+        {/* Nav items */}
+        <nav className="flex-1 px-2 py-4 space-y-0.5 overflow-y-auto overflow-x-hidden">
+          {SIDEBAR_NAV.map((item) => {
+            const active = page === item.id;
+            return (
+              <motion.button key={item.id} onClick={() => setPage(item.id)} whileTap={{ scale: 0.97 }}
+                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-left transition-all duration-150 relative"
+                style={{
+                  background: active ? "#EBF0FF" : "transparent",
+                  color: active ? "#4875EF" : "#6B7294",
+                  boxShadow: active ? "0 0 0 1px rgba(72,117,239,0.15) inset" : "none",
+                }}>
+                <span className="text-base flex-shrink-0">{item.icon}</span>
+                {!collapsed && <span className="whitespace-nowrap">{item.label}</span>}
+                {active && <motion.div layoutId="sidebar-active" className="absolute left-0 inset-y-1 w-0.5 rounded-full" style={{ background: "#4875EF" }} />}
+              </motion.button>
+            );
+          })}
+        </nav>
+
+        {/* Bottom items */}
+        <div className="px-2 py-3 space-y-0.5 border-t" style={{ borderColor: "rgba(15,23,64,0.07)" }}>
+          {[{ icon: "❓", label: "Help Center" }, { icon: "↩", label: "Log Out" }].map((item) => (
+            <button key={item.label}
+              onClick={item.label === "Log Out" ? onBack : undefined}
+              className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium text-left transition-colors hover:bg-gray-50"
+              style={{ color: "#9BA3C4" }}>
+              <span className="text-base flex-shrink-0">{item.icon}</span>
+              {!collapsed && <span className="whitespace-nowrap">{item.label}</span>}
+            </button>
+          ))}
+          {/* XP badge */}
+          {!collapsed && (
+            <div className="mx-1 mt-2 rounded-xl px-3 py-2.5" style={{ background: "#F4F6FF" }}>
+              <p className="text-xs font-semibold" style={{ color: "#9BA3C4", fontFamily: "'DM Mono', monospace" }}>Total XP</p>
+              <p style={{ fontFamily: "'Fraunces', serif", fontSize: "18px", fontWeight: 700, color: "#F59E0B" }}>{xp || 1375} XP</p>
+            </div>
+          )}
+        </div>
+
+        {/* Collapse toggle */}
+        <button onClick={() => setCollapsed((p) => !p)}
+          className="flex items-center justify-center h-10 border-t text-sm transition-colors hover:bg-gray-50"
+          style={{ borderColor: "rgba(15,23,64,0.07)", color: "#C8CEDF" }}>
+          {collapsed ? "→" : "←"}
+        </button>
+      </motion.aside>
+
+      {/* ── Main area ── */}
+      <div className="flex-1 flex flex-col overflow-hidden">
+
+        {/* Top nav */}
+        <div className="flex items-center gap-4 px-6 h-14 border-b flex-shrink-0"
+          style={{ background: "#ffffff", borderColor: "rgba(15,23,64,0.08)" }}>
+
+          {/* Title */}
+          <div className="flex-shrink-0">
+            <p className="font-bold text-base" style={{ fontFamily: "'Fraunces', serif", color: "#0F1740", letterSpacing: "-0.02em" }}>
+              {currentNav.label}
+            </p>
+          </div>
+
+          {/* Global search */}
+          <div className="flex-1 max-w-sm relative hidden md:block">
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm" style={{ color: "#C8CEDF" }}>🔍</span>
+            <input value={search} onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search buyers, products, orders…"
+              className="w-full pl-9 pr-4 py-2 rounded-xl text-xs outline-none transition-all"
+              style={{ background: "#F4F6FF", border: "1.5px solid rgba(15,23,64,0.08)", color: "#0F1740" }} />
+          </div>
+
+          <div className="flex-1" />
+
+          {/* Right actions */}
+          <div className="flex items-center gap-2">
+            {/* Notifications */}
+            <div className="relative">
+              <motion.button whileTap={{ scale: 0.95 }}
+                onClick={() => { setNotifOpen((p) => !p); setProfileOpen(false); }}
+                className="w-9 h-9 rounded-xl flex items-center justify-center relative"
+                style={{ background: notifOpen ? "#EBF0FF" : "#F4F6FF" }}>
+                🔔
+                <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full" style={{ background: "#DC2626" }} />
+              </motion.button>
+              <AnimatePresence>
+                {notifOpen && <NotificationsPanel onClose={() => setNotifOpen(false)} />}
+              </AnimatePresence>
+            </div>
+
+            {/* AI quick */}
+            <motion.button whileTap={{ scale: 0.95 }} onClick={() => setPage("ai")}
+              className="w-9 h-9 rounded-xl flex items-center justify-center text-sm"
+              style={{ background: "#EBF0FF", color: "#4875EF" }}>
+              ✨
+            </motion.button>
+
+            {/* Profile avatar */}
+            <div className="relative">
+              <motion.button whileTap={{ scale: 0.95 }}
+                onClick={() => { setProfileOpen((p) => !p); setNotifOpen(false); }}
+                className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold"
+                style={{ background: "#4875EF", color: "#fff" }}>
+                R
+              </motion.button>
+              <AnimatePresence>
+                {profileOpen && <ProfileDropdown xp={xp} onClose={() => setProfileOpen(false)} onBack={onBack} />}
+              </AnimatePresence>
+            </div>
+          </div>
+        </div>
+
+        {/* Page content */}
+        <div className="flex-1 overflow-y-auto px-6 md:px-8 py-7">
+          <AnimatePresence mode="wait">
+            <motion.div key={page}
+              initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -6 }} transition={{ duration: 0.25, ease: EASE }}>
+              <PageContent />
+            </motion.div>
+          </AnimatePresence>
+        </div>
+      </div>
+
+      {/* Click outside to close dropdowns */}
+      {(profileOpen || notifOpen) && (
+        <div className="fixed inset-0 z-40" onClick={() => { setProfileOpen(false); setNotifOpen(false); }} />
+      )}
     </motion.div>
   );
 }
@@ -1842,15 +3073,15 @@ function CommandCenter({ xp, onBack }) {
 
 const NAV_LINKS = ["Features", "Journey", "Pricing", "About"];
 
-export default function Landing() {
+export default function App() {
   const [navScrolled, setNavScrolled] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [screen, setScreen] = useState("landing");
-  const [authMode, setAuthMode] = useState("register");
-  const [userPath, setUserPath] = useState("new");
+  const [screen, setScreen] = useState<ScreenType>("landing");
+  const [authMode, setAuthMode] = useState<"register" | "login">("register");
+  const [userPath, setUserPath] = useState<"new" | "existing">("new");
   const [xp, setXp] = useState(0);
-  const [completedLevels, setCompletedLevels] = useState([]);
+  const [completedLevels, setCompletedLevels] = useState<number[]>([]);
 
   useEffect(() => {
     const fn = () => setNavScrolled(window.scrollY > 48);
@@ -1863,7 +3094,7 @@ export default function Landing() {
     return () => { document.body.style.overflow = ""; };
   }, [showOnboarding, screen]);
 
-  const handleSelectPath = (path) => {
+  const handleSelectPath = (path: "new" | "existing" | "signin") => {
     setShowOnboarding(false);
     if (path === "signin") {
       setAuthMode("login"); setScreen("auth-login");
@@ -1872,7 +3103,7 @@ export default function Landing() {
     }
   };
 
-  const getLevelNum = () => parseInt((screen).split("-")[1] || "1");
+  const getLevelNum = () => parseInt((screen as string).split("-")[1] || "1");
 
   return (
     <div
@@ -1892,7 +3123,7 @@ export default function Landing() {
         )}
         {screen === "dashboard" && (
           <WelcomeDashboard key="dashboard" xp={xp} completedLevels={completedLevels}
-            onStartLevel={(n) => setScreen(`level-${n}`)}
+            onStartLevel={(n) => setScreen(`level-${n}` as ScreenType)}
             onGoToCommandCenter={() => setScreen("command-center")} />
         )}
         {screen.startsWith("level-") && (
@@ -1901,7 +3132,7 @@ export default function Landing() {
               const n = getLevelNum();
               setXp((p) => p + earned);
               setCompletedLevels((p) => [...new Set([...p, n])]);
-              setScreen(n < 9 ? `level-${n + 1}` : "command-center");
+              setScreen(n < 9 ? `level-${n + 1}` as ScreenType : "command-center");
             }}
             onBack={() => setScreen("dashboard")} />
         )}
@@ -1995,7 +3226,7 @@ export default function Landing() {
               initial={{ opacity: 0, y: -8, scale: 0.97 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: -8, scale: 0.97 }}
-              transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
+              transition={{ duration: 0.22, ease: EASE }}
               className="absolute top-full left-4 right-4 mt-2 rounded-2xl overflow-hidden shadow-xl"
               style={{
                 background: "#ffffff",
@@ -2182,7 +3413,7 @@ export default function Landing() {
               initial={{ opacity: 0, y: 28 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1], delay: 0.1 }}
+              transition={{ duration: 0.7, ease: EASE, delay: 0.1 }}
               style={{ position: "absolute", top: 72, left: 24, width: 268 }}
             >
               <motion.div
@@ -2216,7 +3447,7 @@ export default function Landing() {
               initial={{ opacity: 0, y: 36 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ duration: 0.65, ease: [0.22, 1, 0.36, 1], delay: 0.22 }}
+              transition={{ duration: 0.65, ease: EASE, delay: 0.22 }}
               style={{ position: "absolute", top: 188, left: 80, width: 238 }}
             >
               <motion.div
@@ -2240,7 +3471,7 @@ export default function Landing() {
               initial={{ opacity: 0, x: 24 }}
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
-              transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1], delay: 0.18 }}
+              transition={{ duration: 0.6, ease: EASE, delay: 0.18 }}
               style={{ position: "absolute", top: 8, right: 10, width: 210 }}
             >
               <motion.div
@@ -2263,7 +3494,7 @@ export default function Landing() {
               initial={{ opacity: 0, y: 24 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ duration: 0.65, ease: [0.22, 1, 0.36, 1], delay: 0.3 }}
+              transition={{ duration: 0.65, ease: EASE, delay: 0.3 }}
               style={{ position: "absolute", top: 300, right: 14, width: 200 }}
             >
               <motion.div
@@ -2288,7 +3519,7 @@ export default function Landing() {
               initial={{ opacity: 0, y: 18 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1], delay: 0.38 }}
+              transition={{ duration: 0.55, ease: EASE, delay: 0.38 }}
               style={{ position: "absolute", bottom: 24, right: 4 }}
             >
               <motion.div
@@ -2309,7 +3540,7 @@ export default function Landing() {
               initial={{ opacity: 0 }}
               whileInView={{ opacity: 1 }}
               viewport={{ once: true }}
-              transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1], delay: 0.34 }}
+              transition={{ duration: 0.5, ease: EASE, delay: 0.34 }}
               style={{ position: "absolute", bottom: 108, left: 8 }}
             >
               <motion.div
@@ -2326,7 +3557,7 @@ export default function Landing() {
               initial={{ opacity: 0 }}
               whileInView={{ opacity: 1 }}
               viewport={{ once: true }}
-              transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1], delay: 0.14 }}
+              transition={{ duration: 0.45, ease: EASE, delay: 0.14 }}
               style={{ position: "absolute", top: 28, left: 200 }}
             >
               <motion.div
@@ -2343,7 +3574,7 @@ export default function Landing() {
               initial={{ opacity: 0 }}
               whileInView={{ opacity: 1 }}
               viewport={{ once: true }}
-              transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1], delay: 0.42 }}
+              transition={{ duration: 0.5, ease: EASE, delay: 0.42 }}
               style={{ position: "absolute", top: 410, left: 50 }}
             >
               <motion.div
@@ -2395,7 +3626,7 @@ export default function Landing() {
                   initial={{ opacity: 0, x: isLeft ? -28 : 28 }}
                   whileInView={{ opacity: 1, x: 0 }}
                   viewport={{ once: true, margin: "-32px" }}
-                  transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1], delay: i * 0.06 }}
+                  transition={{ duration: 0.7, ease: EASE, delay: i * 0.06 }}
                   className="relative grid items-center"
                   style={{ gridTemplateColumns: "1fr 56px 1fr" }}
                 >
@@ -2405,7 +3636,7 @@ export default function Landing() {
                       initial={{ opacity: 0, x: -20 }}
                       whileInView={{ opacity: 1, x: 0 }}
                       viewport={{ once: true }}
-                      transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1], delay: i * 0.06 + 0.15 }}
+                      transition={{ duration: 0.6, ease: EASE, delay: i * 0.06 + 0.15 }}
                     >
                       <RoadmapCard m={m} />
                     </motion.div>
@@ -2439,7 +3670,7 @@ export default function Landing() {
                       initial={{ opacity: 0, x: 20 }}
                       whileInView={{ opacity: 1, x: 0 }}
                       viewport={{ once: true }}
-                      transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1], delay: i * 0.06 + 0.15 }}
+                      transition={{ duration: 0.6, ease: EASE, delay: i * 0.06 + 0.15 }}
                     >
                       <RoadmapCard m={m} />
                     </motion.div>
@@ -2637,7 +3868,7 @@ export default function Landing() {
 
 // ── Roadmap card ─────────────────────────────────────────────────────────────
 
-function RoadmapCard({ m }) {
+function RoadmapCard({ m }: { m: typeof MILESTONES[0] }) {
   return (
     <div
       className="rounded-xl px-5 py-4 max-w-[260px] transition-shadow duration-200 hover:shadow-md"

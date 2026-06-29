@@ -1,0 +1,523 @@
+# EXIMARG – Redesign the Entire Onboarding Journey (Levels 1–6)
+
+The landing page design is now approved and acts as the visual foundation of EXIMARG.
+
+**DO NOT redesign the landing page.**
+
+Instead, redesign the **authenticated onboarding experience (Levels 1–6)** while preserving the same typography, spacing, color palette, editorial layout, and premium aesthetic.
+
+The onboarding should feel like **Chapter 2 onward of the same story**.
+
+The user should never feel like they entered a government portal or a generic SaaS dashboard.
+
+---
+
+# Core Vision
+
+Design this product as **"The Guided Journey to Becoming a Global Exporter."**
+
+The user is not completing forms.
+
+The user is progressing through chapters.
+
+Each completed level should feel like unlocking a new milestone in their business.
+
+Every screen should communicate:
+
+* Progress
+* Trust
+* Confidence
+* Achievement
+* Simplicity
+
+---
+
+# Design Language
+
+Keep the exact visual style established on the landing page.
+
+* Warm white background
+* Soft ivory surfaces
+* Royal blue accents
+* Editorial serif headings
+* Clean modern sans typography
+* Large whitespace
+* Rounded cards
+* Soft premium shadows
+* Minimal gradients
+* Calm luxury
+* Apple + Stripe + Linear quality
+
+Do NOT switch to enterprise dashboard styling.
+
+Do NOT use Bootstrap layouts.
+
+Do NOT create long scrolling forms.
+
+---
+
+# Global Layout
+
+Every level uses the same structure.
+
+### Header
+
+* Back to Dashboard
+* Chapter Number
+* Progress Bar
+* Estimated Time
+* XP Reward
+* Readiness Reward
+
+Large editorial heading.
+
+Small supporting description.
+
+---
+
+### Main Layout
+
+Two-column layout.
+
+Left (70%)
+
+The current task.
+
+Right (30%)
+
+Helpful contextual information.
+
+Rewards.
+
+AI Help.
+
+Completion preview.
+
+---
+
+# Instead of One Long Form
+
+Break every level into beautiful cards.
+
+Each card represents one logical step.
+
+Cards should have:
+
+* soft shadow
+* rounded corners
+* icon
+* short explanation
+* inputs
+* completion indicator
+
+---
+
+# Level 1
+
+Chapter 01
+
+Identity & Trust
+
+Cards
+
+• Director Details
+
+• PAN Verification
+
+• Aadhaar Verification
+
+• Contact Information
+
+• Upload Documents
+
+• OTP Verification
+
+Sidebar
+
+Why Identity Matters
+
+Rewards
+
+Identity Badge Preview
+
+Ask AI
+
+Security
+
+Completion Animation
+
+Identity Verified
+
++100 XP
+
+---
+
+# Level 2
+
+Chapter 02
+
+Your Export Business
+
+Cards
+
+Business Type
+
+Manufacturer
+
+Merchant
+
+Both
+
+Export Categories
+
+Operating Since
+
+Shipment Range
+
+Export Intent
+
+AI Suggested RCMC
+
+Beautiful chips
+
+Industry cards
+
+Completion Preview
+
+Exporter Profile Badge
+
+---
+
+# Level 3
+
+Chapter 03
+
+Compliance Verification
+
+Instead of one page.
+
+Create three elegant stages.
+
+Stage A
+
+Business Verification
+
+GST
+
+CIN
+
+IEC
+
+Stage B
+
+Address & Banking
+
+Bank
+
+IFSC
+
+AD Code
+
+Address
+
+Stage C
+
+Export Compliance
+
+RCMC
+
+FSSAI
+
+APEDA
+
+Every successful verification animates into a premium green verified chip.
+
+Trust Score increases live.
+
+Sidebar
+
+Current Trust
+
+Verification %
+
+Risk Score
+
+Verification Tips
+
+---
+
+# Level 4
+
+Chapter 04
+
+Build Your Brand
+
+Cards
+
+Company Logo
+
+Company Name
+
+Tagline
+
+Website
+
+Social Links
+
+Trademark
+
+Brand Preview
+
+At the bottom
+
+Company Review
+
+Large summary
+
+Everything completed so far.
+
+Primary CTA
+
+Confirm Company
+
+Lock Progress
+
+Beautiful completion celebration.
+
+---
+
+# Level 5
+
+Chapter 05
+
+Unlock Premium
+
+Do NOT create normal pricing cards.
+
+Create elegant premium membership cards.
+
+Starter
+
+Growth
+
+Premium
+
+Large comparison.
+
+Animated recommendation.
+
+Benefits Timeline.
+
+Future unlocks.
+
+Single CTA
+
+Activate Plan
+
+---
+
+# Level 6
+
+Chapter 06
+
+Launch Your Digital Dukan
+
+Large product gallery.
+
+Beautiful product cards.
+
+Image uploader.
+
+HS Code AI Suggestions.
+
+MOQ Builder.
+
+Pricing.
+
+Store Preview.
+
+Bulk Upload.
+
+Catalogue Preview.
+
+Large celebration after locking.
+
+The user should feel like they launched their company globally.
+
+---
+
+# Shared Sidebar
+
+Every level should have a contextual sidebar.
+
+Include different information depending on the chapter.
+
+Possible cards
+
+Why this matters
+
+Rewards
+
+Badge Preview
+
+Progress
+
+Current Readiness
+
+Current XP
+
+Estimated Time
+
+Ask AI
+
+Security
+
+Tips
+
+Recent Achievement
+
+Keep the sidebar visually consistent.
+
+---
+
+# Navigation
+
+Persistent onboarding navigation.
+
+Chapter indicator.
+
+Current chapter highlighted.
+
+Future chapters locked.
+
+Completed chapters checked.
+
+---
+
+# Sticky Bottom Action Bar
+
+Every level ends with a sticky footer.
+
+Left
+
+Current XP
+
+Readiness Gain
+
+Estimated Remaining Time
+
+Right
+
+Save Progress
+
+Continue Later
+
+Complete Level
+
+The primary CTA should always be visually dominant.
+
+---
+
+# Components
+
+Design reusable components.
+
+Progress Card
+
+Verification Card
+
+Upload Card
+
+Reward Card
+
+Badge Card
+
+AI Assistant Card
+
+Security Card
+
+Summary Card
+
+Completion Card
+
+Timeline Card
+
+Step Indicator
+
+Document Viewer
+
+Verification Chip
+
+Status Badge
+
+---
+
+# Micro Interactions
+
+Cards elevate slightly.
+
+Buttons lift.
+
+Progress bars animate.
+
+Upload success animation.
+
+Verification check animation.
+
+XP count animation.
+
+Readiness bar fills.
+
+Completion celebration.
+
+Everything should feel smooth and premium.
+
+---
+
+# UX Principles
+
+One primary action.
+
+Everything else is secondary.
+
+Never overwhelm the user.
+
+Break complex tasks into beautiful sections.
+
+Use progressive disclosure.
+
+Always explain why information is required.
+
+Show rewards before asking for work.
+
+Celebrate every achievement.
+
+---
+
+# Quality Target
+
+This should feel like the onboarding experience of a billion-dollar product.
+
+Think:
+
+Apple onboarding
+
+Stripe Identity
+
+Shopify setup
+
+Linear onboarding
+
+Arc Browser
+
+Notion AI
+
+Never government forms.
+
+Never enterprise ERP.
+
+Never Bootstrap.
+
+The user should enjoy completing each level because the experience feels guided, rewarding, elegant, and premium.
+
+Maintain complete visual consistency with the approved landing page while redesigning every onboarding level using a modern card-based information architecture.
