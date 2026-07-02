@@ -1,8 +1,8 @@
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { feature } from "topojson-client";
-
-const EASE = [0.22, 1, 0.36, 1] as const;
+import { EASE, STAGGER_CONTAINER, STAGGER_ITEM, JourneyButton, DashCard, Field, FieldSelect, ChipSelect, Modal, Drawer, AnimatedNumber, TiltCard, ToastType, LEVELS } from "./shared";
+import { GAME_DATA, RANK_TIERS, getRank, ExportPassportPage, AchievementsPage, QuestsPage, SkillTreePage, BattlePassPage, LeaderboardPage, PowerUpsPage, StoryModePage, DailySpinModal, MiniQuestCard } from "./gamification";
+import { FlatWorldMap, OverviewPage, ProductsPage, BuyersPage, OrdersPage, InvoicesPage, DocumentsPage, AIPage, SettingsPage, MyProfilePage, SupportDrawer, ProfileDropdown, NotificationsPanel } from "./pages";
 
 // ── Shared animation wrappers ────────────────────────────────────────────────
 
@@ -265,255 +265,6 @@ function GlobeCanvas({ className = "" }: { className?: string }) {
   }, []);
 
   return <canvas ref={canvasRef} className={`w-full aspect-square ${className}`} />;
-}
-
-// ── Flat World Map ───────────────────────────────────────────────────────────
-
-const MAP_W = 860;
-const MAP_H = 430;
-
-function ll(lat: number, lon: number): string {
-  const x = ((lon + 180) / 360) * MAP_W;
-  const y = ((90 - lat) / 180) * MAP_H;
-  return `${x.toFixed(1)},${y.toFixed(1)}`;
-}
-
-function ptsToD(pts: [number, number][]): string {
-  return pts.map(([lat, lon], i) => `${i === 0 ? "M" : "L"}${ll(lat, lon)}`).join(" ") + "Z";
-}
-
-const LAND_MASSES: [number, number][][] = [
-  // North America
-  [[72,-140],[72,-82],[62,-64],[47,-53],[25,-80],[8,-77],[8,-83],[15,-87],[22,-105],[30,-117],[48,-124],[60,-138],[72,-140]],
-  // South America
-  [[12,-72],[0,-50],[-5,-35],[-20,-40],[-34,-57],[-55,-68],[-50,-75],[-22,-75],[0,-78],[10,-75],[12,-72]],
-  // Europe
-  [[71,28],[58,5],[44,-1],[36,-5],[36,8],[38,23],[42,28],[47,30],[55,22],[58,26],[64,27],[68,18],[71,28]],
-  // Africa
-  [[37,-5],[37,15],[22,38],[11,44],[-12,42],[-35,20],[-35,27],[-17,37],[5,10],[15,-17],[37,-5]],
-  // Asia (main body, India region included)
-  [[72,25],[72,142],[50,145],[35,140],[23,120],[10,104],[0,104],[-8,116],[10,100],[22,92],[22,86],[8,77],[8,68],[22,58],[30,48],[40,50],[38,42],[42,28],[72,25]],
-  // Australia
-  [[-16,124],[-14,136],[-16,145],[-28,154],[-38,148],[-42,146],[-38,140],[-30,115],[-22,114],[-16,124]],
-  // Greenland
-  [[83,-45],[83,-18],[76,-18],[70,-24],[65,-42],[68,-52],[72,-55],[76,-55],[83,-45]],
-  // Japan
-  [[34,130],[40,141],[45,141],[43,145],[43,141],[34,130]],
-  // UK
-  [[50,-5],[58,-3],[58,0],[51,2],[50,-5]],
-];
-
-const INDIA_OUTLINE: [number, number][] = [
-  [35,73],[32,78],[28,84],[20,88],[10,79],[8,77],[8,78],[15,72],[23,68],[35,73],
-];
-
-function arcD(destLat: number, destLon: number): string {
-  const [x1, y1] = [((INDIA.lon + 180) / 360) * MAP_W, ((90 - INDIA.lat) / 180) * MAP_H];
-  const [x2, y2] = [((destLon + 180) / 360) * MAP_W, ((90 - destLat) / 180) * MAP_H];
-  const dist = Math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2);
-  return `M${x1.toFixed(1)},${y1.toFixed(1)} Q${((x1 + x2) / 2).toFixed(1)},${((y1 + y2) / 2 - dist * 0.28).toFixed(1)} ${x2.toFixed(1)},${y2.toFixed(1)}`;
-}
-
-function FlatWorldMap() {
-  const [geoData, setGeoData] = useState<any>(null);
-  const [hoveredCountry, setHoveredCountry] = useState<string | null>(null);
-
-  useEffect(() => {
-    fetch("https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json")
-      .then((res) => res.json())
-      .then((data) => {
-        const countries = feature(data, data.objects.countries) as any;
-        setGeoData(countries);
-      })
-      .catch((err) => console.error("Error loading map data:", err));
-  }, []);
-
-  const indiaCX = ((INDIA.lon + 180) / 360) * MAP_W;
-  const indiaCY = ((90 - INDIA.lat) / 180) * MAP_H;
-
-  const projectPoint = (lon: number, lat: number) => {
-    const clampedLat = Math.min(84, Math.max(-55, lat));
-    const x = ((lon + 180) / 360) * MAP_W;
-    const y = ((90 - clampedLat) / 180) * MAP_H;
-    return `${x.toFixed(1)},${y.toFixed(1)}`;
-  };
-
-  const getGeoPath = (geometry: any): string => {
-    if (!geometry) return "";
-    const { type, coordinates } = geometry;
-
-    if (type === "Polygon") {
-      return coordinates
-        .map((ring: any) => {
-          let lastLon = 0;
-          return ring
-            .map(([lon, lat]: [number, number], idx: number) => {
-              let command = "L";
-              if (idx === 0) {
-                command = "M";
-              } else if (Math.abs(lon - lastLon) > 180) {
-                command = "M";
-              }
-              lastLon = lon;
-              return `${command}${projectPoint(lon, lat)}`;
-            })
-            .join(" ") + "Z";
-        })
-        .join(" ");
-    }
-
-    if (type === "MultiPolygon") {
-      return coordinates
-        .map((polygon: any) =>
-          polygon
-            .map((ring: any) => {
-              let lastLon = 0;
-              return ring
-                .map(([lon, lat]: [number, number], idx: number) => {
-                  let command = "L";
-                  if (idx === 0) {
-                    command = "M";
-                  } else if (Math.abs(lon - lastLon) > 180) {
-                    command = "M";
-                  }
-                  lastLon = lon;
-                  return `${command}${projectPoint(lon, lat)}`;
-                })
-                .join(" ") + "Z";
-            })
-            .join(" ")
-        )
-        .join(" ");
-    }
-
-    return "";
-  };
-
-  const renderCountries = () => {
-    if (!geoData) {
-      return LAND_MASSES.map((pts, i) => (
-        <path key={`fallback-${i}`} d={ptsToD(pts)} fill="rgba(72,117,239,0.13)" stroke="rgba(72,117,239,0.22)" strokeWidth="0.7" />
-      ));
-    }
-
-    const features = geoData.features.filter((f: any) => f.properties?.name !== "Antarctica" && f.id !== "010");
-
-    return features.map((geo: any, idx: number) => {
-      const isIndia = geo.properties?.name === "India" || geo.id === "356" || geo.id === 356;
-      const isHovered = hoveredCountry === geo.id;
-
-      let fill = "rgba(72, 117, 239, 0.13)";
-      let stroke = "rgba(72, 117, 239, 0.22)";
-      let strokeWidth = "0.7";
-
-      if (isIndia) {
-        fill = "rgba(245, 158, 11, 0.22)";
-        stroke = "#F59E0B";
-        strokeWidth = "1.2";
-      } else if (isHovered) {
-        fill = "rgba(72, 117, 239, 0.28)";
-        stroke = "rgba(72, 117, 239, 0.5)";
-        strokeWidth = "1";
-      }
-
-      return (
-        <path
-          key={geo.id || idx}
-          d={getGeoPath(geo.geometry)}
-          fill={fill}
-          stroke={stroke}
-          strokeWidth={strokeWidth}
-          style={{ transition: "fill 0.2s, stroke 0.2s, stroke-width 0.2s" }}
-          onMouseEnter={() => !isIndia && setHoveredCountry(geo.id)}
-          onMouseLeave={() => setHoveredCountry(null)}
-        />
-      );
-    });
-  };
-
-  return (
-    <svg
-      viewBox={`0 0 ${MAP_W} ${MAP_H}`}
-      style={{ width: "100%", height: "auto", display: "block" }}
-      aria-label="World map showing trade routes from India"
-    >
-      {/* Ocean */}
-      <rect width={MAP_W} height={MAP_H} fill="#EBF4FF" rx="12" />
-
-      {/* Grid lines */}
-      {[-60, -30, 0, 30, 60].map((lat) => {
-        const y = ((90 - lat) / 180) * MAP_H;
-        return <line key={`lat${lat}`} x1={0} y1={y} x2={MAP_W} y2={y} stroke="rgba(72,117,239,0.1)" strokeWidth="0.6" />;
-      })}
-      {[-120, -60, 0, 60, 120].map((lon) => {
-        const x = ((lon + 180) / 360) * MAP_W;
-        return <line key={`lon${lon}`} x1={x} y1={0} x2={x} y2={MAP_H} stroke="rgba(72,117,239,0.1)" strokeWidth="0.6" />;
-      })}
-
-      {/* Landmasses */}
-      {renderCountries()}
-
-      {!geoData && (
-        <path d={ptsToD(INDIA_OUTLINE)} fill="rgba(245,158,11,0.22)" stroke="#F59E0B" strokeWidth="1.2" />
-      )}
-
-      {/* Trade arcs */}
-      {DESTINATIONS.map((dest, i) => (
-        <motion.path
-          key={dest.name}
-          d={arcD(dest.lat, dest.lon)}
-          fill="none"
-          stroke="#4875EF"
-          strokeWidth="1.6"
-          strokeDasharray="5 3"
-          strokeLinecap="round"
-          initial={{ pathLength: 0, opacity: 0 }}
-          whileInView={{ pathLength: 1, opacity: 0.65 }}
-          viewport={{ once: true }}
-          transition={{ duration: 1.6, delay: 0.3 + i * 0.18, ease: "easeOut" }}
-        />
-      ))}
-
-      {/* Destination dots */}
-      {DESTINATIONS.map((dest, i) => {
-        const dx = ((dest.lon + 180) / 360) * MAP_W;
-        const dy = ((90 - dest.lat) / 180) * MAP_H;
-        return (
-          <motion.g key={dest.name}
-            initial={{ opacity: 0, scale: 0 }}
-            whileInView={{ opacity: 1, scale: 1 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.35, delay: 0.3 + i * 0.18 + 1.4 }}
-          >
-            <circle cx={dx} cy={dy} r="5" fill="#4875EF" opacity="0.85" />
-            <text x={dx} y={dy - 7} fontSize="9" fill="#4875EF" fillOpacity="0.7" textAnchor="middle"
-              style={{ fontFamily: "'DM Mono', monospace" }}>
-              {dest.name}
-            </text>
-          </motion.g>
-        );
-      })}
-
-      {/* India origin */}
-      <motion.g
-        initial={{ opacity: 0 }}
-        whileInView={{ opacity: 1 }}
-        viewport={{ once: true }}
-        transition={{ duration: 0.5 }}
-      >
-        <motion.circle cx={indiaCX} cy={indiaCY} r="14" fill="rgba(245,158,11,0.15)"
-          animate={{ r: [10, 18, 10], opacity: [0.4, 0, 0.4] }}
-          transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
-        />
-        <circle cx={indiaCX} cy={indiaCY} r="6" fill="#F59E0B" />
-        <circle cx={indiaCX} cy={indiaCY} r="6" fill="none" stroke="white" strokeWidth="1.5" />
-        <text x={indiaCX} y={indiaCY + 17} fontSize="10" fill="#D97706" textAnchor="middle" fontWeight="600"
-          style={{ fontFamily: "'DM Mono', monospace" }}>
-          INDIA
-        </text>
-      </motion.g>
-    </svg>
-  );
 }
 
 // ── Hero Visual (product card stack) ────────────────────────────────────────
@@ -1084,50 +835,6 @@ function FirstBuyerStory() {
   );
 }
 
-// ── Journey Button ──────────────────────────────────────────────────────────
-
-function JourneyButton({
-  children,
-  onClick,
-  variant = "primary",
-  size = "md",
-  className = "",
-}: {
-  children: React.ReactNode;
-  onClick?: () => void;
-  variant?: "primary" | "ghost-light" | "ghost-dark";
-  size?: "sm" | "md" | "lg";
-  className?: string;
-}) {
-  const pad = { sm: "px-5 py-2", md: "px-7 py-3.5", lg: "px-10 py-4" }[size];
-  const txt = { sm: "text-sm", md: "text-sm", lg: "text-base" }[size];
-
-  const baseStyle =
-    variant === "primary"
-      ? { background: "#4875EF", color: "#fff", boxShadow: "0 4px 20px rgba(72,117,239,0.38)" }
-      : variant === "ghost-dark"
-      ? { background: "transparent", color: "#0F1740" }
-      : { background: "rgba(255,255,255,0.09)", color: "rgba(255,255,255,0.85)", border: "1px solid rgba(255,255,255,0.15)" };
-
-  return (
-    <motion.button
-      onClick={onClick}
-      whileHover={variant === "primary"
-        ? { y: -2, boxShadow: "0 10px 32px rgba(72,117,239,0.52)" }
-        : { opacity: 0.75 }}
-      whileTap={{ scale: 0.96 }}
-      transition={{ duration: 0.15 }}
-      className={`rounded-full font-semibold flex items-center gap-2 group ${pad} ${txt} ${className}`}
-      style={baseStyle}
-    >
-      <span>{typeof children === "string" ? children.replace(" →", "") : children}</span>
-      {typeof children === "string" && children.includes("→") && (
-        <span className="inline-block transition-transform duration-200 group-hover:translate-x-1">→</span>
-      )}
-    </motion.button>
-  );
-}
-
 // ── Onboarding Overlay ───────────────────────────────────────────────────────
 
 function OnboardingOverlay({ onSelectPath }: { onSelectPath: (path: "new" | "existing" | "signin") => void }) {
@@ -1261,7 +968,7 @@ function OnboardingOverlay({ onSelectPath }: { onSelectPath: (path: "new" | "exi
   );
 }
 
-// ── Product screen types & level data ────────────────────────────────────────
+// ── Product screen types ──────────────────────────────────────────────────────
 
 type ScreenType =
   | "landing" | "auth-register" | "auth-login"
@@ -1269,81 +976,6 @@ type ScreenType =
   | "level-1" | "level-2" | "level-3" | "level-4" | "level-5" | "level-6"
   | "level-7" | "level-8" | "level-9"
   | "command-center";
-
-const LEVELS = [
-  { number: 1, title: "Identity",      scene: "Identity & Trust",       badge: "🪪", color: "#4875EF", xp: 100, readiness: 11,  time: "5 min",  desc: "Verify your identity with Aadhaar and PAN to establish trust with international buyers." },
-  { number: 2, title: "Profile",       scene: "Business Identity",      badge: "🏭", color: "#7C3AED", xp: 150, readiness: 22,  time: "8 min",  desc: "Build your exporter profile — business type, categories, and shipment capacity." },
-  { number: 3, title: "Verification",  scene: "Legal & Compliance",     badge: "✅", color: "#059669", xp: 200, readiness: 33,  time: "10 min", desc: "Verify your business with GST, IEC, and bank details to unlock buyer trust." },
-  { number: 4, title: "Review",        scene: "Profile Review",         badge: "🔍", color: "#D97706", xp: 75,  readiness: 44,  time: "3 min",  desc: "Review and confirm your complete exporter profile before publishing to buyers." },
-  { number: 5, title: "Subscription",  scene: "Your Growth Stage",      badge: "⭐", color: "#4875EF", xp: 50,  readiness: 55,  time: "2 min",  desc: "Choose the plan that matches your export ambitions. Upgrade anytime." },
-  { number: 6, title: "Catalog",       scene: "Digital Dukan",          badge: "🛍️", color: "#DC2626", xp: 200, readiness: 66,  time: "12 min", desc: "Add your first product and build your export catalogue for global buyers." },
-  { number: 7, title: "Invoices",      scene: "Export Documentation",   badge: "📃", color: "#059669", xp: 150, readiness: 77,  time: "6 min",  desc: "Set up your invoice templates and documentation workflow for smooth exports." },
-  { number: 8, title: "Deals",         scene: "First Buyer",            badge: "🤝", color: "#F59E0B", xp: 200, readiness: 88,  time: "8 min",  desc: "Connect with your first verified buyer and initiate your first trade conversation." },
-  { number: 9, title: "Deal Center",   scene: "Trade Operations",       badge: "🌐", color: "#0F1740", xp: 250, readiness: 100, time: "10 min", desc: "Activate your full trade dashboard and launch global operations from one place." },
-];
-
-// ── Shared form components ────────────────────────────────────────────────────
-
-function Field({ label, type = "text", placeholder = "", value, onChange, hint }: {
-  label: string; type?: string; placeholder?: string;
-  value: string; onChange: (v: string) => void; hint?: string;
-}) {
-  const [focused, setFocused] = useState(false);
-  return (
-    <div className="space-y-1.5">
-      <label className="block text-xs font-semibold tracking-widest uppercase"
-        style={{ color: "#9BA3C4", fontFamily: "'DM Mono', monospace" }}>{label}</label>
-      <input type={type} placeholder={placeholder} value={value}
-        onChange={(e) => onChange(e.target.value)}
-        onFocus={() => setFocused(true)} onBlur={() => setFocused(false)}
-        className="w-full px-4 py-3 rounded-xl text-sm outline-none transition-all duration-200"
-        style={{ background: "#F8F9FF", border: `1.5px solid ${focused ? "#4875EF" : "rgba(15,23,64,0.1)"}`, color: "#0F1740", boxShadow: focused ? "0 0 0 3px rgba(72,117,239,0.1)" : "none" }} />
-      {hint && <p className="text-xs" style={{ color: "#9BA3C4" }}>{hint}</p>}
-    </div>
-  );
-}
-
-function FieldSelect({ label, options, value, onChange }: {
-  label: string; options: string[]; value: string; onChange: (v: string) => void;
-}) {
-  const [focused, setFocused] = useState(false);
-  return (
-    <div className="space-y-1.5">
-      <label className="block text-xs font-semibold tracking-widest uppercase"
-        style={{ color: "#9BA3C4", fontFamily: "'DM Mono', monospace" }}>{label}</label>
-      <select value={value} onChange={(e) => onChange(e.target.value)}
-        onFocus={() => setFocused(true)} onBlur={() => setFocused(false)}
-        className="w-full px-4 py-3 rounded-xl text-sm outline-none transition-all duration-200 appearance-none"
-        style={{ background: "#F8F9FF", border: `1.5px solid ${focused ? "#4875EF" : "rgba(15,23,64,0.1)"}`, color: value ? "#0F1740" : "#9BA3C4" }}>
-        <option value="">Select…</option>
-        {options.map((o) => <option key={o} value={o}>{o}</option>)}
-      </select>
-    </div>
-  );
-}
-
-function ChipSelect({ label, options, selected, onToggle }: {
-  label: string; options: string[]; selected: string[]; onToggle: (o: string) => void;
-}) {
-  return (
-    <div className="space-y-2">
-      <label className="block text-xs font-semibold tracking-widest uppercase"
-        style={{ color: "#9BA3C4", fontFamily: "'DM Mono', monospace" }}>{label}</label>
-      <div className="flex flex-wrap gap-2">
-        {options.map((o) => {
-          const active = selected.includes(o);
-          return (
-            <motion.button key={o} type="button" whileTap={{ scale: 0.95 }} onClick={() => onToggle(o)}
-              className="px-3 py-1.5 rounded-full text-xs font-semibold transition-all duration-150"
-              style={{ background: active ? "#4875EF" : "#F4F6FF", color: active ? "#fff" : "#6B7294", border: `1.5px solid ${active ? "#4875EF" : "rgba(15,23,64,0.1)"}` }}>
-              {o}
-            </motion.button>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
 
 // ── ProductScreen wrapper ─────────────────────────────────────────────────────
 
@@ -2239,771 +1871,596 @@ function LevelScreen({ levelNum, xp, onComplete, onBack }: {
 
 // ── CommandCenter ─────────────────────────────────────────────────────────────
 
-// ── Command Center ─────────────────────────────────────────────────────────────
+// ── Toast system ─────────────────────────────────────────────────────────────
 
-const SIDEBAR_NAV = [
-  { icon: "🏠", label: "Command Center", id: "overview"   },
-  { icon: "📦", label: "Products",       id: "products"   },
-  { icon: "🤝", label: "Buyers",         id: "buyers"     },
-  { icon: "📋", label: "Orders",         id: "orders"     },
-  { icon: "🧾", label: "Invoices",       id: "invoices"   },
-  { icon: "📁", label: "Documents",      id: "documents"  },
-  { icon: "✨", label: "AI Consultant",  id: "ai"         },
-  { icon: "⚙️", label: "Settings",       id: "settings"   },
+interface ToastItem { id: number; msg: string; type: ToastType }
+
+function ToastStack({ toasts, remove }: { toasts: ToastItem[]; remove: (id: number) => void }) {
+  return (
+    <div className="fixed bottom-5 right-5 z-[300] space-y-2 pointer-events-none">
+      <AnimatePresence>
+        {toasts.map((t) => (
+          <motion.div key={t.id}
+            initial={{ opacity: 0, y: 16, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 8, scale: 0.95 }}
+            transition={{ duration: 0.25, ease: EASE }}
+            className="flex items-center gap-3 px-4 py-3 rounded-xl shadow-xl pointer-events-auto"
+            style={{
+              background: t.type === "success" ? "#0F1740" : t.type === "error" ? "#DC2626" : "#0F1740",
+              color: "#fff",
+              minWidth: "280px",
+              maxWidth: "380px",
+            }}
+          >
+            <span className="text-base flex-shrink-0">
+              {t.type === "success" ? "✅" : t.type === "error" ? "❌" : "ℹ️"}
+            </span>
+            <p className="text-sm flex-1">{t.msg}</p>
+            <button onClick={() => remove(t.id)} className="text-white/50 hover:text-white text-xs ml-2">✕</button>
+          </motion.div>
+        ))}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+// ── Global Search Modal (Ctrl+K) ──────────────────────────────────────────────
+
+const SEARCH_ITEMS = [
+  { type: "page",    icon: "🏠", label: "Command Center",     id: "overview"  },
+  { type: "page",    icon: "📦", label: "Products",           id: "products"  },
+  { type: "page",    icon: "🤝", label: "Buyers",             id: "buyers"    },
+  { type: "page",    icon: "📋", label: "Orders",             id: "orders"    },
+  { type: "page",    icon: "🧾", label: "Invoices",           id: "invoices"  },
+  { type: "page",    icon: "📁", label: "Documents",          id: "documents" },
+  { type: "page",    icon: "✨", label: "AI Consultant",      id: "ai"        },
+  { type: "page",    icon: "⚙️", label: "Settings",           id: "settings"  },
+  { type: "action",  icon: "➕", label: "Add Product",         id: "add-product" },
+  { type: "action",  icon: "🧾", label: "Create Invoice",      id: "create-invoice" },
+  { type: "action",  icon: "⬆", label: "Upload Document",     id: "upload-doc" },
+  { type: "action",  icon: "🤝", label: "Find Buyers",         id: "buyers" },
 ];
 
-// ── Shared card ───────────────────────────────────────────────────────────────
-function DashCard({ children, className = "", style = {} }: { children: React.ReactNode; className?: string; style?: React.CSSProperties }) {
+function SearchModal({ open, onClose, onNavigate, onAction }: {
+  open: boolean; onClose: () => void;
+  onNavigate: (id: string) => void; onAction: (id: string) => void;
+}) {
+  const [q, setQ] = useState("");
+  const results = q.length > 0
+    ? SEARCH_ITEMS.filter((i) => i.label.toLowerCase().includes(q.toLowerCase()))
+    : SEARCH_ITEMS.slice(0, 6);
+
+  if (!open) return null;
   return (
-    <div className={`rounded-2xl ${className}`}
-      style={{ background: "#ffffff", border: "1px solid rgba(15,23,64,0.07)", boxShadow: "0 2px 16px rgba(15,23,64,0.05)", ...style }}>
-      {children}
+    <div className="fixed inset-0 z-[250] flex items-start justify-center pt-24 px-4"
+      style={{ background: "rgba(15,23,64,0.5)", backdropFilter: "blur(4px)" }}
+      onClick={onClose}>
+      <motion.div initial={{ opacity: 0, y: -12, scale: 0.97 }} animate={{ opacity: 1, y: 0, scale: 1 }}
+        transition={{ duration: 0.2, ease: EASE }}
+        className="w-full max-w-lg rounded-2xl overflow-hidden"
+        style={{ background: "#ffffff", boxShadow: "0 24px 64px rgba(15,23,64,0.25)" }}
+        onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center gap-3 px-4 py-3 border-b" style={{ borderColor: "rgba(15,23,64,0.07)" }}>
+          <span style={{ color: "#9BA3C4" }}>🔍</span>
+          <input autoFocus value={q} onChange={(e) => setQ(e.target.value)}
+            placeholder="Search pages, products, buyers, invoices…"
+            className="flex-1 text-sm outline-none bg-transparent" style={{ color: "#0F1740" }} />
+          <kbd className="text-xs px-2 py-0.5 rounded" style={{ background: "#F4F6FF", color: "#9BA3C4" }}>Esc</kbd>
+        </div>
+        <div className="py-2">
+          {q.length === 0 && <p className="px-4 py-1.5 text-xs font-semibold tracking-widest uppercase" style={{ color: "#C8CEDF", fontFamily: "'DM Mono', monospace" }}>Quick Access</p>}
+          {results.map((r) => (
+            <button key={r.id + r.label} onClick={() => { r.type === "action" ? onAction(r.id) : onNavigate(r.id); onClose(); }}
+              className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-left transition-colors hover:bg-gray-50">
+              <span className="text-base w-6 text-center">{r.icon}</span>
+              <span style={{ color: "#374151" }}>{r.label}</span>
+              <span className="ml-auto text-xs px-2 py-0.5 rounded-full" style={{ background: "#F4F6FF", color: "#9BA3C4" }}>
+                {r.type === "action" ? "Action" : "Page"}
+              </span>
+            </button>
+          ))}
+          {results.length === 0 && (
+            <p className="px-4 py-6 text-center text-sm" style={{ color: "#9BA3C4" }}>No results for "{q}"</p>
+          )}
+        </div>
+        <div className="flex items-center gap-4 px-4 py-2.5 border-t text-xs" style={{ borderColor: "rgba(15,23,64,0.07)", color: "#C8CEDF" }}>
+          <span>↑↓ navigate</span><span>↵ select</span><span>Esc close</span>
+        </div>
+      </motion.div>
     </div>
   );
 }
 
-// ── Empty state ───────────────────────────────────────────────────────────────
-function EmptyState({ icon, title, desc, cta, onCta }: { icon: string; title: string; desc: string; cta: string; onCta?: () => void }) {
-  return (
-    <div className="flex flex-col items-center justify-center py-24 text-center">
-      <div className="text-6xl mb-4">{icon}</div>
-      <h3 style={{ fontFamily: "'Fraunces', serif", fontSize: "22px", fontWeight: 700, color: "#0F1740", letterSpacing: "-0.02em" }}>{title}</h3>
-      <p className="text-sm mt-2 mb-6 max-w-xs" style={{ color: "#9BA3C4" }}>{desc}</p>
-      <JourneyButton variant="primary" size="sm" onClick={onCta}>{cta}</JourneyButton>
-    </div>
-  );
-}
+// ── Add Product Wizard ────────────────────────────────────────────────────────
 
-// ── Overview page ─────────────────────────────────────────────────────────────
-function OverviewPage({ xp }: { xp: number }) {
-  const ACTIVITY = [
-    { icon: "🚢", e: "Shipment #183 departed Mumbai Port",      t: "2h ago",     c: "#4875EF" },
-    { icon: "📩", e: "New buyer inquiry from Stockholm, Sweden", t: "5h ago",     c: "#4875EF" },
-    { icon: "✅", e: "Invoice #047 approved by Müller GmbH",    t: "Yesterday",  c: "#22C55E" },
-    { icon: "📄", e: "Certificate of Origin issued — FIEO",     t: "Yesterday",  c: "#22C55E" },
-    { icon: "🔄", e: "RCMC renewal completed successfully",      t: "3 days ago", c: "#F59E0B" },
-  ];
+const WIZARD_STEPS = ["Basic Details", "Pricing", "Images", "Specifications", "Export Details"];
+
+function AddProductWizard({ open, onClose, onSave }: { open: boolean; onClose: () => void; onSave: () => void }) {
+  const [step, setStep] = useState(0);
+  const [vals, setVals] = useState<Record<string, string>>({});
+  const set = (k: string) => (v: string) => setVals((p) => ({ ...p, [k]: v }));
+
+  const handleSave = () => { onSave(); onClose(); setStep(0); setVals({}); };
 
   return (
-    <div className="space-y-6">
-      {/* Welcome + priority */}
-      <div className="grid md:grid-cols-[1fr_320px] gap-6">
-        <DashCard className="p-6">
-          <p className="text-xs font-semibold tracking-widest uppercase mb-1" style={{ color: "#9BA3C4", fontFamily: "'DM Mono', monospace" }}>Good morning</p>
-          <h2 style={{ fontFamily: "'Fraunces', serif", fontSize: "clamp(24px,3vw,32px)", fontWeight: 700, color: "#0F1740", letterSpacing: "-0.025em", lineHeight: 1.2 }}>
-            Rajesh Kumar
-          </h2>
-          <p className="text-sm mt-1 mb-5" style={{ color: "#6B7294" }}>Ravi Exports Pvt. Ltd. · Level 6 Bronze Exporter</p>
-
-          {/* XP + Readiness */}
-          <div className="grid grid-cols-2 gap-4 mb-5">
-            <div className="rounded-xl p-4" style={{ background: "#FEF3C7" }}>
-              <p className="text-xs font-semibold mb-1" style={{ color: "#9BA3C4", fontFamily: "'DM Mono', monospace" }}>Total XP</p>
-              <p style={{ fontFamily: "'Fraunces', serif", fontSize: "24px", fontWeight: 700, color: "#D97706" }}>{xp || 1375} XP</p>
+    <Modal open={open} onClose={onClose} title="Add Product" wide>
+      {/* Step indicator */}
+      <div className="px-6 py-4 border-b" style={{ borderColor: "rgba(15,23,64,0.07)" }}>
+        <div className="flex items-center gap-2">
+          {WIZARD_STEPS.map((s, i) => (
+            <div key={s} className="flex items-center gap-2">
+              <div className="flex items-center gap-1.5">
+                <div className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold"
+                  style={{ background: i < step ? "#22C55E" : i === step ? "#4875EF" : "#F4F6FF", color: i <= step ? "#fff" : "#9BA3C4" }}>
+                  {i < step ? "✓" : i + 1}
+                </div>
+                <span className="text-xs font-medium hidden md:block" style={{ color: i === step ? "#0F1740" : "#9BA3C4" }}>{s}</span>
+              </div>
+              {i < WIZARD_STEPS.length - 1 && <div className="flex-1 h-px w-4" style={{ background: i < step ? "#22C55E" : "rgba(15,23,64,0.1)" }} />}
             </div>
-            <div className="rounded-xl p-4" style={{ background: "#DCFCE7" }}>
-              <p className="text-xs font-semibold mb-1" style={{ color: "#9BA3C4", fontFamily: "'DM Mono', monospace" }}>Readiness</p>
-              <p style={{ fontFamily: "'Fraunces', serif", fontSize: "24px", fontWeight: 700, color: "#16A34A" }}>66%</p>
-            </div>
-          </div>
-
-          {/* Quick actions */}
-          <div className="grid grid-cols-3 gap-2">
-            {[
-              { icon: "📦", label: "Add Product" },
-              { icon: "🤝", label: "Find Buyers" },
-              { icon: "🧾", label: "Create Invoice" },
-              { icon: "📁", label: "Upload Doc" },
-              { icon: "✨", label: "Ask AI" },
-              { icon: "📋", label: "View Orders" },
-            ].map((a) => (
-              <motion.button key={a.label} whileHover={{ y: -2 }} whileTap={{ scale: 0.96 }}
-                className="flex flex-col items-center gap-1.5 py-3 rounded-xl text-xs font-medium transition-all"
-                style={{ background: "#F8F9FF", border: "1px solid rgba(15,23,64,0.07)", color: "#6B7294" }}>
-                <span className="text-base">{a.icon}</span>
-                {a.label}
-              </motion.button>
-            ))}
-          </div>
-        </DashCard>
-
-        {/* Today's Priority */}
-        <DashCard className="p-6" style={{ background: "linear-gradient(135deg,#EBF0FF 0%,#F0F4FF 100%)", border: "1.5px solid rgba(72,117,239,0.18)" }}>
-          <p className="text-xs font-bold tracking-widest uppercase mb-3" style={{ color: "#4875EF", fontFamily: "'DM Mono', monospace" }}>Today's Priority</p>
-          <div className="text-3xl mb-3">🛍️</div>
-          <h3 style={{ fontFamily: "'Fraunces', serif", fontSize: "18px", fontWeight: 700, color: "#0F1740", letterSpacing: "-0.02em", lineHeight: 1.3 }}>
-            Add your first product
-          </h3>
-          <p className="text-xs mt-2 mb-5" style={{ color: "#6B7294" }}>
-            Your Digital Dukan is ready. Add products to start receiving buyer inquiries from 190+ countries.
-          </p>
-          <JourneyButton variant="primary" size="sm" className="w-full justify-center">
-            Add First Product →
-          </JourneyButton>
-          <p className="text-xs text-center mt-3" style={{ color: "#9BA3C4" }}>⚡ +200 XP · 📈 +11% Readiness</p>
-        </DashCard>
-      </div>
-
-      {/* Stats row */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        {[
-          { label: "Total Revenue",  value: "₹1.8 Cr", delta: "+24% YoY",       c: "#4875EF" },
-          { label: "Active Buyers",  value: "47",       delta: "+8 this month",  c: "#22C55E" },
-          { label: "Shipments",      value: "183",      delta: "12 in transit",  c: "#F59E0B" },
-          { label: "Countries",      value: "22",       delta: "+3 new markets", c: "#7C3AED" },
-        ].map((s, i) => (
-          <motion.div key={s.label} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, ease: EASE, delay: i * 0.07 }}>
-            <DashCard className="p-5">
-              <p className="text-xs font-semibold tracking-widest uppercase mb-2" style={{ color: "#9BA3C4", fontFamily: "'DM Mono', monospace" }}>{s.label}</p>
-              <p style={{ fontFamily: "'Fraunces', serif", fontSize: "26px", fontWeight: 700, color: "#0F1740", letterSpacing: "-0.02em", lineHeight: 1.1 }}>{s.value}</p>
-              <p className="text-xs font-medium mt-1.5" style={{ color: s.c }}>↑ {s.delta}</p>
-            </DashCard>
-          </motion.div>
-        ))}
-      </div>
-
-      {/* Activity + Global */}
-      <div className="grid md:grid-cols-[1.2fr_1fr] gap-6">
-        <DashCard className="p-6">
-          <p className="text-xs font-bold tracking-widest uppercase mb-5" style={{ color: "#9BA3C4", fontFamily: "'DM Mono', monospace" }}>Recent Activity</p>
-          <div className="space-y-0">
-            {ACTIVITY.map((a, i) => (
-              <div key={i} className="flex items-center justify-between py-3.5 border-b last:border-0" style={{ borderColor: "rgba(15,23,64,0.05)" }}>
-                <div className="flex items-center gap-3">
-                  <span className="text-base flex-shrink-0">{a.icon}</span>
-                  <span className="text-sm" style={{ color: "#374151" }}>{a.e}</span>
-                </div>
-                <span className="text-xs ml-4 flex-shrink-0" style={{ color: "#9BA3C4", fontFamily: "'DM Mono', monospace" }}>{a.t}</span>
-              </div>
-            ))}
-          </div>
-        </DashCard>
-        <DashCard className="p-6">
-          <p className="text-xs font-bold tracking-widest uppercase mb-4" style={{ color: "#9BA3C4", fontFamily: "'DM Mono', monospace" }}>Global Footprint</p>
-          <FlatWorldMap />
-        </DashCard>
-      </div>
-
-      {/* Journey progress */}
-      <DashCard className="p-6">
-        <div className="flex items-center justify-between mb-5">
-          <p className="text-xs font-bold tracking-widest uppercase" style={{ color: "#9BA3C4", fontFamily: "'DM Mono', monospace" }}>Your Journey</p>
-          <span className="text-xs font-semibold px-2.5 py-1 rounded-full" style={{ background: "#DCFCE7", color: "#16A34A" }}>6 of 9 complete</span>
-        </div>
-        <div className="grid grid-cols-3 md:grid-cols-9 gap-3">
-          {LEVELS.map((lvl, i) => {
-            const done = i < 6;
-            return (
-              <div key={lvl.number} className="text-center">
-                <div className="w-10 h-10 rounded-xl flex items-center justify-center text-xl mx-auto mb-1.5"
-                  style={{ background: done ? lvl.color : "#F4F6FF", opacity: done ? 1 : 0.4, boxShadow: done ? `0 4px 12px ${lvl.color}40` : "none" }}>
-                  {done ? "✓" : lvl.badge}
-                </div>
-                <p className="text-xs font-semibold" style={{ color: done ? "#0F1740" : "#C8CEDF" }}>{`0${lvl.number}`}</p>
-                <p className="text-xs" style={{ color: "#9BA3C4" }}>{lvl.title.split(" ")[0]}</p>
-              </div>
-            );
-          })}
-        </div>
-      </DashCard>
-    </div>
-  );
-}
-
-// ── Products page ─────────────────────────────────────────────────────────────
-function ProductsPage() {
-  const [search, setSearch] = useState("");
-  const SAMPLE = [
-    { name: "Premium Basmati Rice 1121", hs: "1006.30", moq: "500 kg", price: "$480/MT", status: "Active",   cat: "Rice & Grains" },
-    { name: "Kashmiri Saffron Grade A",  hs: "0910.20", moq: "100 g",  price: "$12.40/g", status: "Active",   cat: "Spices & Herbs" },
-    { name: "Darjeeling First Flush Tea",hs: "0902.10", moq: "50 kg",  price: "$6.20/100g",status: "Draft",  cat: "Food Products" },
-  ];
-  return (
-    <div className="space-y-5">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 style={{ fontFamily: "'Fraunces', serif", fontSize: "clamp(22px,3vw,30px)", fontWeight: 700, color: "#0F1740", letterSpacing: "-0.025em" }}>Your Products</h2>
-          <p className="text-sm mt-0.5" style={{ color: "#9BA3C4" }}>{SAMPLE.length} products · all categories</p>
-        </div>
-        <JourneyButton variant="primary" size="sm">+ Add Product</JourneyButton>
-      </div>
-
-      {/* Search + filters */}
-      <div className="flex items-center gap-3">
-        <div className="flex-1 relative">
-          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm" style={{ color: "#9BA3C4" }}>🔍</span>
-          <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search products, HS codes…"
-            className="w-full pl-9 pr-4 py-2.5 rounded-xl text-sm outline-none"
-            style={{ background: "#F4F6FF", border: "1.5px solid rgba(15,23,64,0.08)", color: "#0F1740" }} />
-        </div>
-        <select className="px-3 py-2.5 rounded-xl text-sm outline-none appearance-none"
-          style={{ background: "#F4F6FF", border: "1.5px solid rgba(15,23,64,0.08)", color: "#6B7294" }}>
-          <option>All categories</option>
-          <option>Spices & Herbs</option>
-          <option>Rice & Grains</option>
-        </select>
-        <select className="px-3 py-2.5 rounded-xl text-sm outline-none appearance-none"
-          style={{ background: "#F4F6FF", border: "1.5px solid rgba(15,23,64,0.08)", color: "#6B7294" }}>
-          <option>All status</option>
-          <option>Active</option>
-          <option>Draft</option>
-        </select>
-      </div>
-
-      {/* Product grid */}
-      <div className="grid md:grid-cols-3 gap-5">
-        {SAMPLE.filter((p) => !search || p.name.toLowerCase().includes(search.toLowerCase())).map((p, i) => (
-          <motion.div key={p.name} whileHover={{ y: -3 }} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.35, delay: i * 0.07 }}>
-            <DashCard>
-              <div className="h-36 rounded-t-2xl flex items-center justify-center text-5xl"
-                style={{ background: "linear-gradient(135deg,#EBF0FF,#F4F6FF)" }}>
-                📦
-              </div>
-              <div className="p-5">
-                <div className="flex items-start justify-between gap-2 mb-3">
-                  <p className="font-bold text-sm leading-tight" style={{ color: "#0F1740" }}>{p.name}</p>
-                  <span className="text-xs font-semibold px-2 py-0.5 rounded-full flex-shrink-0"
-                    style={{ background: p.status === "Active" ? "#DCFCE7" : "#F3F4F6", color: p.status === "Active" ? "#16A34A" : "#6B7280" }}>
-                    {p.status}
-                  </span>
-                </div>
-                <div className="space-y-1.5">
-                  {[{ l: "HS Code", v: p.hs }, { l: "MOQ", v: p.moq }, { l: "Price (FOB)", v: p.price }].map((r) => (
-                    <div key={r.l} className="flex items-center justify-between">
-                      <span className="text-xs" style={{ color: "#9BA3C4" }}>{r.l}</span>
-                      <span className="text-xs font-semibold" style={{ color: "#0F1740", fontFamily: "'DM Mono', monospace" }}>{r.v}</span>
-                    </div>
-                  ))}
-                </div>
-                <div className="mt-4 pt-3 border-t" style={{ borderColor: "rgba(15,23,64,0.06)" }}>
-                  <span className="text-xs px-2 py-0.5 rounded-full" style={{ background: "#EBF0FF", color: "#4875EF" }}>{p.cat}</span>
-                </div>
-              </div>
-            </DashCard>
-          </motion.div>
-        ))}
-
-        {/* Add product card */}
-        <motion.div whileHover={{ y: -3, scale: 1.01 }}>
-          <DashCard className="h-full flex flex-col items-center justify-center py-12 cursor-pointer"
-            style={{ border: "2px dashed rgba(72,117,239,0.2)", background: "#FAFBFF", boxShadow: "none" }}>
-            <div className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl mb-3" style={{ background: "#EBF0FF" }}>+</div>
-            <p className="font-semibold text-sm" style={{ color: "#4875EF" }}>Add Product</p>
-            <p className="text-xs mt-1" style={{ color: "#9BA3C4" }}>+200 XP on completion</p>
-          </DashCard>
-        </motion.div>
-      </div>
-    </div>
-  );
-}
-
-// ── Buyers page ───────────────────────────────────────────────────────────────
-function BuyersPage() {
-  const BUYERS = [
-    { name: "Müller GmbH",     country: "🇩🇪 Germany",     last: "2h ago",     deals: 3, trust: 94, status: "Active"   },
-    { name: "Nordic Foods AB", country: "🇸🇪 Sweden",      last: "Yesterday",  deals: 1, trust: 87, status: "New"      },
-    { name: "Gulf Traders LLC",country: "🇦🇪 UAE",         last: "3 days ago", deals: 5, trust: 96, status: "Active"   },
-    { name: "Sakura Imports",  country: "🇯🇵 Japan",       last: "1 week ago", deals: 2, trust: 91, status: "Inactive" },
-  ];
-  return (
-    <div className="space-y-5">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 style={{ fontFamily: "'Fraunces', serif", fontSize: "clamp(22px,3vw,30px)", fontWeight: 700, color: "#0F1740", letterSpacing: "-0.025em" }}>Your Buyers</h2>
-          <p className="text-sm mt-0.5" style={{ color: "#9BA3C4" }}>{BUYERS.length} buyers · across 4 countries</p>
-        </div>
-        <JourneyButton variant="primary" size="sm">+ Add Buyer</JourneyButton>
-      </div>
-      <div className="relative">
-        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm" style={{ color: "#9BA3C4" }}>🔍</span>
-        <input placeholder="Search buyers by name or country…" className="w-full pl-9 pr-4 py-2.5 rounded-xl text-sm outline-none"
-          style={{ background: "#F4F6FF", border: "1.5px solid rgba(15,23,64,0.08)", color: "#0F1740" }} />
-      </div>
-      <div className="space-y-3">
-        {BUYERS.map((b, i) => (
-          <motion.div key={b.name} initial={{ opacity: 0, x: -12 }} animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.35, delay: i * 0.07 }} whileHover={{ x: 2 }}>
-            <DashCard className="px-6 py-4">
-              <div className="flex items-center justify-between gap-4">
-                <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0"
-                    style={{ background: "#4875EF", color: "#fff" }}>{b.name[0]}</div>
-                  <div>
-                    <p className="font-bold text-sm" style={{ color: "#0F1740" }}>{b.name}</p>
-                    <p className="text-xs mt-0.5" style={{ color: "#9BA3C4" }}>{b.country} · Last contact {b.last}</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-6">
-                  <div className="text-center hidden md:block">
-                    <p className="text-xs" style={{ color: "#9BA3C4" }}>Deals</p>
-                    <p className="font-bold text-sm" style={{ color: "#0F1740" }}>{b.deals}</p>
-                  </div>
-                  <div className="text-center hidden md:block">
-                    <p className="text-xs" style={{ color: "#9BA3C4" }}>Trust</p>
-                    <p className="font-bold text-sm" style={{ color: "#22C55E" }}>{b.trust}%</p>
-                  </div>
-                  <span className="text-xs font-semibold px-2.5 py-1 rounded-full"
-                    style={{ background: b.status === "Active" ? "#DCFCE7" : b.status === "New" ? "#EBF0FF" : "#F3F4F6", color: b.status === "Active" ? "#16A34A" : b.status === "New" ? "#4875EF" : "#9CA3AF" }}>
-                    {b.status}
-                  </span>
-                  <motion.button whileHover={{ scale: 1.05 }} className="text-xs font-semibold px-3 py-1.5 rounded-lg" style={{ background: "#F4F6FF", color: "#6B7294" }}>
-                    View →
-                  </motion.button>
-                </div>
-              </div>
-            </DashCard>
-          </motion.div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-// ── Orders page ───────────────────────────────────────────────────────────────
-function OrdersPage() {
-  const [filter, setFilter] = useState("All");
-  const ORDERS = [
-    { id: "#ORD-2024-183", buyer: "Müller GmbH",      product: "Basmati Rice 1121",  value: "$22,800", date: "Dec 12, 2024", status: "Completed"  },
-    { id: "#ORD-2024-182", buyer: "Gulf Traders LLC",  product: "Kashmiri Saffron",    value: "$4,960",  date: "Dec 10, 2024", status: "Processing" },
-    { id: "#ORD-2024-181", buyer: "Nordic Foods AB",   product: "Darjeeling Tea",      value: "$3,100",  date: "Dec 8, 2024",  status: "Pending"    },
-    { id: "#ORD-2024-180", buyer: "Sakura Imports",    product: "Basmati Rice 1121",  value: "$18,400", date: "Dec 5, 2024",  status: "Completed"  },
-  ];
-  const statuses = ["All", "Pending", "Processing", "Completed", "Cancelled"];
-  const filtered = filter === "All" ? ORDERS : ORDERS.filter((o) => o.status === filter);
-  const statusColor: Record<string, { bg: string; c: string }> = {
-    Completed:  { bg: "#DCFCE7", c: "#16A34A" },
-    Processing: { bg: "#EBF0FF", c: "#4875EF" },
-    Pending:    { bg: "#FEF3C7", c: "#D97706" },
-    Cancelled:  { bg: "#FEE2E2", c: "#DC2626" },
-  };
-  return (
-    <div className="space-y-5">
-      <div className="flex items-center justify-between">
-        <h2 style={{ fontFamily: "'Fraunces', serif", fontSize: "clamp(22px,3vw,30px)", fontWeight: 700, color: "#0F1740", letterSpacing: "-0.025em" }}>Orders</h2>
-        <p className="text-sm" style={{ color: "#9BA3C4" }}>{ORDERS.length} total orders</p>
-      </div>
-      <div className="flex items-center gap-2 flex-wrap">
-        {statuses.map((s) => (
-          <button key={s} onClick={() => setFilter(s)}
-            className="px-4 py-1.5 rounded-full text-xs font-semibold transition-all"
-            style={{ background: filter === s ? "#4875EF" : "#F4F6FF", color: filter === s ? "#fff" : "#6B7294" }}>
-            {s}
-          </button>
-        ))}
-      </div>
-      <div className="space-y-3">
-        {filtered.map((o, i) => (
-          <motion.div key={o.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3, delay: i * 0.06 }}>
-            <DashCard className="px-6 py-4">
-              <div className="flex items-center justify-between gap-4 flex-wrap">
-                <div className="flex items-center gap-4">
-                  <div>
-                    <p className="font-bold text-sm" style={{ color: "#0F1740", fontFamily: "'DM Mono', monospace" }}>{o.id}</p>
-                    <p className="text-xs mt-0.5" style={{ color: "#9BA3C4" }}>{o.buyer} · {o.product}</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-6">
-                  <div className="hidden md:block">
-                    <p className="text-xs" style={{ color: "#9BA3C4" }}>Value</p>
-                    <p className="font-bold text-sm" style={{ color: "#0F1740" }}>{o.value}</p>
-                  </div>
-                  <div className="hidden md:block">
-                    <p className="text-xs" style={{ color: "#9BA3C4" }}>Date</p>
-                    <p className="text-xs font-semibold" style={{ color: "#6B7294" }}>{o.date}</p>
-                  </div>
-                  <span className="text-xs font-semibold px-2.5 py-1 rounded-full"
-                    style={{ background: statusColor[o.status]?.bg, color: statusColor[o.status]?.c }}>
-                    {o.status}
-                  </span>
-                  <motion.button whileHover={{ scale: 1.05 }} className="text-xs font-semibold px-3 py-1.5 rounded-lg" style={{ background: "#F4F6FF", color: "#6B7294" }}>View</motion.button>
-                </div>
-              </div>
-            </DashCard>
-          </motion.div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-// ── Invoices page ─────────────────────────────────────────────────────────────
-function InvoicesPage() {
-  const [selected, setSelected] = useState(0);
-  const INVOICES = [
-    { id: "INV-2024-047", buyer: "Müller GmbH",     amount: "$22,800", date: "Dec 12", status: "Paid",    terms: "30% advance + 70% before shipment" },
-    { id: "INV-2024-046", buyer: "Gulf Traders LLC", amount: "$4,960",  date: "Dec 10", status: "Pending", terms: "50% advance + 50% on BL" },
-    { id: "INV-2024-045", buyer: "Nordic Foods AB",  amount: "$3,100",  date: "Dec 8",  status: "Sent",    terms: "100% advance" },
-  ];
-  const inv = INVOICES[selected];
-  const sc: Record<string, { bg: string; c: string }> = {
-    Paid:    { bg: "#DCFCE7", c: "#16A34A" },
-    Pending: { bg: "#FEF3C7", c: "#D97706" },
-    Sent:    { bg: "#EBF0FF", c: "#4875EF" },
-  };
-  return (
-    <div className="space-y-5">
-      <div className="flex items-center justify-between">
-        <h2 style={{ fontFamily: "'Fraunces', serif", fontSize: "clamp(22px,3vw,30px)", fontWeight: 700, color: "#0F1740", letterSpacing: "-0.025em" }}>Invoice Center</h2>
-        <JourneyButton variant="primary" size="sm">+ New Invoice</JourneyButton>
-      </div>
-      <div className="grid md:grid-cols-[300px_1fr] gap-5">
-        {/* List */}
-        <div className="space-y-3">
-          {INVOICES.map((inv, i) => (
-            <DashCard key={inv.id} className={`px-4 py-4 cursor-pointer transition-all ${selected === i ? "ring-2 ring-blue-400" : ""}`}
-              onClick={() => setSelected(i)}>
-              <div className="flex items-center justify-between mb-1">
-                <p className="text-xs font-bold" style={{ color: "#0F1740", fontFamily: "'DM Mono', monospace" }}>{inv.id}</p>
-                <span className="text-xs font-semibold px-2 py-0.5 rounded-full" style={{ background: sc[inv.status].bg, color: sc[inv.status].c }}>{inv.status}</span>
-              </div>
-              <p className="text-xs" style={{ color: "#9BA3C4" }}>{inv.buyer}</p>
-              <p className="font-bold text-sm mt-1" style={{ fontFamily: "'Fraunces', serif", color: "#0F1740" }}>{inv.amount}</p>
-              <p className="text-xs" style={{ color: "#C8CEDF" }}>{inv.date}</p>
-            </DashCard>
           ))}
         </div>
+      </div>
 
-        {/* Preview */}
-        <DashCard className="p-8">
-          <div className="flex items-start justify-between mb-8">
+      <div className="px-6 py-6 space-y-4">
+        {step === 0 && <>
+          <Field label="Product Name" placeholder="e.g. Premium Basmati Rice 1121" value={vals.name || ""} onChange={set("name")} />
+          <FieldSelect label="Category" options={["Rice & Grains","Spices & Herbs","Food Products","Textiles","Machinery","Chemicals","Handicrafts"]} value={vals.cat || ""} onChange={set("cat")} />
+          <Field label="Short Description" placeholder="Describe your product in 1–2 sentences" value={vals.desc || ""} onChange={set("desc")} />
+        </>}
+        {step === 1 && <>
+          <Field label="Price (FOB USD)" placeholder="e.g. $480 per MT" value={vals.price || ""} onChange={set("price")} hint="Free On Board — excludes freight" />
+          <Field label="Minimum Order Quantity" placeholder="e.g. 500 kg" value={vals.moq || ""} onChange={set("moq")} />
+          <FieldSelect label="Currency" options={["USD","EUR","GBP","AED","INR"]} value={vals.currency || ""} onChange={set("currency")} />
+        </>}
+        {step === 2 && (
+          <div className="space-y-3">
+            <UploadZone label="Upload Product Photos" hint="JPG, PNG — up to 10 images, max 5MB each" wide />
+            <UploadZone label="Upload Technical Sheet" hint="PDF spec sheet, test certificates" wide />
+          </div>
+        )}
+        {step === 3 && <>
+          <div className="rounded-xl p-4 flex items-start gap-3 mb-2" style={{ background: "#EBF0FF", border: "1px solid rgba(72,117,239,0.15)" }}>
+            <span>🤖</span>
             <div>
-              <div className="flex items-center gap-3 mb-2">
-                <div className="w-8 h-8 rounded-lg flex items-center justify-center text-sm font-bold" style={{ background: "#4875EF", color: "#fff" }}>E</div>
-                <span className="font-bold" style={{ color: "#0F1740" }}>EXIMARG</span>
-              </div>
-              <p className="text-xs" style={{ color: "#9BA3C4" }}>Ravi Exports Pvt. Ltd.</p>
-              <p className="text-xs" style={{ color: "#9BA3C4" }}>Mumbai, Maharashtra, India</p>
-            </div>
-            <div className="text-right">
-              <p style={{ fontFamily: "'Fraunces', serif", fontSize: "22px", fontWeight: 700, color: "#0F1740" }}>INVOICE</p>
-              <p className="text-xs font-bold mt-1" style={{ color: "#4875EF", fontFamily: "'DM Mono', monospace" }}>{inv.id}</p>
-              <p className="text-xs mt-0.5" style={{ color: "#9BA3C4" }}>Date: {inv.date}, 2024</p>
+              <p className="text-xs font-semibold" style={{ color: "#4875EF" }}>AI HS Code Suggestion</p>
+              <p className="text-sm mt-0.5" style={{ color: "#0F1740" }}>HS Code: <strong>1006.30</strong> — Rice, semi-milled</p>
+              <button className="text-xs font-semibold mt-1 hover:opacity-70" style={{ color: "#4875EF" }}>Apply</button>
             </div>
           </div>
-          <div className="border-t pt-6 mb-6" style={{ borderColor: "rgba(15,23,64,0.07)" }}>
-            <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: "#9BA3C4", fontFamily: "'DM Mono', monospace" }}>Bill To</p>
-            <p className="font-bold" style={{ color: "#0F1740" }}>{inv.buyer}</p>
-          </div>
-          <div className="rounded-xl overflow-hidden mb-6" style={{ border: "1px solid rgba(15,23,64,0.07)" }}>
-            <div className="grid grid-cols-4 px-4 py-2.5" style={{ background: "#F4F6FF" }}>
-              {["Description", "Qty", "Unit Price", "Total"].map((h) => (
-                <p key={h} className="text-xs font-bold uppercase tracking-widest" style={{ color: "#9BA3C4", fontFamily: "'DM Mono', monospace" }}>{h}</p>
-              ))}
-            </div>
-            <div className="grid grid-cols-4 px-4 py-3 border-t" style={{ borderColor: "rgba(15,23,64,0.06)" }}>
-              <p className="text-sm" style={{ color: "#0F1740" }}>Basmati Rice 1121</p>
-              <p className="text-sm" style={{ color: "#6B7294" }}>20 MT</p>
-              <p className="text-sm" style={{ color: "#6B7294" }}>$480/MT</p>
-              <p className="text-sm font-bold" style={{ color: "#0F1740" }}>{inv.amount}</p>
-            </div>
-          </div>
-          <div className="flex items-center justify-between mb-6">
-            <p className="text-xs" style={{ color: "#9BA3C4" }}>Payment Terms: {inv.terms}</p>
-            <div className="text-right">
-              <p className="text-xs" style={{ color: "#9BA3C4" }}>Total Amount</p>
-              <p style={{ fontFamily: "'Fraunces', serif", fontSize: "24px", fontWeight: 700, color: "#0F1740" }}>{inv.amount}</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-3">
-            <JourneyButton variant="primary" size="sm">Download PDF</JourneyButton>
-            <JourneyButton variant="ghost-dark" size="sm">Send to Buyer</JourneyButton>
-          </div>
-        </DashCard>
+          <Field label="HS Code" placeholder="e.g. 1006.30" value={vals.hs || ""} onChange={set("hs")} />
+          <Field label="Product Certifications" placeholder="e.g. FSSAI, APEDA, ISO 22000" value={vals.certs || ""} onChange={set("certs")} />
+        </>}
+        {step === 4 && <>
+          <ChipSelect label="Target Export Countries" options={["Germany","USA","UAE","UK","Japan","Australia","Canada","France"]} selected={(vals.countries || "").split(",").filter(Boolean)} onToggle={(o) => { const arr = (vals.countries || "").split(",").filter(Boolean); set("countries")(arr.includes(o) ? arr.filter((x) => x !== o).join(",") : [...arr, o].join(",")); }} />
+          <FieldSelect label="Preferred Incoterm" options={["FOB","CIF","EXW","DAP","DDP"]} value={vals.incoterm || ""} onChange={set("incoterm")} />
+        </>}
       </div>
-    </div>
+
+      <div className="flex items-center justify-between px-6 py-4 border-t" style={{ borderColor: "rgba(15,23,64,0.07)", background: "#FAFBFF" }}>
+        <button onClick={step === 0 ? onClose : () => setStep((s) => s - 1)}
+          className="text-sm font-medium px-4 py-2 rounded-xl transition-colors hover:bg-gray-100"
+          style={{ color: "#6B7294" }}>{step === 0 ? "Cancel" : "← Back"}</button>
+        <div className="flex items-center gap-2">
+          <button className="text-xs" style={{ color: "#C8CEDF" }} onClick={() => {}}>Save draft</button>
+          {step < WIZARD_STEPS.length - 1
+            ? <JourneyButton variant="primary" size="sm" onClick={() => setStep((s) => s + 1)}>Continue →</JourneyButton>
+            : <JourneyButton variant="primary" size="sm" onClick={handleSave}>Add Product ✓</JourneyButton>}
+        </div>
+      </div>
+    </Modal>
   );
 }
 
-// ── Documents page ────────────────────────────────────────────────────────────
-function DocumentsPage() {
-  const FOLDERS = [
-    { icon: "📋", name: "Identity Documents", count: 3, color: "#4875EF" },
-    { icon: "🏢", name: "Business Registration", count: 5, color: "#7C3AED" },
-    { icon: "✅", name: "Compliance & Licences", count: 4, color: "#059669" },
-    { icon: "🧾", name: "Invoices & POs", count: 12, color: "#D97706" },
-    { icon: "🚢", name: "Shipping Documents", count: 8, color: "#DC2626" },
-    { icon: "📊", name: "Financial Records", count: 6, color: "#0F1740" },
-  ];
-  const RECENT = [
-    { name: "IEC_Certificate.pdf",     size: "245 KB", date: "Dec 12", icon: "📄", verified: true  },
-    { name: "GST_Registration.pdf",    size: "180 KB", date: "Dec 10", icon: "📄", verified: true  },
-    { name: "Packing_List_183.pdf",    size: "92 KB",  date: "Dec 8",  icon: "📄", verified: false },
-  ];
+// ── Buyer Profile Drawer ──────────────────────────────────────────────────────
+
+function BuyerProfileDrawer({ buyer, open, onClose, onToast }: {
+  buyer: { name: string; country: string; deals: number; trust: number; status: string } | null;
+  open: boolean; onClose: () => void; onToast: (msg: string, type: ToastType) => void;
+}) {
+  const [tab, setTab] = useState("overview");
+  if (!buyer) return null;
+  const TABS = ["Overview", "Orders", "Invoices", "Chat", "AI Tips"];
   return (
-    <div className="space-y-5">
-      <div className="flex items-center justify-between">
-        <h2 style={{ fontFamily: "'Fraunces', serif", fontSize: "clamp(22px,3vw,30px)", fontWeight: 700, color: "#0F1740", letterSpacing: "-0.025em" }}>Document Vault</h2>
-        <JourneyButton variant="primary" size="sm">⬆ Upload</JourneyButton>
-      </div>
-
-      {/* Upload zone */}
-      <DashCard className="flex items-center justify-center py-8 border-2 border-dashed cursor-pointer transition-all hover:border-blue-400"
-        style={{ borderColor: "rgba(72,117,239,0.2)", background: "#FAFBFF", boxShadow: "none" }}>
-        <div className="text-center">
-          <div className="text-3xl mb-2">⬆</div>
-          <p className="font-semibold text-sm" style={{ color: "#4875EF" }}>Drag & drop documents here</p>
-          <p className="text-xs mt-1" style={{ color: "#9BA3C4" }}>PDF, JPG, PNG — up to 10MB per file</p>
-        </div>
-      </DashCard>
-
-      {/* Folders */}
-      <div>
-        <p className="text-xs font-bold tracking-widest uppercase mb-3" style={{ color: "#9BA3C4", fontFamily: "'DM Mono', monospace" }}>Categories</p>
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-          {FOLDERS.map((f) => (
-            <motion.div key={f.name} whileHover={{ y: -2 }}>
-              <DashCard className="p-5 cursor-pointer">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl flex items-center justify-center text-xl" style={{ background: `${f.color}18` }}>{f.icon}</div>
-                  <div>
-                    <p className="font-semibold text-sm" style={{ color: "#0F1740" }}>{f.name}</p>
-                    <p className="text-xs mt-0.5" style={{ color: "#9BA3C4" }}>{f.count} files</p>
-                  </div>
-                </div>
-              </DashCard>
-            </motion.div>
-          ))}
-        </div>
-      </div>
-
-      {/* Recent uploads */}
-      <div>
-        <p className="text-xs font-bold tracking-widest uppercase mb-3" style={{ color: "#9BA3C4", fontFamily: "'DM Mono', monospace" }}>Recent Uploads</p>
-        <DashCard>
-          {RECENT.map((f, i) => (
-            <div key={f.name} className="flex items-center justify-between px-5 py-3.5 border-b last:border-0" style={{ borderColor: "rgba(15,23,64,0.05)" }}>
-              <div className="flex items-center gap-3">
-                <span className="text-xl">{f.icon}</span>
-                <div>
-                  <p className="text-sm font-medium" style={{ color: "#0F1740" }}>{f.name}</p>
-                  <p className="text-xs mt-0.5" style={{ color: "#9BA3C4" }}>{f.size} · {f.date}</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-2">
-                {f.verified && <span className="text-xs font-semibold px-2 py-0.5 rounded-full" style={{ background: "#DCFCE7", color: "#16A34A" }}>✓ Verified</span>}
-                <motion.button whileHover={{ scale: 1.05 }} className="text-xs px-3 py-1.5 rounded-lg" style={{ background: "#F4F6FF", color: "#6B7294" }}>View</motion.button>
-              </div>
+    <Drawer open={open} onClose={onClose} title={buyer.name}>
+      <div className="space-y-5">
+        {/* Header card */}
+        <div className="rounded-xl p-4" style={{ background: "#F8F9FF", border: "1px solid rgba(15,23,64,0.07)" }}>
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-12 h-12 rounded-full flex items-center justify-center text-lg font-bold" style={{ background: "#4875EF", color: "#fff" }}>{buyer.name[0]}</div>
+            <div>
+              <p className="font-bold" style={{ color: "#0F1740" }}>{buyer.name}</p>
+              <p className="text-xs mt-0.5" style={{ color: "#9BA3C4" }}>{buyer.country}</p>
             </div>
-          ))}
-        </DashCard>
-      </div>
-    </div>
-  );
-}
-
-// ── AI Trade Consultant page ───────────────────────────────────────────────────
-function AIPage() {
-  const [input, setInput] = useState("");
-  const [messages, setMessages] = useState([
-    { role: "ai", text: "Good morning! I'm your EXIMARG AI Trade Consultant. I can help with HS codes, export compliance, buyer responses, invoice queries, and trade regulations. What would you like to know?" },
-  ]);
-  const send = () => {
-    if (!input.trim()) return;
-    setMessages((p) => [...p, { role: "user", text: input }, { role: "ai", text: "Great question! Based on your export profile, I recommend checking the DGFT guidelines for this. Let me pull the latest compliance requirements for your product category..." }]);
-    setInput("");
-  };
-  const PROMPTS = ["What HS code for Basmati Rice?", "How to reply to a Hamburg buyer?", "GST refund for exporters", "IEC renewal process", "Best Incoterms for UAE?"];
-  return (
-    <div className="flex flex-col h-[calc(100vh-180px)]">
-      <div className="flex items-center justify-between mb-5">
-        <div>
-          <h2 style={{ fontFamily: "'Fraunces', serif", fontSize: "clamp(22px,3vw,30px)", fontWeight: 700, color: "#0F1740", letterSpacing: "-0.025em" }}>AI Trade Consultant</h2>
-          <p className="text-sm mt-0.5" style={{ color: "#9BA3C4" }}>Powered by EXIMARG Intelligence · Always current</p>
-        </div>
-        <span className="text-xs font-semibold px-3 py-1.5 rounded-full flex items-center gap-1.5" style={{ background: "#DCFCE7", color: "#16A34A" }}>
-          <span className="w-1.5 h-1.5 rounded-full" style={{ background: "#16A34A" }} /> Online
-        </span>
-      </div>
-
-      {/* Chat area */}
-      <DashCard className="flex-1 flex flex-col overflow-hidden mb-4">
-        <div className="flex-1 overflow-y-auto p-6 space-y-4">
-          {messages.map((m, i) => (
-            <div key={i} className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}>
-              {m.role === "ai" && (
-                <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm mr-3 flex-shrink-0" style={{ background: "#4875EF", color: "#fff" }}>✨</div>
-              )}
-              <div className="max-w-lg px-4 py-3 rounded-2xl text-sm leading-relaxed"
-                style={{ background: m.role === "user" ? "#4875EF" : "#F4F6FF", color: m.role === "user" ? "#fff" : "#374151" }}>
-                {m.text}
-              </div>
+            <span className="ml-auto text-xs font-semibold px-2 py-0.5 rounded-full"
+              style={{ background: buyer.status === "Active" ? "#DCFCE7" : "#EBF0FF", color: buyer.status === "Active" ? "#16A34A" : "#4875EF" }}>
+              {buyer.status}
+            </span>
+          </div>
+          <div className="grid grid-cols-3 gap-3">
+            <div className="text-center rounded-lg py-2.5" style={{ background: "#fff" }}>
+              <p className="font-bold" style={{ fontFamily: "'Fraunces', serif", color: "#0F1740" }}>{buyer.deals}</p>
+              <p className="text-xs" style={{ color: "#9BA3C4" }}>Deals</p>
             </div>
+            <div className="text-center rounded-lg py-2.5" style={{ background: "#fff" }}>
+              <p className="font-bold" style={{ fontFamily: "'Fraunces', serif", color: "#22C55E" }}>{buyer.trust}%</p>
+              <p className="text-xs" style={{ color: "#9BA3C4" }}>Trust</p>
+            </div>
+            <div className="text-center rounded-lg py-2.5" style={{ background: "#fff" }}>
+              <p className="font-bold" style={{ fontFamily: "'Fraunces', serif", color: "#4875EF" }}>A+</p>
+              <p className="text-xs" style={{ color: "#9BA3C4" }}>Rating</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Quick actions */}
+        <div className="grid grid-cols-2 gap-2">
+          {[
+            { icon: "✉", label: "Send Email",    action: () => onToast("Email draft opened", "info") },
+            { icon: "🧾", label: "Create Invoice", action: () => onToast("Invoice builder opening…", "info") },
+            { icon: "📊", label: "Quotation",     action: () => onToast("Quotation generator opened", "info") },
+            { icon: "⭐", label: "Mark Favourite",action: () => onToast(`${buyer.name} marked as favourite`, "success") },
+          ].map((a) => (
+            <motion.button key={a.label} whileHover={{ y: -1 }} whileTap={{ scale: 0.97 }}
+              onClick={a.action}
+              className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm font-medium transition-all text-left"
+              style={{ background: "#F4F6FF", border: "1px solid rgba(15,23,64,0.07)", color: "#374151" }}>
+              <span>{a.icon}</span>{a.label}
+            </motion.button>
           ))}
         </div>
 
-        {/* Suggested prompts */}
-        <div className="px-6 pb-3 flex gap-2 flex-wrap">
-          {PROMPTS.map((p) => (
-            <button key={p} onClick={() => setInput(p)}
-              className="text-xs font-medium px-3 py-1.5 rounded-full transition-all hover:bg-blue-50"
-              style={{ background: "#EBF0FF", color: "#4875EF", border: "1px solid rgba(72,117,239,0.2)" }}>
-              {p}
+        {/* Tabs */}
+        <div className="flex items-center gap-1 flex-wrap">
+          {TABS.map((t) => (
+            <button key={t} onClick={() => setTab(t.toLowerCase())}
+              className="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all"
+              style={{ background: tab === t.toLowerCase() ? "#4875EF" : "#F4F6FF", color: tab === t.toLowerCase() ? "#fff" : "#6B7294" }}>
+              {t}
             </button>
           ))}
         </div>
 
-        {/* Input */}
-        <div className="px-4 pb-4 flex items-center gap-3" style={{ borderTop: "1px solid rgba(15,23,64,0.07)" }}>
-          <input value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => e.key === "Enter" && send()}
-            placeholder="Ask anything about exporting, compliance, buyers…"
-            className="flex-1 px-4 py-3 rounded-xl text-sm outline-none mt-3"
-            style={{ background: "#F4F6FF", border: "1.5px solid rgba(15,23,64,0.08)", color: "#0F1740" }} />
-          <motion.button whileTap={{ scale: 0.95 }} onClick={send}
-            className="mt-3 px-4 py-3 rounded-xl text-sm font-semibold"
-            style={{ background: "#4875EF", color: "#fff" }}>Send</motion.button>
-        </div>
-      </DashCard>
-    </div>
-  );
-}
-
-// ── Settings page ─────────────────────────────────────────────────────────────
-function SettingsPage() {
-  const sections = [
-    { title: "General", icon: "⚙️", items: [{ label: "Company Name", value: "Ravi Exports Pvt. Ltd." }, { label: "Time Zone", value: "Asia/Kolkata (IST)" }, { label: "Language", value: "English" }] },
-    { title: "Notifications", icon: "🔔", items: [{ label: "Buyer Inquiries", value: "toggle" }, { label: "Shipment Updates", value: "toggle" }, { label: "Invoice Reminders", value: "toggle" }] },
-    { title: "Security", icon: "🔒", items: [{ label: "Two-Factor Authentication", value: "toggle" }, { label: "Login Alerts", value: "toggle" }] },
-    { title: "Billing", icon: "💳", items: [{ label: "Current Plan", value: "Growth · ₹2,999/mo" }, { label: "Next Billing", value: "Jan 1, 2025" }] },
-  ];
-  return (
-    <div className="space-y-5 max-w-2xl">
-      <h2 style={{ fontFamily: "'Fraunces', serif", fontSize: "clamp(22px,3vw,30px)", fontWeight: 700, color: "#0F1740", letterSpacing: "-0.025em" }}>Settings</h2>
-      {sections.map((s) => (
-        <DashCard key={s.title} className="overflow-hidden">
-          <div className="flex items-center gap-3 px-6 py-4 border-b" style={{ borderColor: "rgba(15,23,64,0.07)" }}>
-            <span className="text-base">{s.icon}</span>
-            <p className="font-bold text-sm" style={{ color: "#0F1740" }}>{s.title}</p>
-          </div>
-          <div className="divide-y" style={{ borderColor: "rgba(15,23,64,0.05)" }}>
-            {s.items.map((item) => (
-              <div key={item.label} className="flex items-center justify-between px-6 py-4">
-                <p className="text-sm" style={{ color: "#374151" }}>{item.label}</p>
-                {item.value === "toggle" ? (
-                  <div className="w-10 h-5 rounded-full cursor-pointer relative" style={{ background: "#4875EF" }}>
-                    <div className="absolute right-0.5 top-0.5 w-4 h-4 rounded-full bg-white" />
-                  </div>
-                ) : (
-                  <p className="text-sm font-medium" style={{ color: "#6B7294" }}>{item.value}</p>
-                )}
+        {/* Tab content */}
+        {tab === "overview" && (
+          <div className="space-y-3">
+            {[
+              { k: "Company",      v: buyer.name },
+              { k: "Country",      v: buyer.country },
+              { k: "Last Contact", v: "2 hours ago" },
+              { k: "Total Orders", v: String(buyer.deals) },
+              { k: "Avg Order",    v: "$18,400" },
+            ].map((r) => (
+              <div key={r.k} className="flex items-center justify-between py-2 border-b last:border-0" style={{ borderColor: "rgba(15,23,64,0.06)" }}>
+                <p className="text-xs" style={{ color: "#9BA3C4" }}>{r.k}</p>
+                <p className="text-sm font-medium" style={{ color: "#374151" }}>{r.v}</p>
               </div>
             ))}
           </div>
-        </DashCard>
-      ))}
-      <DashCard className="overflow-hidden" style={{ border: "1px solid rgba(220,38,38,0.15)" }}>
-        <div className="flex items-center gap-3 px-6 py-4 border-b" style={{ borderColor: "rgba(220,38,38,0.1)" }}>
-          <span>⚠️</span>
-          <p className="font-bold text-sm" style={{ color: "#DC2626" }}>Danger Zone</p>
-        </div>
-        <div className="px-6 py-4 flex items-center justify-between">
-          <div>
-            <p className="text-sm font-medium" style={{ color: "#374151" }}>Delete Account</p>
-            <p className="text-xs mt-0.5" style={{ color: "#9BA3C4" }}>Permanently delete your EXIMARG account and all data.</p>
-          </div>
-          <button className="text-xs font-semibold px-4 py-2 rounded-lg" style={{ background: "#FEE2E2", color: "#DC2626" }}>Delete</button>
-        </div>
-      </DashCard>
-    </div>
-  );
-}
-
-// ── Profile dropdown ──────────────────────────────────────────────────────────
-function ProfileDropdown({ xp, onClose, onBack }: { xp: number; onClose: () => void; onBack: () => void }) {
-  const items = [
-    { icon: "👤", label: "My Profile" },
-    { icon: "🏢", label: "Company Profile" },
-    { icon: "⭐", label: "Subscription" },
-    { icon: "⚙️", label: "Settings" },
-    { icon: "💬", label: "Support" },
-  ];
-  return (
-    <motion.div initial={{ opacity: 0, y: -8, scale: 0.97 }} animate={{ opacity: 1, y: 0, scale: 1 }}
-      exit={{ opacity: 0, y: -8, scale: 0.97 }} transition={{ duration: 0.2, ease: EASE }}
-      className="absolute right-0 top-full mt-2 w-72 rounded-2xl overflow-hidden z-50"
-      style={{ background: "#ffffff", boxShadow: "0 16px 48px rgba(15,23,64,0.16)", border: "1px solid rgba(15,23,64,0.08)" }}>
-      {/* Profile card */}
-      <div className="px-5 py-4 border-b" style={{ borderColor: "rgba(15,23,64,0.07)", background: "#F8F9FF" }}>
-        <div className="flex items-center gap-3 mb-3">
-          <div className="w-10 h-10 rounded-full flex items-center justify-center font-bold" style={{ background: "#4875EF", color: "#fff" }}>R</div>
-          <div>
-            <p className="font-bold text-sm" style={{ color: "#0F1740" }}>Rajesh Kumar</p>
-            <p className="text-xs" style={{ color: "#9BA3C4" }}>Ravi Exports Pvt. Ltd.</p>
-          </div>
-        </div>
-        <div className="grid grid-cols-3 gap-2">
-          <div className="text-center rounded-lg py-2" style={{ background: "#EBF0FF" }}>
-            <p className="text-xs font-bold" style={{ color: "#4875EF" }}>Growth</p>
-            <p className="text-xs" style={{ color: "#9BA3C4" }}>Plan</p>
-          </div>
-          <div className="text-center rounded-lg py-2" style={{ background: "#FEF3C7" }}>
-            <p className="text-xs font-bold" style={{ color: "#D97706" }}>{xp || 1375}</p>
-            <p className="text-xs" style={{ color: "#9BA3C4" }}>XP</p>
-          </div>
-          <div className="text-center rounded-lg py-2" style={{ background: "#DCFCE7" }}>
-            <p className="text-xs font-bold" style={{ color: "#16A34A" }}>66%</p>
-            <p className="text-xs" style={{ color: "#9BA3C4" }}>Ready</p>
-          </div>
-        </div>
-      </div>
-      {/* Menu items */}
-      <div className="py-2">
-        {items.map((item) => (
-          <button key={item.label} onClick={onClose}
-            className="w-full flex items-center gap-3 px-5 py-2.5 text-sm font-medium transition-colors hover:bg-gray-50 text-left"
-            style={{ color: "#374151" }}>
-            <span>{item.icon}</span>{item.label}
-          </button>
-        ))}
-      </div>
-      <div className="border-t py-2" style={{ borderColor: "rgba(15,23,64,0.07)" }}>
-        <button onClick={onBack}
-          className="w-full flex items-center gap-3 px-5 py-2.5 text-sm font-medium transition-colors hover:bg-red-50 text-left"
-          style={{ color: "#DC2626" }}>
-          <span>↩</span> Back to Dashboard
-        </button>
-      </div>
-    </motion.div>
-  );
-}
-
-// ── Notifications panel ───────────────────────────────────────────────────────
-function NotificationsPanel({ onClose }: { onClose: () => void }) {
-  const NOTIFS = [
-    { icon: "📩", title: "New buyer inquiry",         desc: "Müller GmbH from Hamburg is interested in Basmati Rice.", time: "2h ago",     unread: true  },
-    { icon: "✅", title: "Invoice approved",           desc: "Invoice #047 has been approved and payment is processing.", time: "5h ago",     unread: true  },
-    { icon: "🚢", title: "Shipment departed",          desc: "Shipment #183 has departed Mumbai Port. ETA: Dec 30.",     time: "Yesterday",  unread: false },
-    { icon: "🔄", title: "RCMC renewal reminder",      desc: "Your RCMC certificate expires in 30 days.",                time: "2 days ago", unread: false },
-    { icon: "🏅", title: "Level 6 complete!",          desc: "You earned 200 XP. Your Digital Dukan is live.",           time: "3 days ago", unread: false },
-  ];
-  return (
-    <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}
-      exit={{ opacity: 0, x: 20 }} transition={{ duration: 0.25, ease: EASE }}
-      className="absolute right-0 top-full mt-2 w-80 rounded-2xl overflow-hidden z-50"
-      style={{ background: "#ffffff", boxShadow: "0 16px 48px rgba(15,23,64,0.16)", border: "1px solid rgba(15,23,64,0.08)" }}>
-      <div className="flex items-center justify-between px-5 py-4 border-b" style={{ borderColor: "rgba(15,23,64,0.07)" }}>
-        <p className="font-bold text-sm" style={{ color: "#0F1740" }}>Notifications</p>
-        <button onClick={onClose} className="text-xs" style={{ color: "#9BA3C4" }}>Mark all read</button>
-      </div>
-      <div className="divide-y max-h-80 overflow-y-auto" style={{ borderColor: "rgba(15,23,64,0.05)" }}>
-        {NOTIFS.map((n, i) => (
-          <div key={i} className="flex items-start gap-3 px-5 py-3.5 transition-colors hover:bg-gray-50"
-            style={{ background: n.unread ? "#FAFBFF" : "transparent" }}>
-            <span className="text-xl flex-shrink-0">{n.icon}</span>
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2">
-                <p className="text-xs font-bold" style={{ color: "#0F1740" }}>{n.title}</p>
-                {n.unread && <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: "#4875EF" }} />}
+        )}
+        {tab === "chat" && (
+          <div className="space-y-3">
+            {[
+              { me: false, text: "I need sample container Basmati 1121. Price CIF Hamburg?" },
+              { me: true,  text: "Hello! We can offer $520/MT CIF Hamburg. MOQ 20MT. Shall I send a proforma?" },
+              { me: false, text: "Yes please. Also need FSSAI certificate." },
+            ].map((m, i) => (
+              <div key={i} className={`flex ${m.me ? "justify-end" : "justify-start"}`}>
+                <div className="max-w-[80%] px-3 py-2 rounded-xl text-sm" style={{ background: m.me ? "#4875EF" : "#F4F6FF", color: m.me ? "#fff" : "#374151" }}>{m.text}</div>
               </div>
-              <p className="text-xs mt-0.5 leading-relaxed" style={{ color: "#6B7294" }}>{n.desc}</p>
-              <p className="text-xs mt-1" style={{ color: "#C8CEDF", fontFamily: "'DM Mono', monospace" }}>{n.time}</p>
+            ))}
+          </div>
+        )}
+        {(tab === "orders" || tab === "invoices") && (
+          <p className="text-sm text-center py-8" style={{ color: "#9BA3C4" }}>No {tab} found for this buyer yet.</p>
+        )}
+        {tab === "ai tips" && (
+          <div className="rounded-xl p-4" style={{ background: "#EBF0FF", border: "1px solid rgba(72,117,239,0.15)" }}>
+            <p className="text-xs font-semibold mb-2" style={{ color: "#4875EF" }}>✨ AI Insight</p>
+            <p className="text-sm" style={{ color: "#374151" }}>This buyer has a strong track record. Offering Net 30 payment terms could increase your chance of closing by ~35%.</p>
+          </div>
+        )}
+      </div>
+    </Drawer>
+  );
+}
+
+// ── Order Detail Modal ────────────────────────────────────────────────────────
+
+function OrderDetailModal({ order, open, onClose }: {
+  order: { id: string; buyer: string; product: string; value: string; date: string; status: string } | null;
+  open: boolean; onClose: () => void;
+}) {
+  const [tab, setTab] = useState("overview");
+  if (!order) return null;
+  const TABS = ["Overview", "Timeline", "Shipping", "Payments", "Documents"];
+  const TIMELINE = [
+    { icon: "✅", label: "Order Placed",   date: "Dec 5",  done: true  },
+    { icon: "📦", label: "Packed",          date: "Dec 7",  done: true  },
+    { icon: "🚢", label: "Shipped",          date: "Dec 10", done: true  },
+    { icon: "🛃", label: "Customs Cleared", date: "Dec 14", done: order.status === "Completed" },
+    { icon: "🏠", label: "Delivered",       date: "Dec 18", done: order.status === "Completed" },
+  ];
+  return (
+    <Modal open={open} onClose={onClose} title={order.id} wide>
+      <div className="px-6 py-4">
+        {/* Summary row */}
+        <div className="grid grid-cols-3 gap-4 mb-5">
+          {[{ l: "Buyer", v: order.buyer }, { l: "Value", v: order.value }, { l: "Status", v: order.status }].map((s) => (
+            <div key={s.l} className="rounded-xl p-3" style={{ background: "#F8F9FF" }}>
+              <p className="text-xs" style={{ color: "#9BA3C4" }}>{s.l}</p>
+              <p className="font-bold text-sm mt-0.5" style={{ color: "#0F1740" }}>{s.v}</p>
+            </div>
+          ))}
+        </div>
+
+        {/* Tabs */}
+        <div className="flex items-center gap-1 mb-5 flex-wrap">
+          {TABS.map((t) => (
+            <button key={t} onClick={() => setTab(t.toLowerCase())}
+              className="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all"
+              style={{ background: tab === t.toLowerCase() ? "#4875EF" : "#F4F6FF", color: tab === t.toLowerCase() ? "#fff" : "#6B7294" }}>
+              {t}
+            </button>
+          ))}
+        </div>
+
+        {tab === "overview" && (
+          <div className="space-y-2">
+            {[
+              { k: "Product",       v: order.product },
+              { k: "Buyer",         v: order.buyer },
+              { k: "Order Date",    v: order.date },
+              { k: "Incoterm",      v: "CIF Hamburg" },
+              { k: "Payment",       v: "50% advance + 50% on BL" },
+            ].map((r) => (
+              <div key={r.k} className="flex items-center justify-between py-2.5 border-b last:border-0" style={{ borderColor: "rgba(15,23,64,0.06)" }}>
+                <p className="text-xs" style={{ color: "#9BA3C4" }}>{r.k}</p>
+                <p className="text-sm font-medium" style={{ color: "#374151" }}>{r.v}</p>
+              </div>
+            ))}
+          </div>
+        )}
+        {tab === "timeline" && (
+          <div className="space-y-4">
+            {TIMELINE.map((t, i) => (
+              <div key={t.label} className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ background: t.done ? "#DCFCE7" : "#F4F6FF" }}>
+                  <span className="text-sm">{t.done ? "✓" : t.icon}</span>
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm font-medium" style={{ color: t.done ? "#0F1740" : "#9BA3C4" }}>{t.label}</p>
+                  <p className="text-xs" style={{ color: "#C8CEDF" }}>{t.date}, 2024</p>
+                </div>
+                {t.done && <span className="w-2 h-2 rounded-full" style={{ background: "#22C55E" }} />}
+              </div>
+            ))}
+          </div>
+        )}
+        {tab === "documents" && (
+          <div className="space-y-2">
+            {["Packing List","Commercial Invoice","Bill of Lading","Certificate of Origin"].map((d) => (
+              <div key={d} className="flex items-center justify-between py-2.5 border-b last:border-0" style={{ borderColor: "rgba(15,23,64,0.06)" }}>
+                <div className="flex items-center gap-2"><span>📄</span><p className="text-sm" style={{ color: "#374151" }}>{d}</p></div>
+                <button className="text-xs font-semibold px-3 py-1 rounded-lg" style={{ background: "#EBF0FF", color: "#4875EF" }}>Download</button>
+              </div>
+            ))}
+          </div>
+        )}
+        {(tab === "shipping" || tab === "payments") && (
+          <p className="text-sm text-center py-8" style={{ color: "#9BA3C4" }}>Details loading…</p>
+        )}
+      </div>
+      <div className="px-6 pb-5 flex items-center gap-3">
+        <JourneyButton variant="primary" size="sm" onClick={onClose}>Update Status</JourneyButton>
+        <button className="text-sm font-medium px-4 py-2 rounded-xl hover:bg-gray-50" style={{ color: "#6B7294" }}>Download All Docs</button>
+      </div>
+    </Modal>
+  );
+}
+
+// ── Upload Document Modal ─────────────────────────────────────────────────────
+
+function UploadModal({ open, onClose, onDone }: { open: boolean; onClose: () => void; onDone: () => void }) {
+  const [progress, setProgress] = useState(0);
+  const [stage, setStage] = useState<"idle" | "uploading" | "processing" | "done">("idle");
+
+  const startUpload = () => {
+    setStage("uploading"); setProgress(0);
+    const t1 = setInterval(() => setProgress((p) => { if (p >= 70) { clearInterval(t1); setStage("processing"); const t2 = setInterval(() => setProgress((p2) => { if (p2 >= 100) { clearInterval(t2); setStage("done"); } return p2 + 5; }), 80); } return p + 8; }), 100);
+  };
+
+  const reset = () => { setStage("idle"); setProgress(0); };
+
+  return (
+    <Modal open={open} onClose={() => { reset(); onClose(); }} title="Upload Document">
+      <div className="px-6 py-6 space-y-5">
+        {stage === "idle" && (
+          <>
+            <div className="flex items-center justify-center h-36 rounded-xl border-2 border-dashed cursor-pointer transition-all hover:border-blue-400"
+              style={{ borderColor: "rgba(72,117,239,0.25)", background: "#F8F9FF" }}
+              onClick={startUpload}>
+              <div className="text-center">
+                <div className="text-3xl mb-2">⬆</div>
+                <p className="font-semibold text-sm" style={{ color: "#4875EF" }}>Click to upload or drag & drop</p>
+                <p className="text-xs mt-1" style={{ color: "#9BA3C4" }}>PDF, JPG, PNG — up to 10MB</p>
+              </div>
+            </div>
+            <FieldSelect label="Document Category" options={["Identity Documents","Business Registration","Compliance & Licences","Invoices & POs","Shipping Documents","Financial Records"]} value="" onChange={() => {}} />
+          </>
+        )}
+        {(stage === "uploading" || stage === "processing") && (
+          <div className="py-4 space-y-4">
+            <div className="flex items-center gap-3">
+              <span className="text-2xl">📄</span>
+              <div className="flex-1">
+                <p className="text-sm font-medium mb-1" style={{ color: "#0F1740" }}>document.pdf</p>
+                <div className="w-full h-1.5 rounded-full" style={{ background: "#EBF0FF" }}>
+                  <motion.div className="h-full rounded-full" style={{ background: "#4875EF", width: `${progress}%` }}
+                    animate={{ width: `${progress}%` }} transition={{ duration: 0.1 }} />
+                </div>
+                <p className="text-xs mt-1" style={{ color: "#9BA3C4" }}>
+                  {stage === "uploading" ? `Uploading… ${progress}%` : `AI processing… OCR in progress`}
+                </p>
+              </div>
             </div>
           </div>
-        ))}
+        )}
+        {stage === "done" && (
+          <div className="text-center py-6">
+            <div className="text-5xl mb-3">✅</div>
+            <p className="font-bold text-lg" style={{ fontFamily: "'Fraunces', serif", color: "#0F1740" }}>Upload Complete</p>
+            <p className="text-sm mt-2 mb-4" style={{ color: "#9BA3C4" }}>Document verified and auto-categorized by AI.</p>
+            <JourneyButton variant="primary" size="md" className="mx-auto" onClick={() => { onDone(); reset(); onClose(); }}>Done</JourneyButton>
+          </div>
+        )}
       </div>
-    </motion.div>
+    </Modal>
+  );
+}
+
+// ── Invoice Builder Modal ─────────────────────────────────────────────────────
+
+function InvoiceBuilderModal({ open, onClose, onSave }: { open: boolean; onClose: () => void; onSave: () => void }) {
+  const [buyer, setBuyer] = useState("Müller GmbH");
+  const [product, setProduct] = useState("Premium Basmati Rice 1121");
+  const [qty, setQty] = useState("20");
+  const [price, setPrice] = useState("480");
+  const [currency, setCurrency] = useState("USD");
+  const [preview, setPreview] = useState(false);
+  const total = (parseFloat(qty || "0") * parseFloat(price || "0")).toLocaleString();
+
+  return (
+    <Modal open={open} onClose={onClose} title={preview ? "Invoice Preview" : "Invoice Builder"} wide>
+      {!preview ? (
+        <>
+          <div className="px-6 py-5 space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <Field label="Buyer / Company" value={buyer} onChange={setBuyer} />
+              <FieldSelect label="Currency" options={["USD","EUR","GBP","AED"]} value={currency} onChange={setCurrency} />
+            </div>
+            <Field label="Product" value={product} onChange={setProduct} />
+            <div className="grid grid-cols-2 gap-4">
+              <Field label="Quantity (MT)" value={qty} onChange={setQty} />
+              <Field label="Unit Price" value={price} onChange={setPrice} hint="Per MT" />
+            </div>
+            <div className="rounded-xl p-4" style={{ background: "#F8F9FF", border: "1px solid rgba(15,23,64,0.07)" }}>
+              <div className="flex items-center justify-between">
+                <p className="text-sm" style={{ color: "#6B7294" }}>Subtotal</p>
+                <p className="font-bold" style={{ color: "#0F1740" }}>{currency} {total}</p>
+              </div>
+              <div className="flex items-center justify-between mt-2">
+                <p className="text-sm" style={{ color: "#6B7294" }}>Freight (estimated)</p>
+                <p className="text-sm" style={{ color: "#9BA3C4" }}>+ Calculated on export</p>
+              </div>
+            </div>
+          </div>
+          <div className="flex items-center justify-between px-6 py-4 border-t" style={{ borderColor: "rgba(15,23,64,0.07)", background: "#FAFBFF" }}>
+            <button onClick={onClose} className="text-sm font-medium px-4 py-2 rounded-xl hover:bg-gray-100" style={{ color: "#6B7294" }}>Cancel</button>
+            <div className="flex items-center gap-2">
+              <button onClick={() => setPreview(true)} className="text-sm font-semibold px-4 py-2 rounded-xl" style={{ background: "#EBF0FF", color: "#4875EF" }}>Preview</button>
+              <JourneyButton variant="primary" size="sm" onClick={() => { onSave(); onClose(); }}>Create Invoice</JourneyButton>
+            </div>
+          </div>
+        </>
+      ) : (
+        <>
+          <div className="px-6 py-5">
+            <div className="rounded-xl p-5" style={{ background: "#F8F9FF", border: "1px solid rgba(15,23,64,0.07)" }}>
+              <div className="flex items-start justify-between mb-5">
+                <div>
+                  <p className="font-bold" style={{ color: "#0F1740" }}>EXIMARG</p>
+                  <p className="text-xs" style={{ color: "#9BA3C4" }}>Ravi Exports Pvt. Ltd.</p>
+                </div>
+                <div className="text-right">
+                  <p className="font-bold" style={{ fontFamily: "'Fraunces', serif", color: "#0F1740" }}>INVOICE</p>
+                  <p className="text-xs" style={{ color: "#4875EF", fontFamily: "'DM Mono', monospace" }}>INV-2024-048</p>
+                </div>
+              </div>
+              <div className="border-t pt-4 mb-4" style={{ borderColor: "rgba(15,23,64,0.07)" }}>
+                <p className="text-xs font-bold uppercase tracking-widest mb-1" style={{ color: "#9BA3C4" }}>Bill To</p>
+                <p className="font-semibold text-sm" style={{ color: "#0F1740" }}>{buyer}</p>
+              </div>
+              <div className="flex items-center justify-between text-sm">
+                <span style={{ color: "#6B7294" }}>{product} × {qty} MT @ {currency} {price}/MT</span>
+                <span className="font-bold" style={{ color: "#0F1740" }}>{currency} {total}</span>
+              </div>
+            </div>
+          </div>
+          <div className="flex items-center justify-between px-6 py-4 border-t" style={{ borderColor: "rgba(15,23,64,0.07)", background: "#FAFBFF" }}>
+            <button onClick={() => setPreview(false)} className="text-sm font-medium px-4 py-2 rounded-xl hover:bg-gray-100" style={{ color: "#6B7294" }}>← Edit</button>
+            <div className="flex items-center gap-2">
+              <button className="text-sm font-semibold px-4 py-2 rounded-xl" style={{ background: "#EBF0FF", color: "#4875EF" }}>Download PDF</button>
+              <JourneyButton variant="primary" size="sm" onClick={() => { onSave(); onClose(); }}>Send to Buyer</JourneyButton>
+            </div>
+          </div>
+        </>
+      )}
+    </Modal>
+  );
+}
+
+// ── Logout Confirm Modal ──────────────────────────────────────────────────────
+
+function LogoutModal({ open, onClose, onConfirm }: { open: boolean; onClose: () => void; onConfirm: () => void }) {
+  return (
+    <Modal open={open} onClose={onClose} title="Sign Out">
+      <div className="px-6 py-6 text-center">
+        <div className="text-4xl mb-3">👋</div>
+        <p className="font-bold text-base mb-2" style={{ color: "#0F1740" }}>Are you sure you want to sign out?</p>
+        <p className="text-sm mb-6" style={{ color: "#9BA3C4" }}>You will need to sign in again to access your dashboard.</p>
+        <div className="flex items-center justify-center gap-3">
+          <button onClick={onClose} className="px-6 py-2.5 rounded-xl text-sm font-medium hover:bg-gray-50" style={{ color: "#6B7294" }}>Cancel</button>
+          <button onClick={onConfirm} className="px-6 py-2.5 rounded-xl text-sm font-semibold" style={{ background: "#DC2626", color: "#fff" }}>Sign Out</button>
+        </div>
+      </div>
+    </Modal>
+  );
+}
+
+// ── Command Center ─────────────────────────────────────────────────────────────
+
+const SIDEBAR_NAV = [
+  { icon: "🏠", label: "Command Center",   id: "overview",      section: "business" },
+  { icon: "📦", label: "Products",          id: "products",      section: "business" },
+  { icon: "🤝", label: "Buyers",            id: "buyers",        section: "business" },
+  { icon: "📋", label: "Orders",            id: "orders",        section: "business" },
+  { icon: "🧾", label: "Invoices",          id: "invoices",      section: "business" },
+  { icon: "📁", label: "Documents",         id: "documents",     section: "business" },
+  { icon: "✨", label: "AI Consultant",     id: "ai",            section: "business" },
+  { icon: "⚙️", label: "Settings",          id: "settings",      section: "business" },
+  { icon: "🗺️", label: "Export Passport",   id: "passport",      section: "journey"  },
+  { icon: "🏆", label: "Achievements",      id: "achievements",  section: "journey"  },
+  { icon: "🎯", label: "Quests",            id: "quests",        section: "journey"  },
+  { icon: "⚔️", label: "Battle Pass",       id: "battle-pass",   section: "journey"  },
+  { icon: "🏅", label: "Leaderboard",       id: "leaderboard",   section: "journey"  },
+  { icon: "💎", label: "Power-Ups",         id: "power-ups",     section: "journey"  },
+  { icon: "🧠", label: "Skill Tree",        id: "skill-tree",    section: "journey"  },
+  { icon: "🎬", label: "Story Mode",        id: "story-mode",    section: "journey"  },
+];
+
+function TopLoadingBar({ active }: { active: boolean }) {
+  return (
+    <AnimatePresence>
+      {active && (
+        <motion.div
+          key="topbar"
+          className="fixed top-0 left-0 z-[400] h-[3px] pointer-events-none"
+          style={{
+            background: "linear-gradient(to right, #4875EF, #7BA4FF, #60A5FA)",
+            boxShadow: "0 0 10px rgba(72,117,239,0.6)",
+          }}
+          initial={{ width: "0%", opacity: 1 }}
+          animate={{ width: "88%" }}
+          exit={{ width: "100%", opacity: 0 }}
+          transition={{
+            width: { duration: 0.45, ease: "easeOut" },
+            opacity: { duration: 0.25, delay: 0.05 },
+          }}
+        />
+      )}
+    </AnimatePresence>
   );
 }
 
@@ -3015,19 +2472,76 @@ function CommandCenter({ xp, onBack }: { xp: number; onBack: () => void }) {
   const [notifOpen, setNotifOpen] = useState(false);
   const [search, setSearch] = useState("");
 
+  // ── Toast system ──
+  const [toasts, setToasts] = useState<ToastItem[]>([]);
+  const toastId = useRef(0);
+  const addToast = (msg: string, type: ToastType = "success") => {
+    const id = ++toastId.current;
+    setToasts((p) => [...p, { id, msg, type }]);
+    setTimeout(() => setToasts((p) => p.filter((t) => t.id !== id)), 3500);
+  };
+
+  // ── Modal states ──
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [addProductOpen, setAddProductOpen] = useState(false);
+  const [uploadOpen, setUploadOpen] = useState(false);
+  const [invoiceOpen, setInvoiceOpen] = useState(false);
+  const [logoutOpen, setLogoutOpen] = useState(false);
+  const [supportOpen, setSupportOpen] = useState(false);
+  const [spinOpen, setSpinOpen] = useState(false);
+  const [journeyOpen, setJourneyOpen] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
+  const [selectedBuyer, setSelectedBuyer] = useState<{ name: string; country: string; deals: number; trust: number; status: string } | null>(null);
+  const [selectedOrder, setSelectedOrder] = useState<{ id: string; buyer: string; product: string; value: string; date: string; status: string } | null>(null);
+
+  // ── Global keyboard shortcut ──
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === "k") { e.preventDefault(); setSearchOpen(true); }
+      if (e.key === "Escape") { setSearchOpen(false); setProfileOpen(false); setNotifOpen(false); }
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, []);
+
+  const navigate = (id: string) => {
+    if (id !== page) {
+      setIsLoading(true);
+      setTimeout(() => setIsLoading(false), 550);
+    }
+    setPage(id);
+    setProfileOpen(false);
+  };
+
+  const handleAction = (id: string) => {
+    if (id === "add-product") { setAddProductOpen(true); navigate("products"); }
+    else if (id === "create-invoice") { setInvoiceOpen(true); navigate("invoices"); }
+    else if (id === "upload-doc") { setUploadOpen(true); navigate("documents"); }
+    else navigate(id);
+  };
+
   const currentNav = SIDEBAR_NAV.find((n) => n.id === page) ?? SIDEBAR_NAV[0];
 
   const PageContent = () => {
     switch (page) {
-      case "overview":  return <OverviewPage xp={xp} />;
-      case "products":  return <ProductsPage />;
-      case "buyers":    return <BuyersPage />;
-      case "orders":    return <OrdersPage />;
-      case "invoices":  return <InvoicesPage />;
-      case "documents": return <DocumentsPage />;
+      case "overview":  return <OverviewPage xp={xp} onAction={handleAction} />;
+      case "products":  return <ProductsPage addToast={addToast} onAddProduct={() => setAddProductOpen(true)} />;
+      case "buyers":    return <BuyersPage addToast={addToast} onSelectBuyer={setSelectedBuyer} />;
+      case "orders":    return <OrdersPage addToast={addToast} onSelectOrder={setSelectedOrder} />;
+      case "invoices":  return <InvoicesPage addToast={addToast} onNewInvoice={() => setInvoiceOpen(true)} />;
+      case "documents": return <DocumentsPage addToast={addToast} onUpload={() => setUploadOpen(true)} />;
       case "ai":        return <AIPage />;
-      case "settings":  return <SettingsPage />;
-      default:          return <OverviewPage xp={xp} />;
+      case "settings":      return <SettingsPage addToast={addToast} />;
+      case "profile":       return <MyProfilePage addToast={addToast} />;
+      case "passport":      return <ExportPassportPage />;
+      case "achievements":  return <AchievementsPage addToast={addToast} />;
+      case "quests":        return <QuestsPage addToast={addToast} />;
+      case "battle-pass":   return <BattlePassPage />;
+      case "leaderboard":   return <LeaderboardPage />;
+      case "power-ups":     return <PowerUpsPage addToast={addToast} />;
+      case "skill-tree":    return <SkillTreePage addToast={addToast} />;
+      case "story-mode":    return <StoryModePage />;
+      default:              return <OverviewPage xp={xp} onAction={handleAction} onNavigate={navigate} onSpin={() => setSpinOpen(true)} />;
     }
   };
 
@@ -3036,6 +2550,7 @@ function CommandCenter({ xp, onBack }: { xp: number; onBack: () => void }) {
       transition={{ duration: 0.4 }} className="fixed inset-0 z-[150] flex"
       style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", background: "#F4F6FF", color: "#0F1740" }}>
 
+      <TopLoadingBar active={isLoading} />
       {/* ── Sidebar ── */}
       <motion.aside
         animate={{ width: collapsed ? "64px" : "224px" }}
@@ -3052,43 +2567,37 @@ function CommandCenter({ xp, onBack }: { xp: number; onBack: () => void }) {
         </div>
 
         {/* Nav items */}
-        <nav className="flex-1 px-2 py-4 space-y-0.5 overflow-y-auto overflow-x-hidden">
-          {SIDEBAR_NAV.map((item) => {
+        <nav className="flex-1 px-2 py-3 overflow-y-auto overflow-x-hidden">
+          {/* Business section */}
+          {!collapsed && (
+            <p className="px-3 pb-1 pt-1 text-xs font-bold tracking-widest uppercase" style={{ color: "#C8CEDF", fontFamily: "'DM Mono', monospace" }}>Business</p>
+          )}
+          {SIDEBAR_NAV.filter((n) => n.section === "business").map((item) => {
             const active = page === item.id;
             return (
-              <motion.button key={item.id} onClick={() => setPage(item.id)} whileTap={{ scale: 0.97 }}
-                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-left transition-all duration-150 relative"
-                style={{
-                  background: active ? "#EBF0FF" : "transparent",
-                  color: active ? "#4875EF" : "#6B7294",
-                  boxShadow: active ? "0 0 0 1px rgba(72,117,239,0.15) inset" : "none",
-                }}>
+              <motion.button key={item.id} onClick={() => navigate(item.id)} whileTap={{ scale: 0.97 }}
+                className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium text-left transition-all duration-150 relative mb-0.5"
+                style={{ background: active ? "#EBF0FF" : "transparent", color: active ? "#4875EF" : "#6B7294" }}>
                 <span className="text-base flex-shrink-0">{item.icon}</span>
                 {!collapsed && <span className="whitespace-nowrap">{item.label}</span>}
                 {active && <motion.div layoutId="sidebar-active" className="absolute left-0 inset-y-1 w-0.5 rounded-full" style={{ background: "#4875EF" }} />}
               </motion.button>
             );
           })}
+
         </nav>
 
-        {/* Bottom items */}
+        {/* Bottom items — Help + Log Out only */}
         <div className="px-2 py-3 space-y-0.5 border-t" style={{ borderColor: "rgba(15,23,64,0.07)" }}>
           {[{ icon: "❓", label: "Help Center" }, { icon: "↩", label: "Log Out" }].map((item) => (
             <button key={item.label}
-              onClick={item.label === "Log Out" ? onBack : undefined}
+              onClick={item.label === "Log Out" ? () => setLogoutOpen(true) : undefined}
               className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium text-left transition-colors hover:bg-gray-50"
               style={{ color: "#9BA3C4" }}>
               <span className="text-base flex-shrink-0">{item.icon}</span>
               {!collapsed && <span className="whitespace-nowrap">{item.label}</span>}
             </button>
           ))}
-          {/* XP badge */}
-          {!collapsed && (
-            <div className="mx-1 mt-2 rounded-xl px-3 py-2.5" style={{ background: "#F4F6FF" }}>
-              <p className="text-xs font-semibold" style={{ color: "#9BA3C4", fontFamily: "'DM Mono', monospace" }}>Total XP</p>
-              <p style={{ fontFamily: "'Fraunces', serif", fontSize: "18px", fontWeight: 700, color: "#F59E0B" }}>{xp || 1375} XP</p>
-            </div>
-          )}
         </div>
 
         {/* Collapse toggle */}
@@ -3113,13 +2622,15 @@ function CommandCenter({ xp, onBack }: { xp: number; onBack: () => void }) {
             </p>
           </div>
 
-          {/* Global search */}
-          <div className="flex-1 max-w-sm relative hidden md:block">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm" style={{ color: "#C8CEDF" }}>🔍</span>
-            <input value={search} onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search buyers, products, orders…"
-              className="w-full pl-9 pr-4 py-2 rounded-xl text-xs outline-none transition-all"
-              style={{ background: "#F4F6FF", border: "1.5px solid rgba(15,23,64,0.08)", color: "#0F1740" }} />
+          {/* Global search — opens Ctrl+K modal */}
+          <div className="flex-1 max-w-sm hidden md:block">
+            <button onClick={() => setSearchOpen(true)}
+              className="w-full flex items-center gap-2 pl-3 pr-3 py-2 rounded-xl text-xs text-left transition-all hover:border-blue-300"
+              style={{ background: "#F4F6FF", border: "1.5px solid rgba(15,23,64,0.08)", color: "#C8CEDF" }}>
+              <span>🔍</span>
+              <span className="flex-1">Search buyers, products, orders…</span>
+              <kbd className="text-xs px-1.5 py-0.5 rounded" style={{ background: "#ffffff", color: "#C8CEDF", border: "1px solid rgba(15,23,64,0.1)" }}>⌘K</kbd>
+            </button>
           </div>
 
           <div className="flex-1" />
@@ -3147,6 +2658,14 @@ function CommandCenter({ xp, onBack }: { xp: number; onBack: () => void }) {
               ✨
             </motion.button>
 
+            {/* Journey panel toggle */}
+            <motion.button whileTap={{ scale: 0.95 }} onClick={() => setJourneyOpen((p) => !p)}
+              className="w-9 h-9 rounded-xl flex items-center justify-center text-sm transition-all"
+              style={{ background: journeyOpen ? "#0F1740" : "#F4F6FF", color: journeyOpen ? "#fff" : "#6B7294" }}
+              title="Toggle Journey panel">
+              🗺️
+            </motion.button>
+
             {/* Profile avatar */}
             <div className="relative">
               <motion.button whileTap={{ scale: 0.95 }}
@@ -3156,7 +2675,15 @@ function CommandCenter({ xp, onBack }: { xp: number; onBack: () => void }) {
                 R
               </motion.button>
               <AnimatePresence>
-                {profileOpen && <ProfileDropdown xp={xp} onClose={() => setProfileOpen(false)} onBack={onBack} />}
+                {profileOpen && (
+                  <ProfileDropdown
+                    xp={xp}
+                    onClose={() => setProfileOpen(false)}
+                    onNavigate={(p) => { navigate(p); setProfileOpen(false); }}
+                    onBack={() => setLogoutOpen(true)}
+                    onSupport={() => { setSupportOpen(true); setProfileOpen(false); }}
+                  />
+                )}
               </AnimatePresence>
             </div>
           </div>
@@ -3174,10 +2701,156 @@ function CommandCenter({ xp, onBack }: { xp: number; onBack: () => void }) {
         </div>
       </div>
 
+      {/* ── Right Journey Panel ── */}
+      <AnimatePresence>
+        {journeyOpen && (
+          <motion.aside
+            initial={{ width: 0, opacity: 0 }}
+            animate={{ width: 216, opacity: 1 }}
+            exit={{ width: 0, opacity: 0 }}
+            transition={{ duration: 0.28, ease: EASE }}
+            className="hidden lg:flex flex-col flex-shrink-0 border-l overflow-hidden"
+            style={{ background: "#F8F9FF", borderColor: "rgba(15,23,64,0.08)" }}
+          >
+            {/* ── Hero: circular XP arc + rank ── */}
+            <div className="px-4 pt-5 pb-4 flex flex-col items-center border-b"
+              style={{ borderColor: "rgba(15,23,64,0.07)", background: "#ffffff" }}>
+              {/* SVG circular progress */}
+              <div className="relative" style={{ width: 80, height: 80 }}>
+                <svg width="80" height="80" viewBox="0 0 80 80">
+                  {/* Track */}
+                  <circle cx="40" cy="40" r="34" fill="none" stroke="#EBF0FF" strokeWidth="6" />
+                  {/* Progress arc — 68% of 214px circumference ≈ 145 */}
+                  <motion.circle cx="40" cy="40" r="34" fill="none"
+                    stroke="url(#xpArc)" strokeWidth="6" strokeLinecap="round"
+                    strokeDasharray="214" strokeDashoffset="214"
+                    animate={{ strokeDashoffset: 214 - 214 * 0.68 }}
+                    transition={{ duration: 1.4, ease: EASE, delay: 0.3 }}
+                    transform="rotate(-90 40 40)" />
+                  <defs>
+                    <linearGradient id="xpArc" x1="0%" y1="0%" x2="100%" y2="0%">
+                      <stop offset="0%" stopColor="#4875EF" />
+                      <stop offset="100%" stopColor="#F59E0B" />
+                    </linearGradient>
+                  </defs>
+                </svg>
+                {/* Center content */}
+                <div className="absolute inset-0 flex flex-col items-center justify-center">
+                  <p style={{ fontFamily: "'Fraunces', serif", fontSize: "15px", fontWeight: 700, color: "#0F1740", lineHeight: 1 }}>
+                    {xp || 1375}
+                  </p>
+                  <p style={{ fontSize: "8px", color: "#9BA3C4", fontFamily: "'DM Mono', monospace", letterSpacing: "0.05em" }}>XP</p>
+                </div>
+              </div>
+
+              {/* Rank title */}
+              <p className="text-xs font-bold mt-2 text-center" style={{ color: "#0F1740" }}>
+                {getRank(GAME_DATA.level).icon} {getRank(GAME_DATA.level).title}
+              </p>
+              <p className="text-xs mt-0.5 text-center" style={{ color: "#C8CEDF" }}>1375 / 2000 to next rank</p>
+
+              {/* Streak pill */}
+              <motion.button onClick={() => navigate("quests")}
+                whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
+                className="flex items-center gap-1.5 px-3 py-1 rounded-full mt-2.5 text-xs font-bold"
+                style={{ background: "linear-gradient(135deg,#FEF3C7,#FDE68A)", color: "#D97706", border: "1px solid rgba(217,119,6,0.2)" }}>
+                🔥 {GAME_DATA.streak}-day streak
+              </motion.button>
+            </div>
+
+            {/* ── Journey nav — list style, colored icons ── */}
+            <div className="flex-1 overflow-y-auto px-3 py-3 space-y-1">
+              {SIDEBAR_NAV.filter((n) => n.section === "journey").map((item, idx) => {
+                const active = page === item.id;
+                // Color coding per item
+                const colors = ["#4875EF","#22C55E","#F59E0B","#7C3AED","#EC4899","#059669","#D97706","#DC2626"];
+                const color = colors[idx % colors.length];
+                const short = item.label
+                  .replace("Export ", "").replace("Battle ", "")
+                  .replace("Story ", "").replace(" Tree", "")
+                  .replace(" Pass", "").replace(" Mode", "");
+                return (
+                  <motion.button key={item.id}
+                    onClick={() => navigate(item.id)}
+                    whileHover={{ x: 3 }} whileTap={{ scale: 0.97 }}
+                    className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-all"
+                    style={{
+                      background: active ? "#ffffff" : "transparent",
+                      boxShadow: active ? `0 2px 12px rgba(15,23,64,0.08), inset 3px 0 0 ${color}` : "none",
+                    }}>
+                    {/* Colored icon badge */}
+                    <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
+                      style={{ background: active ? `${color}18` : "rgba(15,23,64,0.04)" }}>
+                      <span style={{ fontSize: "16px" }}>{item.icon}</span>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p style={{
+                        fontSize: "12px",
+                        fontWeight: active ? 700 : 500,
+                        color: active ? "#0F1740" : "#6B7294",
+                        lineHeight: 1.2,
+                      }}>
+                        {short}
+                      </p>
+                    </div>
+                    {active && (
+                      <motion.div layoutId="journey-active-dot"
+                        className="w-1.5 h-1.5 rounded-full flex-shrink-0"
+                        style={{ background: color }} />
+                    )}
+                  </motion.button>
+                );
+              })}
+            </div>
+
+            {/* ── Footer: spin button ── */}
+            <div className="px-3 py-4 border-t" style={{ borderColor: "rgba(15,23,64,0.07)", background: "#ffffff" }}>
+              <motion.button onClick={() => setSpinOpen(true)}
+                whileHover={{ scale: 1.02, boxShadow: "0 8px 24px rgba(72,117,239,0.35)" }}
+                whileTap={{ scale: 0.96 }}
+                className="w-full py-3 rounded-xl text-xs font-bold flex items-center justify-center gap-2"
+                style={{
+                  background: "linear-gradient(135deg, #4875EF 0%, #7BA4FF 100%)",
+                  color: "#fff",
+                  boxShadow: "0 4px 16px rgba(72,117,239,0.3)",
+                }}>
+                🎰 Daily Spin
+              </motion.button>
+              <p className="text-center text-xs mt-2" style={{ color: "#C8CEDF", fontFamily: "'DM Mono', monospace", fontSize: "9px", letterSpacing: "0.08em" }}>
+                XP · POWER-UPS · BADGES
+              </p>
+            </div>
+          </motion.aside>
+        )}
+      </AnimatePresence>
+
       {/* Click outside to close dropdowns */}
       {(profileOpen || notifOpen) && (
         <div className="fixed inset-0 z-40" onClick={() => { setProfileOpen(false); setNotifOpen(false); }} />
       )}
+
+      {/* ── Global interactive overlays ── */}
+      <SearchModal open={searchOpen} onClose={() => setSearchOpen(false)} onNavigate={navigate} onAction={handleAction} />
+
+      <AddProductWizard open={addProductOpen} onClose={() => setAddProductOpen(false)}
+        onSave={() => addToast("Product added successfully! It's now live in your Digital Dukan.", "success")} />
+
+      <BuyerProfileDrawer buyer={selectedBuyer} open={!!selectedBuyer} onClose={() => setSelectedBuyer(null)} onToast={addToast} />
+
+      <OrderDetailModal order={selectedOrder} open={!!selectedOrder} onClose={() => setSelectedOrder(null)} />
+
+      <UploadModal open={uploadOpen} onClose={() => setUploadOpen(false)}
+        onDone={() => addToast("Document uploaded and categorized by AI.", "success")} />
+
+      <InvoiceBuilderModal open={invoiceOpen} onClose={() => setInvoiceOpen(false)}
+        onSave={() => addToast("Invoice created and sent to buyer.", "success")} />
+
+      <LogoutModal open={logoutOpen} onClose={() => setLogoutOpen(false)} onConfirm={onBack} />
+      <SupportDrawer open={supportOpen} onClose={() => setSupportOpen(false)} />
+      <DailySpinModal open={spinOpen} onClose={() => setSpinOpen(false)} onToast={addToast} />
+
+      {/* ── Toast notifications ── */}
+      <ToastStack toasts={toasts} remove={(id) => setToasts((p) => p.filter((t) => t.id !== id))} />
     </motion.div>
   );
 }
